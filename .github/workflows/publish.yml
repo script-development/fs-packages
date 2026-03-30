@@ -1,0 +1,27 @@
+name: Publish
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "**/package.json"
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            packages: write
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  registry-url: "https://npm.pkg.github.com"
+                  scope: "@script-development"
+            - run: npm ci
+            - run: npm run build
+            - run: npx changeset publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,24 @@
+{
+    "name": "fs-packages",
+    "private": true,
+    "workspaces": ["packages/*"],
+    "scripts": {
+        "build": "npm run build --workspaces",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "lint": "oxlint .",
+        "format": "echo 'oxfmt: install separately — not yet available as npm package'",
+        "format:check": "echo 'oxfmt: install separately — not yet available as npm package'",
+        "changeset": "changeset",
+        "version": "changeset version",
+        "release": "npm run build && changeset publish"
+    },
+    "devDependencies": {
+        "@changesets/cli": "^2",
+        "oxlint": "latest",
+        "typescript": "^5.9",
+        "vitest": "^4",
+        "@vitest/coverage-v8": "^4",
+        "tsup": "^8"
+    }
+}
