@@ -1,11 +1,11 @@
-export {createHttpService} from "./http";
+export { createHttpService } from "./http";
 export type {
-    HttpService,
-    HttpServiceOptions,
-    RequestMiddlewareFunc,
-    ResponseMiddlewareFunc,
-    ResponseErrorMiddlewareFunc,
-    UnregisterMiddleware,
-    AxiosResponseError,
+  HttpService,
+  HttpServiceOptions,
+  RequestMiddlewareFunc,
+  ResponseMiddlewareFunc,
+  ResponseErrorMiddlewareFunc,
+  UnregisterMiddleware,
+  AxiosResponseError,
 } from "./types";
-export {isAxiosError} from "./utils";
+export { isAxiosError } from "./utils";

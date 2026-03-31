@@ -4,8 +4,8 @@ Shared frontend service packages for the script-development ecosystem.
 
 ## Packages
 
-| Package | Description | Version |
-|---------|-------------|---------|
+| Package                                        | Description                                     | Version                                                                                                                     |
+| ---------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | [@script-development/fs-http](./packages/http) | Framework-agnostic HTTP service with middleware | ![version](https://img.shields.io/github/package-json/v/script-development/fs-packages?filename=packages/http/package.json) |
 
 ## Development

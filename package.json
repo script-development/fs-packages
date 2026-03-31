@@ -1,29 +1,30 @@
 {
-    "name": "fs-packages",
-    "private": true,
-    "workspaces": [
-        "packages/*"
-    ],
-    "scripts": {
-        "build": "npm run build --workspaces",
-        "test": "vitest run",
-        "test:coverage": "vitest run --coverage",
-        "test:mutation": "stryker run",
-        "lint": "oxlint .",
-        "format": "echo 'oxfmt: install separately — not yet available as npm package'",
-        "format:check": "echo 'oxfmt: install separately — not yet available as npm package'",
-        "changeset": "changeset",
-        "version": "changeset version",
-        "release": "npm run build && changeset publish"
-    },
-    "devDependencies": {
-        "@changesets/cli": "^2",
-        "@stryker-mutator/core": "^9",
-        "@stryker-mutator/vitest-runner": "^9",
-        "@vitest/coverage-v8": "^4",
-        "oxlint": "^1.57",
-        "tsdown": "^0.21.7",
-        "typescript": "^5.9",
-        "vitest": "^4"
-    }
+  "name": "fs-packages",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run",
+    "lint": "oxlint .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "npm run build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2",
+    "@stryker-mutator/core": "^9",
+    "@stryker-mutator/vitest-runner": "^9",
+    "@vitest/coverage-v8": "^4",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.57",
+    "tsdown": "^0.21.7",
+    "typescript": "^5.9",
+    "vitest": "^4"
+  }
 }

@@ -1,17 +1,17 @@
-import {defineConfig} from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-    test: {
-        name: "http",
-        coverage: {
-            provider: "v8",
-            include: ["src/**/*.ts"],
-            thresholds: {
-                lines: 100,
-                branches: 100,
-                functions: 100,
-                statements: 100,
-            },
-        },
+  test: {
+    name: "http",
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      thresholds: {
+        lines: 100,
+        branches: 100,
+        functions: 100,
+        statements: 100,
+      },
     },
+  },
 });
