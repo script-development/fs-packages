@@ -10,6 +10,9 @@
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
     "lint": "oxlint .",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint:pkg": "npm run lint:pkg --workspaces",
+    "audit": "npm audit",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "changeset": "changeset",
@@ -17,12 +20,14 @@
     "release": "npm run build && changeset publish"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
     "@changesets/cli": "^2",
     "@stryker-mutator/core": "^9",
     "@stryker-mutator/vitest-runner": "^9",
     "@vitest/coverage-v8": "^4",
     "oxfmt": "^0.43.0",
     "oxlint": "^1.57",
+    "publint": "^0.3.18",
     "tsdown": "^0.21.7",
     "typescript": "^5.9",
     "vitest": "^4"

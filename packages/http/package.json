@@ -33,6 +33,8 @@
   },
   "scripts": {
     "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint:pkg": "publint && attw --pack",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
