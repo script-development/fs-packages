@@ -1,7 +1,9 @@
 {
     "name": "fs-packages",
     "private": true,
-    "workspaces": ["packages/*"],
+    "workspaces": [
+        "packages/*"
+    ],
     "scripts": {
         "build": "npm run build --workspaces",
         "test": "vitest run",
@@ -16,12 +18,12 @@
     },
     "devDependencies": {
         "@changesets/cli": "^2",
-        "oxlint": "^1.57",
-        "typescript": "^5.9",
-        "vitest": "^4",
-        "@vitest/coverage-v8": "^4",
         "@stryker-mutator/core": "^9",
         "@stryker-mutator/vitest-runner": "^9",
-        "tsup": "^8"
+        "@vitest/coverage-v8": "^4",
+        "oxlint": "^1.57",
+        "tsdown": "^0.21.7",
+        "typescript": "^5.9",
+        "vitest": "^4"
     }
 }
