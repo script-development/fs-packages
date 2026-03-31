@@ -6,6 +6,7 @@
         "build": "npm run build --workspaces",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
+        "test:mutation": "stryker run",
         "lint": "oxlint .",
         "format": "echo 'oxfmt: install separately — not yet available as npm package'",
         "format:check": "echo 'oxfmt: install separately — not yet available as npm package'",
@@ -19,6 +20,8 @@
         "typescript": "^5.9",
         "vitest": "^4",
         "@vitest/coverage-v8": "^4",
+        "@stryker-mutator/core": "^9",
+        "@stryker-mutator/vitest-runner": "^9",
         "tsup": "^8"
     }
 }

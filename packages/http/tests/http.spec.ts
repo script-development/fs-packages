@@ -30,14 +30,10 @@ beforeEach(() => {
         },
     );
 
-    vi.stubGlobal("Blob", class MockBlob {
-        parts: unknown[];
-        options: unknown;
-        constructor(parts: unknown[], options?: unknown) {
-            this.parts = parts;
-            this.options = options;
-        }
-    });
+    vi.stubGlobal("Blob", vi.fn(function MockBlob(this: {parts: unknown[]; options: unknown}, parts: unknown[], options?: unknown) {
+        this.parts = parts;
+        this.options = options;
+    }));
 
     vi.stubGlobal("fetch", vi.fn(() =>
         Promise.resolve(new Response("streamed", {status: 200})),
@@ -82,6 +78,7 @@ describe("createHttpService", () => {
             // Assert
             expect(response.config.baseURL).toBe("https://api.example.com/");
             expect(response.config.withCredentials).toBe(true);
+            expect(response.config.withXSRFToken).toBe(false);
             expect(response.config.headers.Accept).toBe("application/json");
         });
     });
@@ -99,7 +96,7 @@ describe("createHttpService", () => {
             expect(response.config.withCredentials).toBe(false);
         });
 
-        it("includes custom headers", async () => {
+        it("includes custom headers merged with defaults", async () => {
             // Arrange
             mock.onGet(/.*/).reply(200, {});
             const service = createHttpService(BASE_URL, {
@@ -109,8 +106,9 @@ describe("createHttpService", () => {
             // Act
             const response = await service.getRequest("/test");
 
-            // Assert
+            // Assert — custom header present AND default Accept preserved
             expect(response.config.headers["X-Custom"]).toBe("value");
+            expect(response.config.headers.Accept).toBe("application/json");
         });
 
         it("respects withXSRFToken: true", async () => {
@@ -436,8 +434,9 @@ describe("createHttpService", () => {
             const service = createHttpService(BASE_URL);
             const clickFn = vi.fn();
             const mockLink = {href: "", download: "", click: clickFn};
+            const createElementFn = vi.fn(() => mockLink);
             vi.stubGlobal("document", {
-                createElement: vi.fn(() => mockLink),
+                createElement: createElementFn,
                 cookie: "",
             });
 
@@ -446,9 +445,14 @@ describe("createHttpService", () => {
 
             // Assert
             expect(response.config.responseType).toBe("blob");
+            expect(createElementFn).toHaveBeenCalledWith("a");
             expect(mockLink.download).toBe("report.pdf");
             expect(mockLink.href).toBe("blob:http://localhost/fake-object-url");
             expect(clickFn).toHaveBeenCalledTimes(1);
+
+            // Verify Blob was constructed with response data and correct type
+            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
+            expect(BlobMock).toHaveBeenCalledWith([blobData], {type: "application/pdf"});
         });
 
         it("uses explicit type override when provided", async () => {
@@ -466,7 +470,9 @@ describe("createHttpService", () => {
             // Act
             await service.downloadRequest("/download/file", "doc.xlsx", "application/xlsx");
 
-            // Assert
+            // Assert — type override takes precedence over header
+            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
+            expect(BlobMock).toHaveBeenCalledWith(["data"], {type: "application/xlsx"});
             expect(clickFn).toHaveBeenCalled();
         });
 
@@ -485,7 +491,9 @@ describe("createHttpService", () => {
             // Act
             await service.downloadRequest("/download/spreadsheet", "report.xlsx");
 
-            // Assert
+            // Assert — OOXML content-type mapped to application/xlsx
+            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
+            expect(BlobMock).toHaveBeenCalledWith(["data"], {type: "application/xlsx"});
             expect(clickFn).toHaveBeenCalled();
         });
 
@@ -514,6 +522,8 @@ describe("createHttpService", () => {
 
             // Assert
             expect(url).toBe("blob:http://localhost/fake-object-url");
+            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
+            expect(BlobMock).toHaveBeenCalledWith(["blob-data"], {type: "application/pdf"});
             expect(window.URL.createObjectURL).toHaveBeenCalled();
         });
 
@@ -527,6 +537,8 @@ describe("createHttpService", () => {
 
             // Assert
             expect(url).toBe("blob:http://localhost/fake-object-url");
+            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
+            expect(BlobMock).toHaveBeenCalledWith(["blob-data"], {type: "application/octet-stream"});
         });
     });
 
@@ -569,6 +581,22 @@ describe("createHttpService", () => {
             expect(mockFetch).toHaveBeenCalledWith(
                 expect.any(String),
                 expect.objectContaining({signal: controller.signal}),
+            );
+        });
+
+        it("strips multiple trailing slashes from base URL", async () => {
+            // Arrange
+            const service = createHttpService("https://api.example.com///");
+            const mockFetch = vi.fn(() => Promise.resolve(new Response("ok")));
+            vi.stubGlobal("fetch", mockFetch);
+
+            // Act
+            await service.streamRequest("/stream", {});
+
+            // Assert — multiple trailing slashes collapsed
+            expect(mockFetch).toHaveBeenCalledWith(
+                "https://api.example.com/stream",
+                expect.any(Object),
             );
         });
 
