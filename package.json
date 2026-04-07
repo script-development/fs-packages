@@ -8,7 +8,7 @@
     "build": "npm run build --workspaces",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:mutation": "stryker run",
+    "test:mutation": "npm run test:mutation --workspaces",
     "lint": "oxlint .",
     "typecheck": "npm run typecheck --workspaces",
     "lint:pkg": "npm run lint:pkg --workspaces",

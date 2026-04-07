@@ -573,6 +573,70 @@ describe("dialog service", () => {
       expect(handler).not.toHaveBeenCalled();
     });
 
+    it("should not corrupt other handlers when the same handler is unregistered twice", async () => {
+      // Arrange — register two handlers, unregister the second twice.
+      // With a faulty splice guard, the second unregister would splice(-1, 1)
+      // which removes the LAST element (handlerA), corrupting the chain.
+      const handlerA = vi.fn(() => false);
+      const handlerB = vi.fn(() => false);
+      const ErrorComponent = defineComponent({
+        props: { onClose: Function },
+        setup() {
+          throw new Error("Corruption test");
+        },
+        render() {
+          return h("div");
+        },
+      });
+
+      const service = createDialogService();
+      service.registerErrorMiddleware(handlerA);
+      const unregisterB = service.registerErrorMiddleware(handlerB);
+
+      // Act — unregister B twice; the second call should be a no-op
+      unregisterB();
+      unregisterB();
+
+      mount(service.DialogContainerComponent);
+      service.open(ErrorComponent, {});
+      await nextTick();
+      await nextTick();
+
+      // Assert — handlerA must still be in the chain
+      expect(handlerA).toHaveBeenCalled();
+    });
+
+    it("should propagate non-Error values to the app error handler", async () => {
+      // Arrange — non-Error values must propagate (return true from handleError).
+      // If handleError returned false for non-Errors, Vue would swallow them.
+      const handler = vi.fn(() => false);
+      const StringErrorComponent = defineComponent({
+        props: { onClose: Function },
+        setup() {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error, no-throw-literal
+          throw "string error";
+        },
+        render() {
+          return h("div");
+        },
+      });
+
+      const service = createDialogService();
+      service.registerErrorMiddleware(handler);
+      const appErrorHandler = vi.fn();
+      mount(service.DialogContainerComponent, {
+        global: { config: { errorHandler: appErrorHandler } },
+      });
+
+      // Act
+      service.open(StringErrorComponent, {});
+      await nextTick();
+      await nextTick();
+
+      // Assert — error propagated past onErrorCaptured to the app-level handler
+      expect(appErrorHandler).toHaveBeenCalled();
+    });
+
     it("should not call middleware after it has been unregistered", async () => {
       // Arrange
       const handler = vi.fn(() => false);

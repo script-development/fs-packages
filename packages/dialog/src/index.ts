@@ -67,8 +67,6 @@ export const createDialogService = (): DialogService => {
   };
 
   const closeFrom = (index: number) => {
-    if (index < 0 || index >= dialogs.value.length) return;
-
     dialogs.value.splice(index);
     updateBodyScroll();
   };
@@ -99,13 +97,11 @@ export const createDialogService = (): DialogService => {
             }
           },
           onVnodeMounted: (vnode: VNode) => {
-            const el = vnode.el as HTMLDialogElement | null;
-            el?.showModal();
+            (vnode.el as HTMLDialogElement).showModal();
           },
         },
         h(Suspense, null, {
           default: () => h(rawComponent, prepared),
-          fallback: () => null,
         }),
       );
 

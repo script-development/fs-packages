@@ -158,6 +158,25 @@ describe("translation service", () => {
       // Assert
       expect(result.value).toBe("too.many.dots");
     });
+
+    it("should return key when key has multiple dots even if prefix matches a real translation", () => {
+      // Arrange — "errors.required.extra" splits to ["errors", "required", "extra"].
+      // Without the length guard, destructuring picks section="errors", name="required"
+      // which accidentally resolves to a real translation ("Required").
+      // The guard must reject keys with != 2 parts before any lookup occurs.
+      const precise = {
+        en: { errors: { required: "Required" } },
+        nl: { errors: { required: "Verplicht" } },
+      } as const;
+
+      const { t } = createTranslationService(precise, "en");
+
+      // Act
+      const result = t("errors.required.extra" as "errors.required");
+
+      // Assert — must return the full key, not the accidentally matched translation
+      expect(result.value).toBe("errors.required.extra");
+    });
   });
 
   describe("locale", () => {

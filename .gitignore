@@ -3,6 +3,7 @@ dist/
 coverage/
 reports/
 .stryker-tmp/
+.stryker-incremental.json
 *.tsbuildinfo
 .changeset/*.md
 !.changeset/config.json
