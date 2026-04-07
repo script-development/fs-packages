@@ -1,12 +1,20 @@
 # fs-packages
 
-Shared frontend service packages for the script-development ecosystem.
+Shared frontend service packages for the script-development ecosystem, published to the public npm registry under the `@script-development` scope.
 
 ## Packages
 
-| Package                                        | Description                                     | Version                                                                                                                     |
-| ---------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| [@script-development/fs-http](./packages/http) | Framework-agnostic HTTP service with middleware | ![version](https://img.shields.io/github/package-json/v/script-development/fs-packages?filename=packages/http/package.json) |
+| Package | Description |
+| --- | --- |
+| [@script-development/fs-adapter-store](./packages/adapter-store) | Reactive adapter-store pattern with domain state management and CRUD resource adapters |
+| [@script-development/fs-dialog](./packages/dialog) | Component-agnostic dialog stack service for Vue 3 — LIFO management with error middleware |
+| [@script-development/fs-helpers](./packages/helpers) | Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion |
+| [@script-development/fs-http](./packages/http) | Framework-agnostic HTTP service factory with middleware architecture |
+| [@script-development/fs-loading](./packages/loading) | Reactive loading state service with counter-based tracking and HTTP middleware |
+| [@script-development/fs-storage](./packages/storage) | Framework-agnostic localStorage service factory with prefix namespacing |
+| [@script-development/fs-theme](./packages/theme) | Reactive theme service with dark/light mode, system preference detection, and storage persistence |
+| [@script-development/fs-toast](./packages/toast) | Component-agnostic toast queue service for Vue 3 — FIFO management |
+| [@script-development/fs-translation](./packages/translation) | Type-safe reactive i18n service for Vue 3 — multi-locale, dot-notation keys, parameter interpolation |
 
 ## Development
 
@@ -20,29 +28,24 @@ npm run format       # Format all packages
 
 ## Adding a Package
 
-1. Create `packages/{name}/` with `package.json`, `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`
+1. Create `packages/{name}/` with `package.json`, `tsconfig.json`, `tsdown.config.ts`, `vitest.config.ts`
 2. Name it `@script-development/fs-{name}`
 3. Add tests with 100% coverage threshold
-4. Create a changeset: `npx changeset`
+4. Add mutation testing with 90% score threshold
+5. Create a changeset: `npx changeset`
 
 ## Publishing
 
-Packages are published to GitHub Packages via changesets. After merging changes:
+Packages are published to the **public npm registry** via OIDC Trusted Publishing. After merging changes:
 
 1. `npx changeset` — describe the change and version bump
 2. `npx changeset version` — apply version bumps and generate changelog
 3. Commit the version bump
-4. Push to main — CI publishes automatically
+4. Push to main — CI publishes automatically with provenance attestation
 
 ## Consuming
 
-Add to your project's `.npmrc`:
-
-```
-@script-development:registry=https://npm.pkg.github.com
-```
-
-Then install:
+Install directly from npm:
 
 ```bash
 npm install @script-development/fs-http
