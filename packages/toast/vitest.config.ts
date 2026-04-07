@@ -3,7 +3,6 @@ import { defineProject } from "vitest/config";
 export default defineProject({
   test: {
     name: "toast",
-    environment: "jsdom",
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],

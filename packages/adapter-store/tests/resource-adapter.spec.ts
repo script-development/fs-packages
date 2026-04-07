@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import type { Adapted, AdapterStoreModule, Item, NewAdapted } from "../src/types";
 
 import { MissingResponseDataError } from "../src/errors";

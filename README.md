@@ -4,17 +4,17 @@ Shared frontend service packages for the script-development ecosystem, published
 
 ## Packages
 
-| Package | Description |
-| --- | --- |
-| [@script-development/fs-adapter-store](./packages/adapter-store) | Reactive adapter-store pattern with domain state management and CRUD resource adapters |
-| [@script-development/fs-dialog](./packages/dialog) | Component-agnostic dialog stack service for Vue 3 — LIFO management with error middleware |
-| [@script-development/fs-helpers](./packages/helpers) | Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion |
-| [@script-development/fs-http](./packages/http) | Framework-agnostic HTTP service factory with middleware architecture |
-| [@script-development/fs-loading](./packages/loading) | Reactive loading state service with counter-based tracking and HTTP middleware |
-| [@script-development/fs-storage](./packages/storage) | Framework-agnostic localStorage service factory with prefix namespacing |
-| [@script-development/fs-theme](./packages/theme) | Reactive theme service with dark/light mode, system preference detection, and storage persistence |
-| [@script-development/fs-toast](./packages/toast) | Component-agnostic toast queue service for Vue 3 — FIFO management |
-| [@script-development/fs-translation](./packages/translation) | Type-safe reactive i18n service for Vue 3 — multi-locale, dot-notation keys, parameter interpolation |
+| Package                                                          | Description                                                                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [@script-development/fs-adapter-store](./packages/adapter-store) | Reactive adapter-store pattern with domain state management and CRUD resource adapters               |
+| [@script-development/fs-dialog](./packages/dialog)               | Component-agnostic dialog stack service for Vue 3 — LIFO management with error middleware            |
+| [@script-development/fs-helpers](./packages/helpers)             | Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion                   |
+| [@script-development/fs-http](./packages/http)                   | Framework-agnostic HTTP service factory with middleware architecture                                 |
+| [@script-development/fs-loading](./packages/loading)             | Reactive loading state service with counter-based tracking and HTTP middleware                       |
+| [@script-development/fs-storage](./packages/storage)             | Framework-agnostic localStorage service factory with prefix namespacing                              |
+| [@script-development/fs-theme](./packages/theme)                 | Reactive theme service with dark/light mode, system preference detection, and storage persistence    |
+| [@script-development/fs-toast](./packages/toast)                 | Component-agnostic toast queue service for Vue 3 — FIFO management                                   |
+| [@script-development/fs-translation](./packages/translation)     | Type-safe reactive i18n service for Vue 3 — multi-locale, dot-notation keys, parameter interpolation |
 
 ## Development
 

@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { EntryNotFoundError, MissingResponseDataError } from "../src/errors";
 import { describe, expect, it } from "vitest";
 

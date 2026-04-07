@@ -197,6 +197,28 @@ describe("translation service", () => {
     });
   });
 
+  describe("missing locale data", () => {
+    it("should return key when locale data section is missing", () => {
+      // Arrange — switch to a locale that doesn't have the section
+      const sparse = {
+        en: { common: { save: "Save" }, errors: { required: "{field} is required" } },
+        nl: { common: { save: "Opslaan" }, errors: { required: "{field} is verplicht" } },
+      } as const;
+
+      const { t, locale } = createTranslationService(sparse, "en");
+
+      // Act — request a key from a section that exists
+      const result = t("common.save");
+      expect(result.value).toBe("Save");
+
+      // Switch to a hypothetical locale with missing data (cast to bypass types)
+      locale.value = "fr" as "en";
+
+      // Assert — returns the key as fallback
+      expect(result.value).toBe("common.save");
+    });
+  });
+
   describe("memoization", () => {
     it("should return the same computed ref for the same key", () => {
       // Arrange

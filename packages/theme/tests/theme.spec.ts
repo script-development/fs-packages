@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { createThemeService, getSystemThemePreference } from "../src";
 import type { ThemeStorageContract } from "../src";
 import { beforeEach, describe, expect, it, vi } from "vitest";

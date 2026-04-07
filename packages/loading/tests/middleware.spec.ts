@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import type { AxiosResponseError, HttpService } from "@script-development/fs-http";
 import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
@@ -234,6 +234,32 @@ describe("registerLoadingMiddleware", () => {
 
     triggerResponse(config);
 
+    expect(loadingService.activeCount.value).toBe(0);
+  });
+
+  it("should not double-decrement when duplicate response arrives during concurrent requests", () => {
+    // This test catches the completedRequests.has(config) guard mutation:
+    // without the guard, a duplicate response for config1 would decrement
+    // the counter an extra time, making config2's response bring it below 0
+    // (clamped to 0 by Math.max), losing track of config2.
+    const { httpService, triggerRequest, triggerResponse } = createMockHttpService();
+    const loadingService = createLoadingService();
+    registerLoadingMiddleware(httpService, loadingService);
+
+    const config1 = triggerRequest({ url: "/first" });
+    const config2 = triggerRequest({ url: "/second" });
+    expect(loadingService.activeCount.value).toBe(2);
+
+    // First response for config1
+    triggerResponse(config1);
+    expect(loadingService.activeCount.value).toBe(1);
+
+    // Duplicate response for config1 — should be ignored
+    triggerResponse(config1);
+    expect(loadingService.activeCount.value).toBe(1);
+
+    // Response for config2
+    triggerResponse(config2);
     expect(loadingService.activeCount.value).toBe(0);
   });
 

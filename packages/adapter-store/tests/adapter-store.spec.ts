@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import type { HttpService } from "@script-development/fs-http";
 import type { StorageService } from "@script-development/fs-storage";
 import type { LoadingService } from "@script-development/fs-loading";

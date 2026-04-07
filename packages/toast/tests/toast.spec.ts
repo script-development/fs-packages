@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { createToastService } from "../src/index";
 import { shallowMount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
@@ -43,13 +43,24 @@ describe("toast service", () => {
       expect(wrapper.text()).toContain("Test message");
     });
 
-    it("should return toast id", () => {
+    it("should return toast id with toast- prefix", () => {
       const toastService = createToastService(TestToast);
 
       const id = toastService.show({ message: "Test" });
 
-      expect(typeof id).toBe("string");
-      expect(id.length).toBeGreaterThan(0);
+      expect(id).toMatch(/^toast-\d+$/);
+    });
+
+    it("should return incrementing toast ids", () => {
+      const toastService = createToastService(TestToast);
+
+      const id1 = toastService.show({ message: "First" });
+      const id2 = toastService.show({ message: "Second" });
+
+      expect(id1).not.toBe(id2);
+      const num1 = Number(id1.replace("toast-", ""));
+      const num2 = Number(id2.replace("toast-", ""));
+      expect(num2).toBe(num1 + 1);
     });
 
     it("should add multiple toasts", async () => {

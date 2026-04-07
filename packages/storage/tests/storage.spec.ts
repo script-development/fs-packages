@@ -1,27 +1,17 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { createStorageService } from "../src";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Overrides a localStorage method on its prototype.
- *
- * jsdom's Storage uses a Proxy that intercepts property writes on the
- * instance as storage key operations per the Web Storage spec.
- * Object.defineProperty on the instance is silently ignored.
- * Overriding on the prototype bypasses the proxy.
- *
+ * Overrides a localStorage method for testing error paths.
  * Returns a cleanup function that restores the original method.
  */
 const overrideStorageMethod = <K extends "setItem" | "getItem" | "removeItem">(
   method: K,
   implementation: Storage[K],
 ): (() => void) => {
-  const proto = Object.getPrototypeOf(localStorage) as Storage;
-  const original = proto[method];
-  proto[method] = implementation;
-  return () => {
-    proto[method] = original;
-  };
+  const spy = vi.spyOn(localStorage, method).mockImplementation(implementation as never);
+  return () => spy.mockRestore();
 };
 
 describe("storage service", () => {

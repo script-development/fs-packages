@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { createLoadingService } from "../src";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
