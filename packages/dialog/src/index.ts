@@ -1,7 +1,7 @@
 import type { Component, VNode } from "vue";
 import type { ComponentProps } from "vue-component-type-helpers";
 
-import { Suspense, defineComponent, h, markRaw, onErrorCaptured, ref } from "vue";
+import { Suspense, defineComponent, h, markRaw, onErrorCaptured, reactive, ref } from "vue";
 
 type UnregisterMiddleware = () => void;
 
@@ -21,7 +21,7 @@ export interface DialogService {
 }
 
 interface DialogEntry {
-  node: VNode;
+  render: () => VNode;
   key: string;
 }
 
@@ -31,7 +31,7 @@ const prepareVModelProps = (
   props: Record<string, unknown>,
   onClose: () => void,
 ): Record<string, unknown> => {
-  const prepared: Record<string, unknown> = { ...props, onClose };
+  const prepared: Record<string, unknown> = reactive({ ...props, onClose });
 
   for (const key of Object.keys(prepared)) {
     if (!key.startsWith("onUpdate:")) continue;
@@ -86,29 +86,30 @@ export const createDialogService = (): DialogService => {
     const onClose = () => closeFrom(index);
     const prepared = prepareVModelProps(props as Record<string, unknown>, onClose);
 
-    const node = h(
-      "dialog",
-      {
-        key,
-        style: DIALOG_STYLE,
-        onCancel: (event: Event) => event.preventDefault(),
-        onClick: (event: MouseEvent) => {
-          if ((event.target as HTMLElement).tagName === "DIALOG") {
-            onClose();
-          }
+    const render = () =>
+      h(
+        "dialog",
+        {
+          key,
+          style: DIALOG_STYLE,
+          onCancel: (event: Event) => event.preventDefault(),
+          onClick: (event: MouseEvent) => {
+            if ((event.target as HTMLElement).tagName === "DIALOG") {
+              onClose();
+            }
+          },
+          onVnodeMounted: (vnode: VNode) => {
+            const el = vnode.el as HTMLDialogElement | null;
+            el?.showModal();
+          },
         },
-        onVnodeMounted: (vnode: VNode) => {
-          const el = vnode.el as HTMLDialogElement | null;
-          el?.showModal();
-        },
-      },
-      h(Suspense, null, {
-        default: () => h(rawComponent, prepared),
-        fallback: () => null,
-      }),
-    );
+        h(Suspense, null, {
+          default: () => h(rawComponent, prepared),
+          fallback: () => null,
+        }),
+      );
 
-    dialogs.value.push({ node, key });
+    dialogs.value.push({ render, key });
     updateBodyScroll();
   };
 
@@ -137,7 +138,7 @@ export const createDialogService = (): DialogService => {
     setup() {
       onErrorCaptured((error) => handleError(error));
 
-      return () => dialogs.value.map((dialog) => dialog.node);
+      return () => dialogs.value.map((dialog) => dialog.render());
     },
   });
 

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { createDialogService } from "../src/index";
-import { shallowMount } from "@vue/test-utils";
+import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
 
@@ -59,7 +59,7 @@ describe("dialog service", () => {
     it("should add a dialog to the container", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "Test Dialog" });
@@ -73,7 +73,7 @@ describe("dialog service", () => {
     it("should add multiple dialogs to the stack", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "Dialog 1" });
@@ -91,7 +91,7 @@ describe("dialog service", () => {
     it("should assign unique keys to each dialog", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act — open two identical dialogs; unique keys prevent Vue from merging them
       service.open(TestDialogContent, { title: "Same" });
@@ -105,7 +105,7 @@ describe("dialog service", () => {
     it("should wrap component in markRaw to prevent reactivity", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "Test" });
@@ -121,7 +121,7 @@ describe("dialog service", () => {
       HTMLDialogElement.prototype.showModal = showModalSpy;
 
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent, { attachTo: document.body });
+      const wrapper = mount(service.DialogContainerComponent, { attachTo: document.body });
 
       // Act
       service.open(TestDialogContent, { title: "Modal Dialog" });
@@ -137,7 +137,7 @@ describe("dialog service", () => {
     it("should set inline styles on the dialog element", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "Styled" });
@@ -154,7 +154,7 @@ describe("dialog service", () => {
     it("should wrap content in Suspense with fallback", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(AsyncDialogContent, {});
@@ -167,7 +167,7 @@ describe("dialog service", () => {
     it("should set body overflow to hidden when dialogs are open", () => {
       // Arrange
       const service = createDialogService();
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "Test" });
@@ -179,7 +179,7 @@ describe("dialog service", () => {
     it("should inject onClose prop that closes the dialog and those above it", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       service.open(TestDialogContent, { title: "Dialog 1" });
       service.open(TestDialogContent, { title: "Dialog 2" });
@@ -201,7 +201,7 @@ describe("dialog service", () => {
     it("should restore body overflow when all dialogs are closed", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       service.open(TestDialogContent, { title: "Dialog 1" });
       await nextTick();
@@ -222,7 +222,7 @@ describe("dialog service", () => {
     it("should remove all dialogs from the stack", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       service.open(TestDialogContent, { title: "Dialog 1" });
       service.open(TestDialogContent, { title: "Dialog 2" });
@@ -240,7 +240,7 @@ describe("dialog service", () => {
     it("should restore body overflow to auto", () => {
       // Arrange
       const service = createDialogService();
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       service.open(TestDialogContent, { title: "Test" });
       expect(document.body.style.overflowY).toBe("hidden");
@@ -257,7 +257,7 @@ describe("dialog service", () => {
     it("should close dialog at index and everything above", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       service.open(TestDialogContent, { title: "Bottom" });
       service.open(TestDialogContent, { title: "Middle" });
@@ -288,7 +288,7 @@ describe("dialog service", () => {
       });
 
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       service.open(CapturingComponent, {});
       await nextTick();
@@ -312,7 +312,7 @@ describe("dialog service", () => {
     it("should prevent default on cancel events", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
       service.open(TestDialogContent, { title: "Test" });
       await nextTick();
 
@@ -330,7 +330,7 @@ describe("dialog service", () => {
     it("should close dialog when clicking backdrop (the dialog element itself)", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
       service.open(TestDialogContent, { title: "Test" });
       await nextTick();
 
@@ -346,7 +346,7 @@ describe("dialog service", () => {
     it("should not close dialog when clicking content inside dialog", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
       service.open(TestDialogContent, { title: "Test" });
       await nextTick();
 
@@ -381,7 +381,7 @@ describe("dialog service", () => {
 
       const updateHandler = vi.fn();
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(VModelComponent, {
@@ -399,7 +399,8 @@ describe("dialog service", () => {
     });
 
     it("should keep local prop value in sync after update", async () => {
-      // Arrange
+      // Arrange — uses mount (not mount) because reactive prop updates
+      // require a full render cycle through the Suspense boundary
       const VModelComponent = defineComponent({
         props: { modelValue: String, onClose: Function, "onUpdate:modelValue": Function },
         render() {
@@ -417,19 +418,21 @@ describe("dialog service", () => {
       });
 
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(VModelComponent, { modelValue: "initial", "onUpdate:modelValue": () => {} });
       await nextTick();
 
+      expect(wrapper.find(".value-display").text()).toBe("initial");
+
       const updateBtn = wrapper.find(".update-btn");
       await updateBtn.trigger("click");
       await nextTick();
 
-      // Assert — the prepared props object has been mutated to reflect the new value
-      // This is verified by the fact that the original handler was called
-      expect(wrapper.find(".value-display").exists()).toBe(true);
+      // Assert — the reactive prepared props object was mutated, triggering
+      // a re-render with the updated modelValue
+      expect(wrapper.find(".value-display").text()).toBe("synced");
     });
   });
 
@@ -467,7 +470,7 @@ describe("dialog service", () => {
 
       const service = createDialogService();
       service.registerErrorMiddleware(handler);
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       // Act
       service.open(ErrorComponent, {});
@@ -497,7 +500,7 @@ describe("dialog service", () => {
       const service = createDialogService();
       service.registerErrorMiddleware(handler);
       const appErrorHandler = vi.fn();
-      shallowMount(service.DialogContainerComponent, {
+      mount(service.DialogContainerComponent, {
         global: { config: { errorHandler: appErrorHandler } },
       });
 
@@ -528,7 +531,7 @@ describe("dialog service", () => {
       const service = createDialogService();
       service.registerErrorMiddleware(handler1);
       service.registerErrorMiddleware(handler2);
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       // Act
       service.open(ErrorComponent, {});
@@ -557,7 +560,7 @@ describe("dialog service", () => {
       const service = createDialogService();
       service.registerErrorMiddleware(handler);
       const appErrorHandler = vi.fn();
-      shallowMount(service.DialogContainerComponent, {
+      mount(service.DialogContainerComponent, {
         global: { config: { errorHandler: appErrorHandler } },
       });
 
@@ -590,7 +593,7 @@ describe("dialog service", () => {
       unregister();
 
       const appErrorHandler = vi.fn();
-      shallowMount(service.DialogContainerComponent, {
+      mount(service.DialogContainerComponent, {
         global: { config: { errorHandler: appErrorHandler } },
       });
       service.open(ErrorComponent, {});
@@ -607,8 +610,8 @@ describe("dialog service", () => {
       // Arrange
       const service1 = createDialogService();
       const service2 = createDialogService();
-      const wrapper1 = shallowMount(service1.DialogContainerComponent);
-      const wrapper2 = shallowMount(service2.DialogContainerComponent);
+      const wrapper1 = mount(service1.DialogContainerComponent);
+      const wrapper2 = mount(service2.DialogContainerComponent);
 
       // Act
       service1.open(TestDialogContent, { title: "Service 1 dialog" });
@@ -624,7 +627,7 @@ describe("dialog service", () => {
     it("should lock body scroll when first dialog opens", () => {
       // Arrange
       const service = createDialogService();
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "First" });
@@ -636,7 +639,7 @@ describe("dialog service", () => {
     it("should keep body locked when multiple dialogs are open", () => {
       // Arrange
       const service = createDialogService();
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       // Act
       service.open(TestDialogContent, { title: "First" });
@@ -649,7 +652,7 @@ describe("dialog service", () => {
     it("should unlock body when last dialog is closed via closeAll", () => {
       // Arrange
       const service = createDialogService();
-      shallowMount(service.DialogContainerComponent);
+      mount(service.DialogContainerComponent);
 
       service.open(TestDialogContent, { title: "First" });
       service.open(TestDialogContent, { title: "Second" });
@@ -673,7 +676,7 @@ describe("dialog service", () => {
       });
 
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act
       service.open(SimpleComponent, { label: "No v-model" });
@@ -688,7 +691,7 @@ describe("dialog service", () => {
     it("should handle null element gracefully", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act — open dialog; in test env showModal may not exist
       service.open(TestDialogContent, { title: "Mount test" });
@@ -725,7 +728,7 @@ describe("dialog service", () => {
       });
 
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act — open with v-model, trigger update
       service.open(VModelDisplay, {
@@ -738,8 +741,9 @@ describe("dialog service", () => {
       await wrapper.find(".trigger").trigger("click");
       await nextTick();
 
-      // Assert — the original handler was called (proves onUpdate: prefix detection)
-      expect(wrapper.find(".display").text()).toBe("original");
+      // Assert — reactive props updated the displayed value (proves onUpdate: prefix
+      // detection and the prepared[modelPropName] = value mutation triggers re-render)
+      expect(wrapper.find(".display").text()).toBe("changed");
     });
 
     it("should only wrap props that start with onUpdate:", async () => {
@@ -759,7 +763,7 @@ describe("dialog service", () => {
 
       const clickSpy = vi.fn();
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       service.open(PropChecker, { onClick: clickSpy, onHover: () => {} });
       await nextTick();
@@ -776,7 +780,7 @@ describe("dialog service", () => {
     it("should generate unique keys for sequential dialogs", async () => {
       // Arrange
       const service = createDialogService();
-      const wrapper = shallowMount(service.DialogContainerComponent);
+      const wrapper = mount(service.DialogContainerComponent);
 
       // Act — open 3 dialogs
       service.open(TestDialogContent, { title: "A" });
