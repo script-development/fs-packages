@@ -25,18 +25,14 @@ export const createStandardRouteConfig = <
   meta: Meta = {} as Meta,
 ): C extends undefined ? undefined : CrudRoute<P, T, NonNullable<C>, Meta> => {
   if (!component)
-    return undefined as C extends undefined
-      ? undefined
-      : CrudRoute<P, T, NonNullable<C>, Meta>;
+    return undefined as C extends undefined ? undefined : CrudRoute<P, T, NonNullable<C>, Meta>;
 
   return {
     path,
     name,
     component,
     meta,
-  } as C extends undefined
-    ? undefined
-    : CrudRoute<P, T, NonNullable<C>, Meta>;
+  } as C extends undefined ? undefined : CrudRoute<P, T, NonNullable<C>, Meta>;
 };
 
 export const createCrudRoutes = <
@@ -57,14 +53,7 @@ export const createCrudRoutes = <
     show: ShowComponent;
   },
   meta: Meta = {} as Meta,
-): ParentCrudRoute<
-  N,
-  Meta,
-  OverviewComponent,
-  CreateComponent,
-  EditComponent,
-  ShowComponent
-> => {
+): ParentCrudRoute<N, Meta, OverviewComponent, CreateComponent, EditComponent, ShowComponent> => {
   // @ts-expect-error FilterUndefined is a compile-time tuple filter, but .filter() produces a generic array
   const children: ParentCrudRoute<
     N,
@@ -92,12 +81,7 @@ export const createCrudRoutes = <
       components.edit,
       meta,
     ),
-    createStandardRouteConfig(
-      ":id",
-      `${baseRouteName}${SHOW_PAGE_NAME}`,
-      components.show,
-      meta,
-    ),
+    createStandardRouteConfig(":id", `${baseRouteName}${SHOW_PAGE_NAME}`, components.show, meta),
   ].filter((route) => route !== undefined);
 
   return {
@@ -160,12 +144,7 @@ export const createNestedCrudRoutes = <
       components.edit,
       meta,
     ),
-    createStandardRouteConfig(
-      ":id",
-      `${baseRouteName}${SHOW_PAGE_NAME}`,
-      components.show,
-      meta,
-    ),
+    createStandardRouteConfig(":id", `${baseRouteName}${SHOW_PAGE_NAME}`, components.show, meta),
   ].filter((route) => route !== undefined);
 
   return {

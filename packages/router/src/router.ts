@@ -1,24 +1,11 @@
-import type {
-  NavigationHookAfter,
-  RouteLocationRaw,
-  RouteRecordRaw,
-} from "vue-router";
+import type { NavigationHookAfter, RouteLocationRaw, RouteRecordRaw } from "vue-router";
 
 import { computed } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 
 import { createRouterLink, createRouterView } from "./components";
-import {
-  CREATE_PAGE_NAME,
-  EDIT_PAGE_NAME,
-  OVERVIEW_PAGE_NAME,
-  SHOW_PAGE_NAME,
-} from "./routes";
-import type {
-  BeforeRouteMiddleware,
-  RouterService,
-  RouterServiceOptions,
-} from "./types";
+import { CREATE_PAGE_NAME, EDIT_PAGE_NAME, OVERVIEW_PAGE_NAME, SHOW_PAGE_NAME } from "./routes";
+import type { BeforeRouteMiddleware, RouterService, RouterServiceOptions } from "./types";
 
 export const createRouterService = <Routes extends RouteRecordRaw[]>(
   routes: Routes,
@@ -36,9 +23,7 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
   const getRoutePath = (name: string): string =>
     router.getRoutes().find((route) => route.name === name)?.path ?? "";
 
-  const resolveParentId = (
-    overrideParentId?: number,
-  ): string | number | undefined => {
+  const resolveParentId = (overrideParentId?: number): string | number | undefined => {
     if (overrideParentId) return overrideParentId;
 
     // CRUD routes use single :parentId — repeatable params (:parentId+) are not supported
@@ -57,8 +42,7 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
     if (parentId) params.parentId = parentId;
     if (id) {
       params.id = id;
-      if (!params.parentId || !targetPath.includes(":id"))
-        params.parentId = id;
+      if (!params.parentId || !targetPath.includes(":id")) params.parentId = id;
     }
 
     return Object.fromEntries(
@@ -66,12 +50,7 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
     );
   };
 
-  const goToRoute: RouterService<Routes>["goToRoute"] = async (
-    name,
-    id,
-    query,
-    parentId,
-  ) => {
+  const goToRoute: RouterService<Routes>["goToRoute"] = async (name, id, query, parentId) => {
     const route: RouteLocationRaw = { name };
     const params = resolveRouteParams(name as string, id, parentId);
 
@@ -81,17 +60,17 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
     await router.push(route);
   };
 
-  const normalizedRouteToSpecificRoute: RouterService<Routes>["normalizedRouteToSpecificRoute"] =
-    (route) => {
-      const specificRoute = flattenedRoutes.find(
-        ({ path, name }) => name === route.name || path === route.path,
-      );
+  const normalizedRouteToSpecificRoute: RouterService<Routes>["normalizedRouteToSpecificRoute"] = (
+    route,
+  ) => {
+    const specificRoute = flattenedRoutes.find(
+      ({ path, name }) => name === route.name || path === route.path,
+    );
 
-      if (!specificRoute)
-        throw new Error(`${route.path} is an unknown route`);
+    if (!specificRoute) throw new Error(`${route.path} is an unknown route`);
 
-      return specificRoute;
-    };
+    return specificRoute;
+  };
 
   const getUrlForRouteName: RouterService<Routes>["getUrlForRouteName"] = (
     name,
@@ -108,17 +87,13 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
   const beforeRouteMiddleware: BeforeRouteMiddleware<Routes>[] = [];
   router.beforeEach(async (to, from) => {
     const toNormalized = normalizedRouteToSpecificRoute(to);
-    const fromNormalized = from.name
-      ? normalizedRouteToSpecificRoute(from)
-      : toNormalized;
+    const fromNormalized = from.name ? normalizedRouteToSpecificRoute(from) : toNormalized;
 
     for (const middleware of beforeRouteMiddleware)
       if (await middleware(toNormalized, fromNormalized)) return false;
   });
 
-  const afterRouteMiddleware: NavigationHookAfter[] = [
-    ...(options?.afterRouteCallbacks ?? []),
-  ];
+  const afterRouteMiddleware: NavigationHookAfter[] = [...(options?.afterRouteCallbacks ?? [])];
   router.afterEach((to, from, failure) => {
     for (const middleware of afterRouteMiddleware) middleware(to, from, failure);
   });
@@ -133,9 +108,7 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
   };
 
   const fullPath =
-    (options?.base
-      ? location.pathname.replace(options.base, "")
-      : location.pathname) +
+    (options?.base ? location.pathname.replace(options.base, "") : location.pathname) +
     location.search +
     location.hash;
 
@@ -147,8 +120,7 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
     goToCreatePage: (name) => goToRoute(`${name}${CREATE_PAGE_NAME}`),
     goToOverviewPage: (name) => goToRoute(`${name}${OVERVIEW_PAGE_NAME}`),
     goToEditPage: (name, id) => goToRoute(`${name}${EDIT_PAGE_NAME}`, id),
-    goToShowPage: (name, id, query) =>
-      goToRoute(`${name}${SHOW_PAGE_NAME}`, id, query),
+    goToShowPage: (name, id, query) => goToRoute(`${name}${SHOW_PAGE_NAME}`, id, query),
 
     getUrlForRouteName,
     goBack: () => router.back(),
@@ -194,11 +166,9 @@ export const createRouterService = <Routes extends RouteRecordRaw[]>(
     changeRouteQuery: (query) => void router.push({ query }),
 
     onPage,
-    onCreatePage: (baseRouteName) =>
-      onPage(baseRouteName + CREATE_PAGE_NAME),
+    onCreatePage: (baseRouteName) => onPage(baseRouteName + CREATE_PAGE_NAME),
     onEditPage: (baseRouteName) => onPage(baseRouteName + EDIT_PAGE_NAME),
-    onOverviewPage: (baseRouteName) =>
-      onPage(baseRouteName + OVERVIEW_PAGE_NAME),
+    onOverviewPage: (baseRouteName) => onPage(baseRouteName + OVERVIEW_PAGE_NAME),
     onShowPage: (baseRouteName) => onPage(baseRouteName + SHOW_PAGE_NAME),
     routeExists: (to) => {
       try {

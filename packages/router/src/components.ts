@@ -1,23 +1,11 @@
 import type { Ref } from "vue";
-import type {
-  LocationQueryRaw,
-  RouteLocationNormalizedLoaded,
-  RouteRecordRaw,
-} from "vue-router";
+import type { LocationQueryRaw, RouteLocationNormalizedLoaded, RouteRecordRaw } from "vue-router";
 
 import { computed, defineComponent, h } from "vue";
 
-import type {
-  RouteName,
-  RouterLinkComponent,
-  RouterService,
-  RouterViewComponent,
-} from "./types";
+import type { RouteName, RouterLinkComponent, RouterService, RouterViewComponent } from "./types";
 
-const buildRouteKey = (
-  route: RouteLocationNormalizedLoaded,
-  depth: number,
-): string => {
+const buildRouteKey = (route: RouteLocationNormalizedLoaded, depth: number): string => {
   let key = route.matched[depth].path;
   for (const [paramName, paramValue] of Object.entries(route.params)) {
     const value = Array.isArray(paramValue) ? paramValue[0] : paramValue;
@@ -67,28 +55,12 @@ export const createRouterLink = <Routes extends RouteRecordRaw[]>(
         h(
           "a",
           {
-            href: getUrlForRouteName(
-              props.to.name,
-              props.to.id,
-              props.to.query,
-              props.to.parentId,
-            ),
+            href: getUrlForRouteName(props.to.name, props.to.id, props.to.query, props.to.parentId),
             onClick: (event: MouseEvent) => {
-              if (
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              )
-                return;
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
               event.preventDefault();
-              goToRoute(
-                props.to.name,
-                props.to.id,
-                props.to.query,
-                props.to.parentId,
-              );
+              goToRoute(props.to.name, props.to.id, props.to.query, props.to.parentId);
             },
           },
           slots.default?.(),

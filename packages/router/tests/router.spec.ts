@@ -231,7 +231,6 @@ describe("router service", () => {
       expect(service.currentRouteRef.value.params.parentId).toBe("7");
     });
 
-
     it("should not add params that are not in the target path", async () => {
       // Arrange
       const service = createRouterService(createTestRoutes());
@@ -361,9 +360,7 @@ describe("router service", () => {
       const service = createRouterService(createTestRoutes());
 
       // Act & Assert
-      expect(
-        service.getUrlForRouteName("about", undefined, { page: "1" }),
-      ).toBe("/about?page=1");
+      expect(service.getUrlForRouteName("about", undefined, { page: "1" })).toBe("/about?page=1");
     });
 
     it("should handle route without :id in path when id is provided", () => {
@@ -389,9 +386,7 @@ describe("router service", () => {
       const service = createRouterService(routes);
 
       // Act & Assert
-      expect(service.getUrlForRouteName("nested", 10, undefined, 5)).toBe(
-        "/parent/5/child/10",
-      );
+      expect(service.getUrlForRouteName("nested", 10, undefined, 5)).toBe("/parent/5/child/10");
     });
 
     it("should throw for unknown route name", () => {
@@ -729,9 +724,7 @@ describe("router service", () => {
       await flushPromises();
 
       // Act & Assert
-      expect(() => service.currentRouteId.value).toThrow(
-        "This route has no route id",
-      );
+      expect(() => service.currentRouteId.value).toThrow("This route has no route id");
     });
   });
 
@@ -753,9 +746,7 @@ describe("router service", () => {
       await flushPromises();
 
       // Act & Assert
-      expect(() => service.currentRouteSlug.value).toThrow(
-        "This route has no route id",
-      );
+      expect(() => service.currentRouteSlug.value).toThrow("This route has no route id");
     });
   });
 
@@ -785,9 +776,7 @@ describe("router service", () => {
       await flushPromises();
 
       // Act & Assert
-      expect(() => service.currentParentId.value).toThrow(
-        "This route has no parent id",
-      );
+      expect(() => service.currentParentId.value).toThrow("This route has no parent id");
     });
   });
 

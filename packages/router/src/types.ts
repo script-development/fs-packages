@@ -27,10 +27,7 @@ export type LazyRouteComponent = () => Promise<RouteComponent>;
 
 export type OptionalComponent = LazyRouteComponent | undefined;
 
-type TopLevelRoute<Routes extends RouteRecordRaw[]> = Extract<
-  Routes[number],
-  { name: string }
->;
+type TopLevelRoute<Routes extends RouteRecordRaw[]> = Extract<Routes[number], { name: string }>;
 type ChildRoute<Routes extends RouteRecordRaw[]> = Extract<
   Routes[number],
   { children: RouteRecordRaw[] }
@@ -40,21 +37,26 @@ export type ActualRoute<Routes extends RouteRecordRaw[]> =
   | TopLevelRoute<Routes>
   | ChildRoute<Routes>;
 
-export type RouteName<Routes extends RouteRecordRaw[]> =
-  ActualRoute<Routes>["name"];
+export type RouteName<Routes extends RouteRecordRaw[]> = ActualRoute<Routes>["name"];
 
-type ExtractNameFromRoutes<T, P extends string> = T extends `${infer R}${P}`
-  ? R
-  : never;
+type ExtractNameFromRoutes<T, P extends string> = T extends `${infer R}${P}` ? R : never;
 
-export type CreateRouteName<T extends RouteRecordName | undefined> =
-  ExtractNameFromRoutes<T, ".create">;
-export type OverviewRouteName<T extends RouteRecordName | undefined> =
-  ExtractNameFromRoutes<T, ".overview">;
-export type EditRouteName<T extends RouteRecordName | undefined> =
-  ExtractNameFromRoutes<T, ".edit">;
-export type ShowRouteName<T extends RouteRecordName | undefined> =
-  ExtractNameFromRoutes<T, ".show">;
+export type CreateRouteName<T extends RouteRecordName | undefined> = ExtractNameFromRoutes<
+  T,
+  ".create"
+>;
+export type OverviewRouteName<T extends RouteRecordName | undefined> = ExtractNameFromRoutes<
+  T,
+  ".overview"
+>;
+export type EditRouteName<T extends RouteRecordName | undefined> = ExtractNameFromRoutes<
+  T,
+  ".edit"
+>;
+export type ShowRouteName<T extends RouteRecordName | undefined> = ExtractNameFromRoutes<
+  T,
+  ".show"
+>;
 
 export type BeforeRouteMiddleware<Routes extends RouteRecordRaw[]> = (
   to: ActualRoute<Routes>,
@@ -64,15 +66,14 @@ export type BeforeRouteMiddleware<Routes extends RouteRecordRaw[]> = (
 export type UnregisterMiddleware = () => void;
 
 export type RouterViewComponent = DefineSetupFnComponent<{ depth?: number }>;
-export type RouterLinkComponent<Routes extends RouteRecordRaw[]> =
-  DefineSetupFnComponent<{
-    to: {
-      name: RouteName<Routes>;
-      query?: LocationQueryRaw;
-      id?: number | string;
-      parentId?: number;
-    };
-  }>;
+export type RouterLinkComponent<Routes extends RouteRecordRaw[]> = DefineSetupFnComponent<{
+  to: {
+    name: RouteName<Routes>;
+    query?: LocationQueryRaw;
+    id?: number | string;
+    parentId?: number;
+  };
+}>;
 
 export interface RouterServiceOptions {
   base?: string;
@@ -90,16 +91,9 @@ export interface RouterService<Routes extends RouteRecordRaw[]> {
     query?: LocationQueryRaw,
     parentId?: number,
   ) => Promise<void>;
-  goToCreatePage: (
-    name: CreateRouteName<RouteName<Routes>>,
-  ) => Promise<void>;
-  goToOverviewPage: (
-    name: OverviewRouteName<RouteName<Routes>>,
-  ) => Promise<void>;
-  goToEditPage: (
-    name: EditRouteName<RouteName<Routes>>,
-    id: number | string,
-  ) => Promise<void>;
+  goToCreatePage: (name: CreateRouteName<RouteName<Routes>>) => Promise<void>;
+  goToOverviewPage: (name: OverviewRouteName<RouteName<Routes>>) => Promise<void>;
+  goToEditPage: (name: EditRouteName<RouteName<Routes>>, id: number | string) => Promise<void>;
   goToShowPage: (
     name: ShowRouteName<RouteName<Routes>>,
     id: number | string,
@@ -115,9 +109,7 @@ export interface RouterService<Routes extends RouteRecordRaw[]> {
   registerBeforeRouteMiddleware: (
     middleware: BeforeRouteMiddleware<Routes>,
   ) => UnregisterMiddleware;
-  registerAfterRouteMiddleware: (
-    middleware: NavigationHookAfter,
-  ) => UnregisterMiddleware;
+  registerAfterRouteMiddleware: (middleware: NavigationHookAfter) => UnregisterMiddleware;
   currentRouteRef: Ref<RouteLocationNormalizedLoaded>;
   currentRouteQuery: ComputedRef<LocationQuery>;
   currentRouteId: ComputedRef<number>;
@@ -125,13 +117,9 @@ export interface RouterService<Routes extends RouteRecordRaw[]> {
   currentParentId: ComputedRef<number>;
   changeRouteQuery: (query: LocationQuery) => void;
   onPage: (pageName: RouteName<Routes>) => boolean;
-  onCreatePage: (
-    baseRouteName: CreateRouteName<RouteName<Routes>>,
-  ) => boolean;
+  onCreatePage: (baseRouteName: CreateRouteName<RouteName<Routes>>) => boolean;
   onEditPage: (baseRouteName: EditRouteName<RouteName<Routes>>) => boolean;
-  onOverviewPage: (
-    baseRouteName: OverviewRouteName<RouteName<Routes>>,
-  ) => boolean;
+  onOverviewPage: (baseRouteName: OverviewRouteName<RouteName<Routes>>) => boolean;
   onShowPage: (baseRouteName: ShowRouteName<RouteName<Routes>>) => boolean;
   routeExists: (to: RouteLocationRaw) => boolean;
 
@@ -168,20 +156,10 @@ export interface ParentCrudRoute<
         : CrudRoute<"", `${T}.overview`, NonNullable<OverviewComponent>, Meta>,
       CreateComponent extends undefined
         ? undefined
-        : CrudRoute<
-            "create",
-            `${T}.create`,
-            NonNullable<CreateComponent>,
-            Meta
-          >,
+        : CrudRoute<"create", `${T}.create`, NonNullable<CreateComponent>, Meta>,
       EditComponent extends undefined
         ? undefined
-        : CrudRoute<
-            ":id/edit",
-            `${T}.edit`,
-            NonNullable<EditComponent>,
-            Meta
-          >,
+        : CrudRoute<":id/edit", `${T}.edit`, NonNullable<EditComponent>, Meta>,
       ShowComponent extends undefined
         ? undefined
         : CrudRoute<":id", `${T}.show`, NonNullable<ShowComponent>, Meta>,
@@ -206,20 +184,10 @@ export interface NestedParentCrudRoute<
         : CrudRoute<"", `${T}.overview`, NonNullable<OverviewComponent>, Meta>,
       CreateComponent extends undefined
         ? undefined
-        : CrudRoute<
-            "create",
-            `${T}.create`,
-            NonNullable<CreateComponent>,
-            Meta
-          >,
+        : CrudRoute<"create", `${T}.create`, NonNullable<CreateComponent>, Meta>,
       EditComponent extends undefined
         ? undefined
-        : CrudRoute<
-            ":id/edit",
-            `${T}.edit`,
-            NonNullable<EditComponent>,
-            Meta
-          >,
+        : CrudRoute<":id/edit", `${T}.edit`, NonNullable<EditComponent>, Meta>,
       ShowComponent extends undefined
         ? undefined
         : CrudRoute<":id", `${T}.show`, NonNullable<ShowComponent>, Meta>,

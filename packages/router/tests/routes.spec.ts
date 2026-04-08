@@ -50,12 +50,7 @@ describe("createStandardRouteConfig", () => {
     const meta = { authOnly: true, canSeeWhenLoggedIn: true };
 
     // Act
-    const route = createStandardRouteConfig(
-      "create",
-      "items.create",
-      lazyPage,
-      meta,
-    );
+    const route = createStandardRouteConfig("create", "items.create", lazyPage, meta);
 
     // Assert
     expect(route!.meta).toEqual(meta);
