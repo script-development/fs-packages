@@ -54,7 +54,11 @@ export const createToastService = <C extends Component>(
   const ToastContainerComponent = defineComponent({
     name: "ToastContainer",
     render() {
-      return toasts.value.map((toast) => toast.node);
+      return h(
+        "div",
+        null,
+        toasts.value.map((toast) => toast.node),
+      );
     },
   });
 
