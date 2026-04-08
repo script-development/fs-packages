@@ -43,9 +43,9 @@
     "string-ts": "^2.3.1"
   },
   "devDependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3.5.32"
   },
   "peerDependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3.5.32"
   }
 }
