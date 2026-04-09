@@ -72,8 +72,12 @@ const theme = createThemeService(createStorageService("myapp"));
 // A simple object works too — useful in tests
 const fakeStorage = {
   data: {} as Record<string, unknown>,
-  get<T>(key: string) { return this.data[key] as T | undefined; },
-  put(key: string, value: unknown) { this.data[key] = value; },
+  get<T>(key: string) {
+    return this.data[key] as T | undefined;
+  },
+  put(key: string, value: unknown) {
+    this.data[key] = value;
+  },
 };
 const theme = createThemeService(fakeStorage);
 ```
@@ -98,27 +102,27 @@ This is used internally during initialization but is also exported for direct us
 
 ### `createThemeService(storage)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter | Type                   | Description                                 |
+| --------- | ---------------------- | ------------------------------------------- |
 | `storage` | `ThemeStorageContract` | Any object with `get()` and `put()` methods |
 
 ### Service Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `isDark` | `Ref<boolean>` | Reactive theme state. `true` = dark mode |
-| `toggleTheme()` | `() => void` | Toggle theme and persist to storage |
+| Property        | Type           | Description                              |
+| --------------- | -------------- | ---------------------------------------- |
+| `isDark`        | `Ref<boolean>` | Reactive theme state. `true` = dark mode |
+| `toggleTheme()` | `() => void`   | Toggle theme and persist to storage      |
 
 ### Utilities
 
-| Function | Returns | Description |
-|----------|---------|-------------|
+| Function                     | Returns             | Description                      |
+| ---------------------------- | ------------------- | -------------------------------- |
 | `getSystemThemePreference()` | `"dark" \| "light"` | Read OS/browser theme preference |
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `Theme` | `"dark" \| "light"` |
-| `ThemeService` | Service object returned by the factory |
+| Type                   | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `Theme`                | `"dark" \| "light"`                      |
+| `ThemeService`         | Service object returned by the factory   |
 | `ThemeStorageContract` | Shape required for the storage parameter |

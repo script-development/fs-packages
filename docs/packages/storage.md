@@ -66,17 +66,18 @@ The prefix is prepended to every key with a `:` separator:
 const userStorage = createStorageService("user");
 const cacheStorage = createStorageService("cache");
 
-userStorage.put("name", "Alice");  // localStorage key: "user:name"
+userStorage.put("name", "Alice"); // localStorage key: "user:name"
 cacheStorage.put("name", "stale"); // localStorage key: "cache:name"
 
-userStorage.get("name");  // "Alice"
+userStorage.get("name"); // "Alice"
 cacheStorage.get("name"); // "stale"
 
 // clear() only removes keys with the matching prefix
-userStorage.clear();  // removes "user:*", leaves "cache:*" intact
+userStorage.clear(); // removes "user:*", leaves "cache:*" intact
 ```
 
 This is particularly useful when:
+
 - Multiple apps run on the same domain
 - Different features store data independently
 - You want to clear one feature's cache without affecting others
@@ -100,16 +101,16 @@ const theme = createThemeService(storage);
 
 ### `createStorageService(prefix)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `prefix` | `string` | Required. Prepended to all keys as `prefix:key` |
+| Parameter | Type     | Description                                     |
+| --------- | -------- | ----------------------------------------------- |
+| `prefix`  | `string` | Required. Prepended to all keys as `prefix:key` |
 
 ### Service Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `put(key, value)` | `void` | Store a value (JSON-stringified if not a string) |
-| `get<T>(key)` | `T \| undefined` | Retrieve a value, attempting JSON parse |
-| `get<T>(key, defaultValue)` | `T` | Retrieve with fallback default |
-| `remove(key)` | `void` | Remove a single key |
-| `clear()` | `void` | Remove all keys with this prefix |
+| Method                      | Returns          | Description                                      |
+| --------------------------- | ---------------- | ------------------------------------------------ |
+| `put(key, value)`           | `void`           | Store a value (JSON-stringified if not a string) |
+| `get<T>(key)`               | `T \| undefined` | Retrieve a value, attempting JSON parse          |
+| `get<T>(key, defaultValue)` | `T`              | Retrieve with fallback default                   |
+| `remove(key)`               | `void`           | Remove a single key                              |
+| `clear()`                   | `void`           | Remove all keys with this prefix                 |

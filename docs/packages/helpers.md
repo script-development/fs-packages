@@ -27,7 +27,7 @@ const copy = deepCopy(original);
 copy.roles.push("viewer");
 
 original.roles; // ["admin", "editor"] — unchanged
-copy.roles;     // ["admin", "editor", "viewer"]
+copy.roles; // ["admin", "editor", "viewer"]
 ```
 
 ### Writable Types
@@ -127,17 +127,17 @@ const snakeData = deepSnakeKeys(camelData);
 
 ### Functions
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `deepCopy` | `<T>(toCopy: T) => Writable<T>` | Deep clone for objects, arrays, dates |
-| `isExisting` | `<T extends {id: number}>(obj) => obj is T` | Type guard for objects with an `id` |
-| `toCamelCaseTyped` | `<T extends object>(data) => T` | Type-safe snake_case to camelCase |
-| `deepCamelKeys` | `(obj) => DeepCamelKeys` | Deep snake_case to camelCase |
-| `deepSnakeKeys` | `(obj) => DeepSnakeKeys` | Deep camelCase to snake_case |
+| Function           | Signature                                   | Description                           |
+| ------------------ | ------------------------------------------- | ------------------------------------- |
+| `deepCopy`         | `<T>(toCopy: T) => Writable<T>`             | Deep clone for objects, arrays, dates |
+| `isExisting`       | `<T extends {id: number}>(obj) => obj is T` | Type guard for objects with an `id`   |
+| `toCamelCaseTyped` | `<T extends object>(data) => T`             | Type-safe snake_case to camelCase     |
+| `deepCamelKeys`    | `(obj) => DeepCamelKeys`                    | Deep snake_case to camelCase          |
+| `deepSnakeKeys`    | `(obj) => DeepSnakeKeys`                    | Deep camelCase to snake_case          |
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `Writable<T>` | Removes all `readonly` modifiers from `T` |
-| `DeepSnakeKeys<T>` | Recursively converts keys to snake_case |
+| Type               | Description                               |
+| ------------------ | ----------------------------------------- |
+| `Writable<T>`      | Removes all `readonly` modifiers from `T` |
+| `DeepSnakeKeys<T>` | Recursively converts keys to snake_case   |

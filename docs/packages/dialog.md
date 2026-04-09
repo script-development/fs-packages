@@ -53,13 +53,18 @@ Props are type-checked against your component's definitions — same pattern as 
 Dialogs are managed as a **LIFO stack** (last in, first out). Opening a new dialog pushes it on top of the stack:
 
 ```typescript
-dialog.open(SettingsDialog, { /* ... */ });  // stack: [Settings]
-dialog.open(ConfirmDialog, { /* ... */ });   // stack: [Settings, Confirm]
+dialog.open(SettingsDialog, {
+  /* ... */
+}); // stack: [Settings]
+dialog.open(ConfirmDialog, {
+  /* ... */
+}); // stack: [Settings, Confirm]
 
 // Confirm is on top, Settings is behind it
 ```
 
 Each dialog renders inside a native `<dialog>` element using `showModal()`, which provides:
+
 - **Backdrop** — clicking outside the topmost dialog is detected
 - **Scroll lock** — body scrolling is disabled while dialogs are open
 - **Focus trapping** — keyboard focus stays within the dialog
@@ -148,6 +153,7 @@ dialog.registerErrorMiddleware((error, { closeAll }) => {
   return false;
 });
 ```
+
 :::
 
 ## Async Components
@@ -158,7 +164,7 @@ Dialog content is wrapped in `<Suspense>`, so you can use async setup in your di
 // Lazy-loaded dialog — only fetched when opened
 dialog.open(
   defineAsyncComponent(() => import("@/components/HeavyDialog.vue")),
-  { id: 42 }
+  { id: 42 },
 );
 ```
 
@@ -174,18 +180,15 @@ Returns a dialog service. No parameters.
 
 ### Service Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `open(component, props)` | `(component, props) => void` | Push a dialog onto the stack |
-| `closeAll()` | `() => void` | Clear the entire stack |
-| `registerErrorMiddleware(handler)` | `(handler) => UnregisterMiddleware` | Register an error handler |
-| `DialogContainerComponent` | `Component` | Mount this in your app root |
+| Property                           | Type                                | Description                  |
+| ---------------------------------- | ----------------------------------- | ---------------------------- |
+| `open(component, props)`           | `(component, props) => void`        | Push a dialog onto the stack |
+| `closeAll()`                       | `() => void`                        | Clear the entire stack       |
+| `registerErrorMiddleware(handler)` | `(handler) => UnregisterMiddleware` | Register an error handler    |
+| `DialogContainerComponent`         | `Component`                         | Mount this in your app root  |
 
 ### Error Handler Signature
 
 ```typescript
-type DialogErrorHandler = (
-  error: Error,
-  context: { closeAll: () => void }
-) => boolean; // false = handled, true = pass to next handler
+type DialogErrorHandler = (error: Error, context: { closeAll: () => void }) => boolean; // false = handled, true = pass to next handler
 ```

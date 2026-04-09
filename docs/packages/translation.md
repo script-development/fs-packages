@@ -77,10 +77,10 @@ import { translation } from "@/services";
 Translation keys are validated at compile time using TypeScript's template literal types. The `t()` function only accepts keys that exist in your translation schema:
 
 ```typescript
-translation.t("common.save");    // compiles — "common.save" exists
-translation.t("common.delete");  // compiles — "common.delete" exists
-translation.t("common.submit");  // compile error — "common.submit" doesn't exist
-translation.t("invalid.key");    // compile error — "invalid" section doesn't exist
+translation.t("common.save"); // compiles — "common.save" exists
+translation.t("common.delete"); // compiles — "common.delete" exists
+translation.t("common.submit"); // compile error — "common.submit" doesn't exist
+translation.t("invalid.key"); // compile error — "invalid" section doesn't exist
 ```
 
 Keys use dot notation: `"section.key"`. This catches typos before your code ever runs.
@@ -138,17 +138,17 @@ The service caches `ComputedRef` instances by key and params combination. Callin
 
 ### `createTranslationService(translations, defaultLocale)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `translations` | `Record<TLocale, TSchema>` | Translation data per locale |
-| `defaultLocale` | `TLocale` | The initial active locale |
+| Parameter       | Type                       | Description                 |
+| --------------- | -------------------------- | --------------------------- |
+| `translations`  | `Record<TLocale, TSchema>` | Translation data per locale |
+| `defaultLocale` | `TLocale`                  | The initial active locale   |
 
 ### Service Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `t(key, params?)` | `(key, params?) => ComputedRef<string>` | Translate a key with optional params |
-| `locale` | `Ref<TLocale>` | Current locale — assign to switch languages |
+| Property          | Type                                    | Description                                 |
+| ----------------- | --------------------------------------- | ------------------------------------------- |
+| `t(key, params?)` | `(key, params?) => ComputedRef<string>` | Translate a key with optional params        |
+| `locale`          | `Ref<TLocale>`                          | Current locale — assign to switch languages |
 
 ### Translation Schema
 
@@ -157,7 +157,7 @@ Translations must be a two-level nested object:
 ```typescript
 {
   section: {
-    key: "Translation string with optional {param} placeholders"
+    key: "Translation string with optional {param} placeholders";
   }
 }
 ```

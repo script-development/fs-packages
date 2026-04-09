@@ -76,10 +76,10 @@ Toasts are managed as a **FIFO queue** (first in, first out). When the maximum i
 // Maximum 3 visible toasts at a time
 const toast = createToastService(MyToast, 3);
 
-toast.show({ message: "First" });   // visible: [First]
-toast.show({ message: "Second" });  // visible: [First, Second]
-toast.show({ message: "Third" });   // visible: [First, Second, Third]
-toast.show({ message: "Fourth" });  // visible: [Second, Third, Fourth] — First removed
+toast.show({ message: "First" }); // visible: [First]
+toast.show({ message: "Second" }); // visible: [First, Second]
+toast.show({ message: "Third" }); // visible: [First, Second, Third]
+toast.show({ message: "Fourth" }); // visible: [Second, Third, Fourth] — First removed
 ```
 
 The default maximum is 4. The minimum is 1.
@@ -113,15 +113,15 @@ This catches toast-related bugs at build time, not at runtime.
 
 ### `createToastService(component, maxToasts?)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `component` | `Component` | Your toast Vue component |
-| `maxToasts` | `number` | Maximum visible toasts (default: `4`, minimum: `1`) |
+| Parameter   | Type        | Description                                         |
+| ----------- | ----------- | --------------------------------------------------- |
+| `component` | `Component` | Your toast Vue component                            |
+| `maxToasts` | `number`    | Maximum visible toasts (default: `4`, minimum: `1`) |
 
 ### Service Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `show(props)` | `(props) => string` | Show a toast, returns unique ID |
-| `hide(id)` | `(id: string) => void` | Remove a toast by ID |
-| `ToastContainerComponent` | `Component` | Mount this in your app root |
+| Property                  | Type                   | Description                     |
+| ------------------------- | ---------------------- | ------------------------------- |
+| `show(props)`             | `(props) => string`    | Show a toast, returns unique ID |
+| `hide(id)`                | `(id: string) => void` | Remove a toast by ID            |
+| `ToastContainerComponent` | `Component`            | Mount this in your app root     |

@@ -51,7 +51,7 @@ const loading = createLoadingService();
 registerLoadingMiddleware(http, loading);
 
 // Now every request automatically updates loading state
-await http.getRequest("/users");  // isLoading: true → false
+await http.getRequest("/users"); // isLoading: true → false
 await http.postRequest("/users", data); // isLoading: true → false
 ```
 
@@ -116,20 +116,20 @@ Returns a loading service with counter-based state tracking. No parameters.
 
 ### Service Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `isLoading` | `ComputedRef<boolean>` | `true` when counter > 0 |
-| `activeCount` | `DeepReadonly<Ref<number>>` | Current counter value (read-only) |
-| `startLoading()` | `() => void` | Increment counter |
-| `stopLoading()` | `() => void` | Decrement counter (floor at 0) |
-| `ensureLoadingFinished()` | `() => Promise<void>` | Resolves when counter reaches 0 |
+| Property                  | Type                        | Description                       |
+| ------------------------- | --------------------------- | --------------------------------- |
+| `isLoading`               | `ComputedRef<boolean>`      | `true` when counter > 0           |
+| `activeCount`             | `DeepReadonly<Ref<number>>` | Current counter value (read-only) |
+| `startLoading()`          | `() => void`                | Increment counter                 |
+| `stopLoading()`           | `() => void`                | Decrement counter (floor at 0)    |
+| `ensureLoadingFinished()` | `() => Promise<void>`       | Resolves when counter reaches 0   |
 
 ### `registerLoadingMiddleware(httpService, loadingService, options?)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `httpService` | `HttpService` | The HTTP service to hook into |
-| `loadingService` | `LoadingService` | The loading service to update |
-| `options.timeoutMs` | `number` | Auto-recovery timeout in ms (default: `30000`, `0` = disabled) |
+| Parameter           | Type             | Description                                                    |
+| ------------------- | ---------------- | -------------------------------------------------------------- |
+| `httpService`       | `HttpService`    | The HTTP service to hook into                                  |
+| `loadingService`    | `LoadingService` | The loading service to update                                  |
+| `options.timeoutMs` | `number`         | Auto-recovery timeout in ms (default: `30000`, `0` = disabled) |
 
 **Returns:** `{ unregister: () => void }`

@@ -37,6 +37,7 @@ const router = createRouterService(routes);
 ```
 
 `createCrudRoutes` generates four child routes:
+
 - `users.overview` → `/users`
 - `users.create` → `/users/create`
 - `users.edit` → `/users/:id/edit`
@@ -66,13 +67,9 @@ import { router } from "@/services";
 </script>
 
 <template>
-  <button @click="router.goToCreatePage('users')">
-    New User
-  </button>
+  <button @click="router.goToCreatePage('users')">New User</button>
 
-  <button @click="router.goBack()">
-    Back
-  </button>
+  <button @click="router.goBack()">Back</button>
 </template>
 ```
 
@@ -84,16 +81,16 @@ Generates a parent route with up to four child routes:
 
 ```typescript
 createCrudRoutes(
-  "/users",           // base path
-  "users",            // base route name
-  UsersLayout,        // parent component (wraps children)
+  "/users", // base path
+  "users", // base route name
+  UsersLayout, // parent component (wraps children)
   {
-    overview: UsersList,     // → /users (name: "users.overview")
-    create: UserCreate,      // → /users/create (name: "users.create")
-    edit: UserEdit,          // → /users/:id/edit (name: "users.edit")
-    show: UserDetail,        // → /users/:id (name: "users.show")
+    overview: UsersList, // → /users (name: "users.overview")
+    create: UserCreate, // → /users/create (name: "users.create")
+    edit: UserEdit, // → /users/:id/edit (name: "users.edit")
+    show: UserDetail, // → /users/:id (name: "users.show")
   },
-  { requiresAuth: true }    // optional route meta
+  { requiresAuth: true }, // optional route meta
 );
 ```
 
@@ -107,18 +104,18 @@ createNestedCrudRoutes(
   "project-issues",
   ProjectIssuesLayout,
   {
-    overview: IssuesList,     // → /projects/:parentId/issues
-    create: IssueCreate,      // → /projects/:parentId/issues/create
-    edit: IssueEdit,          // → /projects/:parentId/issues/:id/edit
-    show: IssueDetail,        // → /projects/:parentId/issues/:id
-  }
+    overview: IssuesList, // → /projects/:parentId/issues
+    create: IssueCreate, // → /projects/:parentId/issues/create
+    edit: IssueEdit, // → /projects/:parentId/issues/:id/edit
+    show: IssueDetail, // → /projects/:parentId/issues/:id
+  },
 );
 ```
 
 Navigate with both IDs:
 
 ```typescript
-router.goToEditPage("project-issues", 7);          // issue ID
+router.goToEditPage("project-issues", 7); // issue ID
 router.goToRoute("project-issues.overview", undefined, undefined, 3); // project ID as parentId
 ```
 
@@ -131,10 +128,10 @@ The service exposes reactive route state:
 router.currentRouteRef; // Ref<RouteLocationNormalizedLoaded>
 
 // Parsed parameters
-router.currentRouteId;      // ComputedRef<number> — parsed :id
-router.currentRouteSlug;    // ComputedRef<string> — raw :id as string
-router.currentParentId;     // ComputedRef<number> — parsed :parentId
-router.currentRouteQuery;   // ComputedRef<LocationQuery>
+router.currentRouteId; // ComputedRef<number> — parsed :id
+router.currentRouteSlug; // ComputedRef<string> — raw :id as string
+router.currentParentId; // ComputedRef<number> — parsed :parentId
+router.currentRouteQuery; // ComputedRef<LocationQuery>
 ```
 
 ### Page Predicates
@@ -228,10 +225,12 @@ router.changeRouteQuery({ page: "2", sort: "name" });
 
 ```typescript
 const router = createRouterService(routes, {
-  base: "/app",  // base path for all routes
+  base: "/app", // base path for all routes
   afterRouteCallbacks: [
     // global after-route hooks
-    (to, from) => { /* ... */ },
+    (to, from) => {
+      /* ... */
+    },
   ],
 });
 ```
@@ -240,47 +239,47 @@ const router = createRouterService(routes, {
 
 ### `createRouterService(routes, options?)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `routes` | `RouteRecordRaw[]` | Route definitions |
-| `options.base` | `string` | Base path for routing |
+| Parameter                     | Type                    | Description                   |
+| ----------------------------- | ----------------------- | ----------------------------- |
+| `routes`                      | `RouteRecordRaw[]`      | Route definitions             |
+| `options.base`                | `string`                | Base path for routing         |
 | `options.afterRouteCallbacks` | `NavigationHookAfter[]` | Global after-navigation hooks |
 
 ### Navigation Methods
 
-| Method | Description |
-|--------|-------------|
-| `goToRoute(name, id?, query?, parentId?)` | Navigate to any named route |
-| `goToOverviewPage(name)` | Navigate to `name.overview` |
-| `goToCreatePage(name)` | Navigate to `name.create` |
-| `goToEditPage(name, id)` | Navigate to `name.edit` with `:id` |
-| `goToShowPage(name, id, query?)` | Navigate to `name.show` with `:id` |
-| `goBack()` | Navigate back in history |
+| Method                                    | Description                        |
+| ----------------------------------------- | ---------------------------------- |
+| `goToRoute(name, id?, query?, parentId?)` | Navigate to any named route        |
+| `goToOverviewPage(name)`                  | Navigate to `name.overview`        |
+| `goToCreatePage(name)`                    | Navigate to `name.create`          |
+| `goToEditPage(name, id)`                  | Navigate to `name.edit` with `:id` |
+| `goToShowPage(name, id, query?)`          | Navigate to `name.show` with `:id` |
+| `goBack()`                                | Navigate back in history           |
 
 ### Route State
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `currentRouteRef` | `Ref<RouteLocation>` | Full current route |
-| `currentRouteId` | `ComputedRef<number>` | Parsed `:id` param |
-| `currentRouteSlug` | `ComputedRef<string>` | Raw `:id` as string |
-| `currentParentId` | `ComputedRef<number>` | Parsed `:parentId` param |
-| `currentRouteQuery` | `ComputedRef<LocationQuery>` | Current query params |
+| Property            | Type                         | Description              |
+| ------------------- | ---------------------------- | ------------------------ |
+| `currentRouteRef`   | `Ref<RouteLocation>`         | Full current route       |
+| `currentRouteId`    | `ComputedRef<number>`        | Parsed `:id` param       |
+| `currentRouteSlug`  | `ComputedRef<string>`        | Raw `:id` as string      |
+| `currentParentId`   | `ComputedRef<number>`        | Parsed `:parentId` param |
+| `currentRouteQuery` | `ComputedRef<LocationQuery>` | Current query params     |
 
 ### Predicates
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `onPage(name)` | `boolean` | Exact route name match |
-| `onOverviewPage(name)` | `boolean` | On `name.overview` |
-| `onCreatePage(name)` | `boolean` | On `name.create` |
-| `onEditPage(name)` | `boolean` | On `name.edit` |
-| `onShowPage(name)` | `boolean` | On `name.show` |
-| `routeExists(to)` | `boolean` | Route is resolvable |
+| Method                 | Returns   | Description            |
+| ---------------------- | --------- | ---------------------- |
+| `onPage(name)`         | `boolean` | Exact route name match |
+| `onOverviewPage(name)` | `boolean` | On `name.overview`     |
+| `onCreatePage(name)`   | `boolean` | On `name.create`       |
+| `onEditPage(name)`     | `boolean` | On `name.edit`         |
+| `onShowPage(name)`     | `boolean` | On `name.show`         |
+| `routeExists(to)`      | `boolean` | Route is resolvable    |
 
 ### Route Factories
 
-| Function | Description |
-|----------|-------------|
-| `createCrudRoutes(path, name, component, children, meta?)` | Generate CRUD child routes |
+| Function                                                          | Description                 |
+| ----------------------------------------------------------------- | --------------------------- |
+| `createCrudRoutes(path, name, component, children, meta?)`        | Generate CRUD child routes  |
 | `createNestedCrudRoutes(paths, name, component, children, meta?)` | Generate nested CRUD routes |

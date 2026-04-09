@@ -199,8 +199,8 @@ Vue-dependent packages use Vue's reactivity primitives (`Ref`, `ComputedRef`, `r
 ```typescript
 const loading = createLoadingService();
 
-loading.isLoading;    // ComputedRef<boolean> — use in templates, watch, computed
-loading.activeCount;  // DeepReadonly<Ref<number>> — readable but not writable
+loading.isLoading; // ComputedRef<boolean> — use in templates, watch, computed
+loading.activeCount; // DeepReadonly<Ref<number>> — readable but not writable
 ```
 
 This means services integrate naturally with Vue's ecosystem:
@@ -245,7 +245,7 @@ const routes = [
 
 const router = createRouterService(routes);
 
-router.goToEditPage("users", 42);    // compiles — "users" exists and has an edit page
+router.goToEditPage("users", 42); // compiles — "users" exists and has an edit page
 router.goToEditPage("projects", 42); // compile error — "projects" is not a valid route
 ```
 
@@ -254,15 +254,18 @@ router.goToEditPage("projects", 42); // compile error — "projects" is not a va
 `fs-translation` validates keys against your translation schema:
 
 ```typescript
-const translation = createTranslationService({
-  en: {
-    common: { save: "Save", cancel: "Cancel" },
-    users: { title: "Users", empty: "No users found" },
+const translation = createTranslationService(
+  {
+    en: {
+      common: { save: "Save", cancel: "Cancel" },
+      users: { title: "Users", empty: "No users found" },
+    },
   },
-}, "en");
+  "en",
+);
 
-translation.t("common.save");    // compiles — "common.save" exists
-translation.t("common.delete");  // compile error — "common.delete" doesn't exist
+translation.t("common.save"); // compiles — "common.save" exists
+translation.t("common.delete"); // compile error — "common.delete" doesn't exist
 ```
 
 ## The Dependency Graph

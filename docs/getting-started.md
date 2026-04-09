@@ -128,7 +128,7 @@ export const dialog = createDialogService();
 // Translation
 export const translation = createTranslationService(
   { en: { common: { save: "Save", cancel: "Cancel" } } },
-  "en"
+  "en",
 );
 ```
 

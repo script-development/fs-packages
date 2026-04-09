@@ -15,6 +15,7 @@ npm install @script-development/fs-adapter-store
 ## The Big Picture
 
 A typical application has domain resources — users, projects, invoices — that need to be:
+
 1. **Fetched** from an API
 2. **Stored** in reactive state
 3. **Displayed** in components
@@ -43,11 +44,11 @@ import { createAdapterStoreModule, resourceAdapter } from "@script-development/f
 import { http, storage, loading } from "@/services";
 
 const usersStore = createAdapterStoreModule<User>({
-  domainName: "users",           // API endpoint: /users
-  adapter: resourceAdapter,       // CRUD adapter factory
-  httpService: http,              // for API calls
-  storageService: storage,        // for offline persistence
-  loadingService: loading,        // for waiting on data
+  domainName: "users", // API endpoint: /users
+  adapter: resourceAdapter, // CRUD adapter factory
+  httpService: http, // for API calls
+  storageService: storage, // for offline persistence
+  loadingService: loading, // for waiting on data
 });
 ```
 
@@ -117,15 +118,15 @@ When a resource comes from the API (has an `id`), it's wrapped in an `Adapted` o
 const user = usersStore.getById(1).value;
 
 // Read original values (readonly, frozen)
-user.id;    // 1
-user.name;  // "Alice"
+user.id; // 1
+user.name; // "Alice"
 user.email; // "alice@example.com"
 
 // Edit via mutable ref
 user.mutable.value.name = "Bob";
 
 // Save changes
-await user.update();  // PUT /users/1 — sends full object
+await user.update(); // PUT /users/1 — sends full object
 await user.patch({ name: "Bob" }); // PATCH /users/1 — sends partial update
 
 // Discard edits
@@ -143,7 +144,7 @@ When you create a new resource via `generateNew()`, it's wrapped in a `NewAdapte
 const newUser = usersStore.generateNew();
 
 // Default values (readonly, frozen)
-newUser.name;  // "" (empty defaults)
+newUser.name; // "" (empty defaults)
 newUser.email; // ""
 
 // Edit via mutable ref
@@ -218,40 +219,40 @@ import { EntryNotFoundError, MissingResponseDataError } from "@script-developmen
 
 ### `createAdapterStoreModule(config)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `config.domainName` | `string` | Resource endpoint name (e.g., `"users"`) |
-| `config.adapter` | `Adapter` | CRUD adapter factory (use `resourceAdapter`) |
-| `config.httpService` | `Pick<HttpService, "getRequest">` | HTTP service for fetching |
-| `config.storageService` | `Pick<StorageService, "get" \| "put">` | Storage for persistence |
-| `config.loadingService` | `Pick<LoadingService, "ensureLoadingFinished">` | Loading service for sync |
+| Parameter               | Type                                            | Description                                  |
+| ----------------------- | ----------------------------------------------- | -------------------------------------------- |
+| `config.domainName`     | `string`                                        | Resource endpoint name (e.g., `"users"`)     |
+| `config.adapter`        | `Adapter`                                       | CRUD adapter factory (use `resourceAdapter`) |
+| `config.httpService`    | `Pick<HttpService, "getRequest">`               | HTTP service for fetching                    |
+| `config.storageService` | `Pick<StorageService, "get" \| "put">`          | Storage for persistence                      |
+| `config.loadingService` | `Pick<LoadingService, "ensureLoadingFinished">` | Loading service for sync                     |
 
 ### Store Module Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `getAll` | `ComputedRef<Adapted[]>` | Reactive list of all adapted resources |
-| `getById(id)` | `ComputedRef<Adapted \| undefined>` | Reactive lookup by ID |
-| `getOrFailById(id)` | `Promise<Adapted>` | Wait for loading, throw if not found |
-| `generateNew()` | `NewAdapted` | Create a new unsaved resource |
-| `retrieveAll()` | `Promise<void>` | Fetch all from API and update state |
+| Method              | Returns                             | Description                            |
+| ------------------- | ----------------------------------- | -------------------------------------- |
+| `getAll`            | `ComputedRef<Adapted[]>`            | Reactive list of all adapted resources |
+| `getById(id)`       | `ComputedRef<Adapted \| undefined>` | Reactive lookup by ID                  |
+| `getOrFailById(id)` | `Promise<Adapted>`                  | Wait for loading, throw if not found   |
+| `generateNew()`     | `NewAdapted`                        | Create a new unsaved resource          |
+| `retrieveAll()`     | `Promise<void>`                     | Fetch all from API and update state    |
 
 ### Adapted Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| *(all resource fields)* | `readonly` | Original values from API |
-| `mutable` | `Ref<Writable<T>>` | Editable copy |
-| `reset()` | `() => void` | Revert mutable to original |
-| `update()` | `() => Promise<T>` | PUT full resource |
-| `patch(partial)` | `(partial) => Promise<T>` | PATCH partial update |
-| `delete()` | `() => Promise<void>` | DELETE resource |
+| Property                | Type                      | Description                |
+| ----------------------- | ------------------------- | -------------------------- |
+| _(all resource fields)_ | `readonly`                | Original values from API   |
+| `mutable`               | `Ref<Writable<T>>`        | Editable copy              |
+| `reset()`               | `() => void`              | Revert mutable to original |
+| `update()`              | `() => Promise<T>`        | PUT full resource          |
+| `patch(partial)`        | `(partial) => Promise<T>` | PATCH partial update       |
+| `delete()`              | `() => Promise<void>`     | DELETE resource            |
 
 ### NewAdapted Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| *(all new fields)* | `readonly` | Default values |
-| `mutable` | `Ref<Writable<N>>` | Editable copy |
-| `reset()` | `() => void` | Revert mutable to defaults |
-| `create()` | `() => Promise<T>` | POST to create resource |
+| Property           | Type               | Description                |
+| ------------------ | ------------------ | -------------------------- |
+| _(all new fields)_ | `readonly`         | Default values             |
+| `mutable`          | `Ref<Writable<N>>` | Editable copy              |
+| `reset()`          | `() => void`       | Revert mutable to defaults |
+| `create()`         | `() => Promise<T>` | POST to create resource    |

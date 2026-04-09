@@ -73,16 +73,16 @@ npm run lint:pkg
 
 Every pull request must pass all 8 gates in order:
 
-| Gate | Command | What it checks |
-|------|---------|----------------|
-| 1. Audit | `npm audit` | No known vulnerabilities in dependencies |
-| 2. Format | `npm run format:check` | Code follows oxfmt formatting rules |
-| 3. Lint | `npm run lint` | No oxlint violations |
-| 4. Build | `npm run build` | All packages compile successfully |
-| 5. Typecheck | `npm run typecheck` | No TypeScript errors in strict mode |
-| 6. Package lint | `npm run lint:pkg` | Package exports are correct (publint + attw) |
-| 7. Coverage | `npm run test:coverage` | 100% code coverage per package |
-| 8. Mutation | `npm run test:mutation` | 90% mutation score per package |
+| Gate            | Command                 | What it checks                               |
+| --------------- | ----------------------- | -------------------------------------------- |
+| 1. Audit        | `npm audit`             | No known vulnerabilities in dependencies     |
+| 2. Format       | `npm run format:check`  | Code follows oxfmt formatting rules          |
+| 3. Lint         | `npm run lint`          | No oxlint violations                         |
+| 4. Build        | `npm run build`         | All packages compile successfully            |
+| 5. Typecheck    | `npm run typecheck`     | No TypeScript errors in strict mode          |
+| 6. Package lint | `npm run lint:pkg`      | Package exports are correct (publint + attw) |
+| 7. Coverage     | `npm run test:coverage` | 100% code coverage per package               |
+| 8. Mutation     | `npm run test:mutation` | 90% mutation score per package               |
 
 ::: tip Why mutation testing?
 100% code coverage means every line of code was executed during tests. It does not mean every line was actually **verified**. Mutation testing changes your code (introduces "mutants") and checks whether your tests catch the change. A 90% mutation score means your tests detect 90% of possible bugs — not just that they run the code.
@@ -180,7 +180,9 @@ export function createExampleService(config: ExampleConfig): ExampleService {
   // return public API as plain object
   return {
     value: computed(() => state.value),
-    doSomething() { /* ... */ },
+    doSomething() {
+      /* ... */
+    },
   };
 }
 ```

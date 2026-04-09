@@ -128,9 +128,13 @@ const blobUrl = await http.previewRequest("/documents/123/preview");
 Uses the native `fetch` API for streaming responses (useful for server-sent events or AI completions):
 
 ```typescript
-const response = await http.streamRequest("/ai/generate", {
-  prompt: "Hello",
-}, abortController.signal);
+const response = await http.streamRequest(
+  "/ai/generate",
+  {
+    prompt: "Hello",
+  },
+  abortController.signal,
+);
 
 const reader = response.body?.getReader();
 ```
@@ -156,31 +160,31 @@ try {
 
 ### `createHttpService(baseURL, options?)`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `baseURL` | `string` | Base URL for all requests |
-| `options.headers` | `Record<string, string>` | Default headers |
-| `options.withCredentials` | `boolean` | Send cookies cross-origin (default: `true`) |
-| `options.withXSRFToken` | `boolean` | Include XSRF token (default: `false`) |
-| `options.smartCredentials` | `boolean` | Auto-toggle credentials by origin (default: `false`) |
+| Parameter                  | Type                     | Description                                          |
+| -------------------------- | ------------------------ | ---------------------------------------------------- |
+| `baseURL`                  | `string`                 | Base URL for all requests                            |
+| `options.headers`          | `Record<string, string>` | Default headers                                      |
+| `options.withCredentials`  | `boolean`                | Send cookies cross-origin (default: `true`)          |
+| `options.withXSRFToken`    | `boolean`                | Include XSRF token (default: `false`)                |
+| `options.smartCredentials` | `boolean`                | Auto-toggle credentials by origin (default: `false`) |
 
 ### Service Methods
 
-| Method | Returns |
-|--------|---------|
-| `getRequest<T>(endpoint, options?)` | `Promise<AxiosResponse<T>>` |
-| `postRequest<T>(endpoint, data, options?)` | `Promise<AxiosResponse<T>>` |
-| `putRequest<T>(endpoint, data, options?)` | `Promise<AxiosResponse<T>>` |
+| Method                                      | Returns                     |
+| ------------------------------------------- | --------------------------- |
+| `getRequest<T>(endpoint, options?)`         | `Promise<AxiosResponse<T>>` |
+| `postRequest<T>(endpoint, data, options?)`  | `Promise<AxiosResponse<T>>` |
+| `putRequest<T>(endpoint, data, options?)`   | `Promise<AxiosResponse<T>>` |
 | `patchRequest<T>(endpoint, data, options?)` | `Promise<AxiosResponse<T>>` |
-| `deleteRequest<T>(endpoint, options?)` | `Promise<AxiosResponse<T>>` |
-| `downloadRequest(endpoint, name, type?)` | `Promise<AxiosResponse>` |
-| `previewRequest(endpoint)` | `Promise<string>` |
-| `streamRequest(endpoint, data, signal?)` | `Promise<Response>` |
+| `deleteRequest<T>(endpoint, options?)`      | `Promise<AxiosResponse<T>>` |
+| `downloadRequest(endpoint, name, type?)`    | `Promise<AxiosResponse>`    |
+| `previewRequest(endpoint)`                  | `Promise<string>`           |
+| `streamRequest(endpoint, data, signal?)`    | `Promise<Response>`         |
 
 ### Middleware Registration
 
-| Method | Returns |
-|--------|---------|
-| `registerRequestMiddleware(fn)` | `UnregisterMiddleware` |
-| `registerResponseMiddleware(fn)` | `UnregisterMiddleware` |
+| Method                                | Returns                |
+| ------------------------------------- | ---------------------- |
+| `registerRequestMiddleware(fn)`       | `UnregisterMiddleware` |
+| `registerResponseMiddleware(fn)`      | `UnregisterMiddleware` |
 | `registerResponseErrorMiddleware(fn)` | `UnregisterMiddleware` |
