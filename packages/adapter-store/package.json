@@ -2,7 +2,8 @@
   "name": "@script-development/fs-adapter-store",
   "version": "0.1.0",
   "description": "Reactive adapter-store pattern with domain state management and CRUD resource adapters",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/adapter-store",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",

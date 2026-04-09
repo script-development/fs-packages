@@ -2,7 +2,8 @@
   "name": "@script-development/fs-dialog",
   "version": "0.1.0",
   "description": "Component-agnostic dialog stack service for Vue 3 — LIFO management with error middleware, you bring the component",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/dialog",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",

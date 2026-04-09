@@ -2,7 +2,8 @@
   "name": "@script-development/fs-toast",
   "version": "0.1.1",
   "description": "Component-agnostic toast queue service for Vue 3 — FIFO management, you bring the component",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/toast",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",

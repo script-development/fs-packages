@@ -2,7 +2,8 @@
   "name": "@script-development/fs-router",
   "version": "0.1.0",
   "description": "Type-safe router service factory with CRUD navigation, middleware pipeline, and custom components for Vue Router",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/router",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",

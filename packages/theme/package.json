@@ -2,7 +2,8 @@
   "name": "@script-development/fs-theme",
   "version": "0.1.0",
   "description": "Reactive theme service factory with dark/light mode, system preference detection, and storage persistence",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/theme",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",
