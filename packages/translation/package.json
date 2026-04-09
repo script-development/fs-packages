@@ -2,7 +2,8 @@
   "name": "@script-development/fs-translation",
   "version": "0.1.0",
   "description": "Type-safe reactive i18n service for Vue 3 — multi-locale, dot-notation keys, parameter interpolation, memoized computed refs",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/translation",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",

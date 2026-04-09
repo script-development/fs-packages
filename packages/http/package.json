@@ -2,7 +2,8 @@
   "name": "@script-development/fs-http",
   "version": "0.1.0",
   "description": "Framework-agnostic HTTP service factory with middleware architecture",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/http",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",

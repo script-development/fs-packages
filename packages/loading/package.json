@@ -2,7 +2,8 @@
   "name": "@script-development/fs-loading",
   "version": "0.1.0",
   "description": "Reactive loading state service with counter-based tracking and HTTP middleware for fs-http",
-  "license": "UNLICENSED",
+  "homepage": "https://packages.script.nl/packages/loading",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/script-development/fs-packages.git",
