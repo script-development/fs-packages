@@ -1,20 +1,50 @@
 # fs-packages
 
-Shared frontend service packages for the script-development ecosystem, published to the public npm registry under the `@script-development` scope.
+Shared frontend service packages by [Script Development](https://github.com/script-development), published to the public npm registry under the `@script-development` scope.
+
+**[Documentation](https://packages.script.nl)** — Getting started, architecture, package guides, and contributing.
 
 ## Packages
 
-| Package                                                          | Description                                                                                          |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [@script-development/fs-adapter-store](./packages/adapter-store) | Reactive adapter-store pattern with domain state management and CRUD resource adapters               |
-| [@script-development/fs-dialog](./packages/dialog)               | Component-agnostic dialog stack service for Vue 3 — LIFO management with error middleware            |
-| [@script-development/fs-helpers](./packages/helpers)             | Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion                   |
-| [@script-development/fs-http](./packages/http)                   | Framework-agnostic HTTP service factory with middleware architecture                                 |
-| [@script-development/fs-loading](./packages/loading)             | Reactive loading state service with counter-based tracking and HTTP middleware                       |
-| [@script-development/fs-storage](./packages/storage)             | Framework-agnostic localStorage service factory with prefix namespacing                              |
-| [@script-development/fs-theme](./packages/theme)                 | Reactive theme service with dark/light mode, system preference detection, and storage persistence    |
-| [@script-development/fs-toast](./packages/toast)                 | Component-agnostic toast queue service for Vue 3 — FIFO management                                   |
-| [@script-development/fs-translation](./packages/translation)     | Type-safe reactive i18n service for Vue 3 — multi-locale, dot-notation keys, parameter interpolation |
+### Foundation
+
+| Package                                                                                        | Description                                                       |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [@script-development/fs-http](https://www.npmjs.com/package/@script-development/fs-http)       | HTTP service factory with middleware architecture                 |
+| [@script-development/fs-storage](https://www.npmjs.com/package/@script-development/fs-storage) | localStorage service factory with prefix namespacing              |
+| [@script-development/fs-helpers](https://www.npmjs.com/package/@script-development/fs-helpers) | Tree-shakeable utilities: deep copy, type guards, case conversion |
+
+### Services
+
+| Package                                                                                                | Description                                               |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| [@script-development/fs-theme](https://www.npmjs.com/package/@script-development/fs-theme)             | Reactive dark/light mode with system preference detection |
+| [@script-development/fs-loading](https://www.npmjs.com/package/@script-development/fs-loading)         | Loading state service with HTTP middleware integration    |
+| [@script-development/fs-toast](https://www.npmjs.com/package/@script-development/fs-toast)             | Component-agnostic toast notification queue               |
+| [@script-development/fs-dialog](https://www.npmjs.com/package/@script-development/fs-dialog)           | Component-agnostic dialog stack with error middleware     |
+| [@script-development/fs-translation](https://www.npmjs.com/package/@script-development/fs-translation) | Type-safe reactive i18n with multi-locale support         |
+
+### Domain
+
+| Package                                                                                                    | Description                                                   |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [@script-development/fs-adapter-store](https://www.npmjs.com/package/@script-development/fs-adapter-store) | Reactive state management with CRUD resource adapters         |
+| [@script-development/fs-router](https://www.npmjs.com/package/@script-development/fs-router)               | Type-safe router with CRUD navigation and middleware pipeline |
+
+## Quick Start
+
+```bash
+npm install @script-development/fs-http
+```
+
+```typescript
+import { createHttpService } from "@script-development/fs-http";
+
+const http = createHttpService("https://api.example.com");
+const response = await http.getRequest<User[]>("/users");
+```
+
+See the [documentation](https://packages.script.nl) for the full getting started guide, architecture deep-dive, and package API tours.
 
 ## Development
 
@@ -26,27 +56,4 @@ npm run lint         # Lint all packages
 npm run format       # Format all packages
 ```
 
-## Adding a Package
-
-1. Create `packages/{name}/` with `package.json`, `tsconfig.json`, `tsdown.config.ts`, `vitest.config.ts`
-2. Name it `@script-development/fs-{name}`
-3. Add tests with 100% coverage threshold
-4. Add mutation testing with 90% score threshold
-5. Create a changeset: `npx changeset`
-
-## Publishing
-
-Packages are published to the **public npm registry** via OIDC Trusted Publishing. After merging changes:
-
-1. `npx changeset` — describe the change and version bump
-2. `npx changeset version` — apply version bumps and generate changelog
-3. Commit the version bump
-4. Push to main — CI publishes automatically with provenance attestation
-
-## Consuming
-
-Install directly from npm:
-
-```bash
-npm install @script-development/fs-http
-```
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full development guide.
