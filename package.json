@@ -34,7 +34,7 @@
     "publint": "^0.3.18",
     "tsdown": "^0.21.7",
     "typescript": "^5.9",
-    "vitepress": "^1.6.4",
+    "vitepress": "^2.0.0-alpha.17",
     "vitest": "^4"
   }
 }
