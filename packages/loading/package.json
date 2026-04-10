@@ -43,7 +43,7 @@
   "devDependencies": {
     "@script-development/fs-http": "^0.1.0",
     "@vue/test-utils": "^2.4.6",
-    "axios": "1.14.0",
+    "axios": "^1.15.0",
     "happy-dom": "^20.8.9",
     "vue": "^3.5.32"
   },

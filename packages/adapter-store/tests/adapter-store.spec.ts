@@ -468,6 +468,50 @@ describe("createAdapterStoreModule", () => {
       expect(result.testMethod()).toBe("adapted-1");
     });
 
+    it("should return reactive adapted item that reflects store updates", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const { adapter, getCapturedStoreModule } = createCapturingAdapter();
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      const items: TestItem[] = [
+        {
+          id: 1,
+          name: "Original",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+      vi.mocked(httpService.getRequest).mockResolvedValue({ data: items } as AxiosResponse<
+        TestItem[]
+      >);
+      const store = createAdapterStoreModule(config);
+      await store.retrieveAll();
+      const result = await store.getOrFailById(1);
+      expect(result.name).toBe("Original");
+
+      // Act — simulate a store update (e.g. from a patch/update response)
+      const storeModule = getCapturedStoreModule() as unknown as AdapterStoreModule<TestItem>;
+      storeModule.setById({
+        id: 1,
+        name: "Updated",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-02T00:00:00Z",
+      });
+
+      // Assert — the same adapted object should reflect the updated data via getters
+      expect(result.name).toBe("Updated");
+    });
+
     it("should throw EntryNotFoundError when item not found", async () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
