@@ -18,6 +18,10 @@ export type Writable<T> = T extends WritablePrimitive
  *
  * Handles: primitives, plain objects, arrays, Date, null.
  * Does NOT handle: Map, Set, RegExp, functions, circular references.
+ *
+ * Security: skips `__proto__` and `constructor` keys to prevent prototype
+ * pollution when copying untrusted input (e.g., `JSON.parse` of external
+ * data, where these keys are treated as literal own properties).
  */
 export const deepCopy = <T>(toCopy: T): Writable<T> => {
   if (typeof toCopy !== "object" || toCopy === null) return toCopy as Writable<T>;
@@ -29,6 +33,7 @@ export const deepCopy = <T>(toCopy: T): Writable<T> => {
   const copiedObject: Record<string, unknown> = {};
 
   for (const key of Object.keys(toCopy)) {
+    if (key === "__proto__" || key === "constructor") continue;
     copiedObject[key] = deepCopy((toCopy as Record<string, unknown>)[key]);
   }
 
