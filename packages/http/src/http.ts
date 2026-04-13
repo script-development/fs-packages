@@ -139,10 +139,16 @@ export const createHttpService = (baseURL: string, options?: HttpServiceOptions)
 
     const base = apiUrl.toString().replace(/\/+$/, "");
 
+    // Honor the service's withCredentials config. Previously hardcoded to
+    // "include", which silently overrode consumer opt-outs. Note: smartCredentials
+    // is a no-op here because streamRequest only accepts relative endpoints
+    // (base + endpoint is string concatenation), so requests are always same-host.
+    const includeCredentials: boolean = options?.withCredentials ?? true;
+
     return fetch(base + endpoint, {
       signal,
       method: "POST",
-      credentials: "include",
+      credentials: includeCredentials ? "include" : "same-origin",
       headers,
       body: JSON.stringify(data),
     });
