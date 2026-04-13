@@ -112,6 +112,10 @@ export const createHttpService = (baseURL: string, options?: HttpServiceOptions)
     link.href = window.URL.createObjectURL(blob);
     link.download = documentName;
     link.click();
+    // Revoke the object URL after the click so the browser can release the
+    // blob reference. The download itself captures its own reference during
+    // link.click(), so revoking here does not interrupt it.
+    window.URL.revokeObjectURL(link.href);
 
     return response;
   };
