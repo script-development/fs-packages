@@ -1,6 +1,12 @@
 import type { StorageService, Get } from "./types";
 
 export const createStorageService = (prefix: string): StorageService => {
+  if (prefix.includes(":")) {
+    throw new Error(
+      `createStorageService: prefix must not contain ":" — got ${JSON.stringify(prefix)}. The colon is reserved as the prefix/key separator; a prefix containing ":" would allow clear() to match and delete keys from other prefixes (e.g., prefix "app" would delete everything stored under "app:admin").`,
+    );
+  }
+
   const prefixKey = (key: string): string => `${prefix}:${key}`;
 
   const put = (key: string, value: unknown): void => {

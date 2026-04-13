@@ -1,6 +1,6 @@
 {
   "name": "@script-development/fs-storage",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Framework-agnostic localStorage service factory with prefix namespacing",
   "homepage": "https://packages.script.nl/packages/storage",
   "license": "MIT",

@@ -28,6 +28,16 @@ describe("storage service", () => {
       expect(storage).toHaveProperty("remove");
       expect(storage).toHaveProperty("clear");
     });
+
+    it("should throw when the prefix contains a colon", () => {
+      expect(() => createStorageService("app:admin")).toThrow(/must not contain ":"/u);
+      expect(() => createStorageService(":leading")).toThrow(/must not contain ":"/u);
+      expect(() => createStorageService("trailing:")).toThrow(/must not contain ":"/u);
+    });
+
+    it("should include the offending prefix in the error message", () => {
+      expect(() => createStorageService("bad:prefix")).toThrow(/"bad:prefix"/u);
+    });
   });
 
   describe("put", () => {
