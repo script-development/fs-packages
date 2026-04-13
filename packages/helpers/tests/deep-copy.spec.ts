@@ -70,4 +70,41 @@ describe("deepCopy", () => {
     expect(copy.b.c).toBe(99);
     expect(original.a).toBe(1);
   });
+
+  describe("prototype pollution resistance", () => {
+    it("should not set the prototype from a JSON-parsed __proto__ key", () => {
+      // JSON.parse treats __proto__ as a literal own property, unlike object literals.
+      const malicious = JSON.parse('{"__proto__": {"polluted": "yes"}}') as Record<string, unknown>;
+
+      const copy = deepCopy(malicious) as Record<string, unknown>;
+
+      expect(Object.getPrototypeOf(copy)).toBe(Object.prototype);
+      expect(copy.polluted).toBeUndefined();
+    });
+
+    it("should not copy a literal constructor key from external data", () => {
+      const malicious = JSON.parse('{"constructor": {"prototype": {"polluted": "yes"}}}') as Record<
+        string,
+        unknown
+      >;
+
+      const copy = deepCopy(malicious);
+
+      expect(Object.hasOwn(copy, "constructor")).toBe(false);
+      // Sanity: ensure Object.prototype was not polluted by the copy operation.
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    });
+
+    it("should preserve safe keys when dangerous keys are present", () => {
+      const malicious = JSON.parse(
+        '{"__proto__": {"polluted": "yes"}, "safe": 1, "other": "keep"}',
+      ) as Record<string, unknown>;
+
+      const copy = deepCopy(malicious) as Record<string, unknown>;
+
+      expect(copy.safe).toBe(1);
+      expect(copy.other).toBe("keep");
+      expect(copy.polluted).toBeUndefined();
+    });
+  });
 });

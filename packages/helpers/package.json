@@ -1,6 +1,6 @@
 {
   "name": "@script-development/fs-helpers",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion",
   "homepage": "https://packages.script.nl/packages/helpers",
   "license": "MIT",
