@@ -670,6 +670,38 @@ describe("createHttpService", () => {
         }),
       );
     });
+
+    it("honors withCredentials: false by sending same-origin credentials mode", async () => {
+      // Arrange
+      const service = createHttpService(BASE_URL, { withCredentials: false });
+      const mockFetch = vi.fn(() => Promise.resolve(new Response("ok")));
+      vi.stubGlobal("fetch", mockFetch);
+
+      // Act
+      await service.streamRequest("/stream", {});
+
+      // Assert
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ credentials: "same-origin" }),
+      );
+    });
+
+    it("honors explicit withCredentials: true by sending include credentials mode", async () => {
+      // Arrange
+      const service = createHttpService(BASE_URL, { withCredentials: true });
+      const mockFetch = vi.fn(() => Promise.resolve(new Response("ok")));
+      vi.stubGlobal("fetch", mockFetch);
+
+      // Act
+      await service.streamRequest("/stream", {});
+
+      // Assert
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ credentials: "include" }),
+      );
+    });
   });
 });
 
