@@ -78,5 +78,6 @@ export type StoreModuleForAdapter<
   getById: (id: number) => ComputedRef<E | undefined>;
   getOrFailById: (id: number) => Promise<E>;
   generateNew: () => N;
+  retrieveById: (id: number) => Promise<void>;
   retrieveAll: () => Promise<void>;
 };

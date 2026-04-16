@@ -559,6 +559,168 @@ describe("createAdapterStoreModule", () => {
     });
   });
 
+  describe("retrieveById", () => {
+    it("should call httpService.getRequest with domainName and id", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter: createTestAdapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      vi.mocked(httpService.getRequest).mockResolvedValue({
+        data: {
+          id: 7,
+          name: "Item 7",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        } satisfies TestItem,
+      } as AxiosResponse<TestItem>);
+      const store = createAdapterStoreModule(config);
+
+      // Act
+      await store.retrieveById(7);
+
+      // Assert
+      expect(httpService.getRequest).toHaveBeenCalledWith("test-items/7");
+    });
+
+    it("should insert the returned item into the store", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter: createTestAdapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      vi.mocked(httpService.getRequest).mockResolvedValue({
+        data: {
+          id: 7,
+          name: "Item 7",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        } satisfies TestItem,
+      } as AxiosResponse<TestItem>);
+      const store = createAdapterStoreModule(config);
+
+      // Act
+      await store.retrieveById(7);
+
+      // Assert
+      expect(store.getById(7).value?.testMethod()).toBe("adapted-7");
+    });
+
+    it("should refresh an existing item's adapted view after re-retrieval", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter: createTestAdapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      vi.mocked(httpService.getRequest).mockResolvedValueOnce({
+        data: {
+          id: 1,
+          name: "Original",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        } satisfies TestItem,
+      } as AxiosResponse<TestItem>);
+      const store = createAdapterStoreModule(config);
+      await store.retrieveById(1);
+      expect(store.getById(1).value?.name).toBe("Original");
+      vi.mocked(httpService.getRequest).mockResolvedValueOnce({
+        data: {
+          id: 1,
+          name: "Updated",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-02T00:00:00Z",
+        } satisfies TestItem,
+      } as AxiosResponse<TestItem>);
+
+      // Act
+      await store.retrieveById(1);
+
+      // Assert
+      expect(store.getById(1).value?.name).toBe("Updated");
+    });
+
+    it("should persist to storage service", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter: createTestAdapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      vi.mocked(httpService.getRequest).mockResolvedValue({
+        data: {
+          id: 3,
+          name: "Item 3",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        } satisfies TestItem,
+      } as AxiosResponse<TestItem>);
+      const store = createAdapterStoreModule(config);
+
+      // Act
+      await store.retrieveById(3);
+
+      // Assert
+      expect(storageService.put).toHaveBeenCalledWith(
+        "test-items",
+        expect.objectContaining({ 3: expect.any(Object) as unknown }),
+      );
+    });
+
+    it("should propagate http errors and leave state untouched", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter: createTestAdapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      vi.mocked(httpService.getRequest).mockRejectedValue(new Error("network down"));
+      const store = createAdapterStoreModule(config);
+
+      // Act & Assert
+      await expect(store.retrieveById(1)).rejects.toThrow("network down");
+      expect(store.getById(1).value).toBeUndefined();
+      expect(storageService.put).not.toHaveBeenCalled();
+    });
+  });
+
   describe("retrieveAll", () => {
     it("should call httpService.getRequest with domainName", async () => {
       // Arrange
@@ -1099,6 +1261,59 @@ describe("createAdapterStoreModule", () => {
 
       // Assert
       expect(refBefore).not.toBe(refAfter);
+    });
+
+    it("should reuse cached adapted entries for untouched ids when state changes for a different id", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const { adapter, getCapturedStoreModule } = createCapturingAdapter();
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      const items: TestItem[] = [
+        {
+          id: 1,
+          name: "Item 1",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+        {
+          id: 2,
+          name: "Item 2",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+      vi.mocked(httpService.getRequest).mockResolvedValue({ data: items } as AxiosResponse<
+        TestItem[]
+      >);
+      const store = createAdapterStoreModule(config);
+      await store.retrieveAll();
+      const itemOneBefore = store.getById(1).value;
+      const itemTwoBefore = store.getById(2).value;
+      expect(itemOneBefore).toBeDefined();
+      expect(itemTwoBefore).toBeDefined();
+
+      // Act — setById for id 2 only. Clears adaptedCache for 2; id 1 remains cached.
+      const storeModule = getCapturedStoreModule() as unknown as AdapterStoreModule<TestItem>;
+      storeModule.setById({
+        id: 2,
+        name: "Item 2 Updated",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-02T00:00:00Z",
+      });
+
+      // Assert — id 1 returns the same cached adapted reference; id 2 is freshly adapted.
+      expect(store.getById(1).value).toBe(itemOneBefore);
+      expect(store.getById(2).value).not.toBe(itemTwoBefore);
     });
 
     it("should return cached adapted object via getById when state has not changed", async () => {
