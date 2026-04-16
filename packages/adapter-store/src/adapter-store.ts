@@ -78,6 +78,10 @@ export const createAdapterStoreModule = <
       return item;
     },
     generateNew: () => adapter(storeModule),
+    retrieveById: async (id: number) => {
+      const { data } = await httpService.getRequest<T>(`${domainName}/${id}`);
+      setById(data);
+    },
     retrieveAll: async () => {
       const { data } = await httpService.getRequest<T[]>(domainName);
       state.value = data.reduce<{ [id: number]: Readonly<T> }>((acc, item) => {
