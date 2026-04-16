@@ -39,18 +39,18 @@ Shared frontend service packages monorepo under the `@script-development` npm sc
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm run build` | Build all packages (tsdown) |
-| `npm run typecheck` | Type-check all packages (requires build first) |
-| `npm test` | Run all tests |
-| `npm run test:coverage` | Run tests with coverage (100% threshold) |
-| `npm run test:mutation` | Run Stryker mutation testing (90% threshold) |
-| `npm run lint` | Lint with oxlint |
-| `npm run format:check` | Check formatting with oxfmt |
-| `npm run format` | Fix formatting with oxfmt |
-| `npm run lint:pkg` | Run publint + attw on all packages |
-| `npm audit` | Check for dependency vulnerabilities |
+| Command                 | Purpose                                        |
+| ----------------------- | ---------------------------------------------- |
+| `npm run build`         | Build all packages (tsdown)                    |
+| `npm run typecheck`     | Type-check all packages (requires build first) |
+| `npm test`              | Run all tests                                  |
+| `npm run test:coverage` | Run tests with coverage (100% threshold)       |
+| `npm run test:mutation` | Run Stryker mutation testing (90% threshold)   |
+| `npm run lint`          | Lint with oxlint                               |
+| `npm run format:check`  | Check formatting with oxfmt                    |
+| `npm run format`        | Fix formatting with oxfmt                      |
+| `npm run lint:pkg`      | Run publint + attw on all packages             |
+| `npm audit`             | Check for dependency vulnerabilities           |
 
 **Build before typecheck.** Cross-package type resolution requires built `.d.mts` files. The CI pipeline enforces this order.
 
