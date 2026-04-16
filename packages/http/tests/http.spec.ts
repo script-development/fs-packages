@@ -24,6 +24,7 @@ beforeEach(() => {
   vi.stubGlobal("window", {
     URL: {
       createObjectURL: vi.fn(() => "blob:http://localhost/fake-object-url"),
+      revokeObjectURL: vi.fn(),
     },
   });
 
@@ -512,6 +513,28 @@ describe("createHttpService", () => {
       // Act & Assert
       await expect(service.downloadRequest("/download/unknown", "file.bin")).rejects.toThrow(
         "No content type found",
+      );
+    });
+
+    it("revokes the object URL after triggering the download", async () => {
+      // Arrange
+      mock.onGet(`${BASE_URL}/download/file.pdf`).reply(200, "file-content", {
+        "content-type": "application/pdf",
+      });
+      const service = createHttpService(BASE_URL);
+      const mockLink = { href: "", download: "", click: vi.fn() };
+      vi.stubGlobal("document", {
+        createElement: vi.fn(() => mockLink),
+        cookie: "",
+      });
+
+      // Act
+      await service.downloadRequest("/download/file.pdf", "report.pdf");
+
+      // Assert — revoke fires with the same URL that was assigned to href
+      expect(window.URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.revokeObjectURL).toHaveBeenCalledWith(
+        "blob:http://localhost/fake-object-url",
       );
     });
   });
