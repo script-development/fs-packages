@@ -44,6 +44,7 @@ export const createAdapterStoreModule = <
   const setById = (item: T): void => {
     state.value = { ...state.value, [item.id]: Object.freeze(item) };
     storageService.put(domainName, state.value);
+    adaptedCache.delete(item.id);
   };
 
   const deleteById = (id: number): void => {
