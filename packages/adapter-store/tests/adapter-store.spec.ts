@@ -16,7 +16,7 @@ import type { Ref } from "vue";
 import { EntryNotFoundError } from "../src/errors";
 import { createAdapterStoreModule } from "../src/adapter-store";
 import { describe, expect, it, vi } from "vitest";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 type TestNew = Omit<TestItem, "id">;
 type TestStorageService = Pick<StorageService, "get" | "put">;
@@ -771,7 +771,7 @@ describe("createAdapterStoreModule", () => {
       expect(firstAccess).toBe(secondAccess);
     });
 
-    it("should return the same adapted object after setById, with reactive properties reflecting the update", async () => {
+    it("should return a new adapted object after setById, with properties reflecting the update", async () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
@@ -811,10 +811,56 @@ describe("createAdapterStoreModule", () => {
       });
       const afterUpdate = store.getById(1).value;
 
-      // Assert — same adapted object reference (reactive getters, no cache invalidation)
-      expect(beforeUpdate).toBe(afterUpdate);
-      // Display properties reflect the updated store data via getter
+      // Assert — new adapted object reference (cache invalidated by setById)
+      expect(beforeUpdate).not.toBe(afterUpdate);
+      // Display properties reflect the updated store data
       expect(afterUpdate?.name).toBe("Updated");
+    });
+
+    it("should propagate setById changes through computed chain", async () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+      const { adapter, getCapturedStoreModule } = createCapturingAdapter();
+      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+        domainName: "test-items",
+        adapter,
+        httpService,
+        storageService,
+        loadingService,
+      };
+      const items: TestItem[] = [
+        {
+          id: 1,
+          name: "Original",
+          createdAt: "2024-01-01T00:00:00Z",
+          updatedAt: "2024-01-01T00:00:00Z",
+        },
+      ];
+      vi.mocked(httpService.getRequest).mockResolvedValue({ data: items } as AxiosResponse<
+        TestItem[]
+      >);
+      const store = createAdapterStoreModule(config);
+      await store.retrieveAll();
+
+      // A downstream computed that wraps getById — mirrors how Vue components consume stores
+      const derivedName = computed(() => store.getById(1).value?.name);
+      expect(derivedName.value).toBe("Original");
+
+      // Act — simulate a store update (e.g. from an update response)
+      const storeModule = getCapturedStoreModule() as unknown as AdapterStoreModule<TestItem>;
+      storeModule.setById({
+        id: 1,
+        name: "Updated",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-02T00:00:00Z",
+      });
+
+      // Assert — the downstream computed must re-evaluate
+      expect(derivedName.value).toBe("Updated");
     });
 
     it("should clear adapted cache on deleteById", async () => {
