@@ -50,7 +50,9 @@ export const createAdapterStoreModule = <
   const deleteById = (id: number): void => {
     state.value = Object.fromEntries(
       Object.entries(state.value).filter(([key]) => Number(key) !== id),
-    ) as { [id: number]: Readonly<T> };
+    ) as {
+      [id: number]: Readonly<T>;
+    };
     storageService.put(domainName, state.value);
     adaptedCache.delete(id);
     getByIdComputedCache.delete(id);
@@ -92,5 +94,7 @@ export const createAdapterStoreModule = <
       adaptedCache.clear();
       getByIdComputedCache.clear();
     },
+    applyServerUpdate: setById,
+    applyServerDelete: deleteById,
   };
 };

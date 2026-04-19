@@ -80,4 +80,14 @@ export type StoreModuleForAdapter<
   generateNew: () => N;
   retrieveById: (id: number) => Promise<void>;
   retrieveAll: () => Promise<void>;
+  /**
+   * Apply an externally-sourced item to the store (e.g. a WebSocket broadcast
+   * pushed by another client). Replaces the item by id without triggering HTTP.
+   */
+  applyServerUpdate: (item: T) => void;
+  /**
+   * Apply an externally-sourced deletion to the store (e.g. a WebSocket broadcast
+   * pushed by another client). Removes the item by id without triggering HTTP.
+   */
+  applyServerDelete: (id: number) => void;
 };
