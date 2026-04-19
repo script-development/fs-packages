@@ -19,7 +19,7 @@ export const createAdapterStoreModule = <
 >(
   config: AdapterStoreConfig<T, E, N>,
 ): StoreModuleForAdapter<T, E, N> => {
-  const { domainName, adapter, httpService, storageService, loadingService } = config;
+  const { domainName, adapter, httpService, storageService, loadingService, broadcast } = config;
 
   const storedItems = storageService.get<{ [id: number]: T }>(domainName, {});
   const frozenStoredItems = Object.fromEntries(
@@ -60,6 +60,8 @@ export const createAdapterStoreModule = <
 
   const storeModule: AdapterStoreModule<T> = { setById, deleteById };
 
+  broadcast?.subscribe({ onUpdate: setById, onDelete: deleteById });
+
   const getById = (id: number): ComputedRef<E | undefined> => {
     const cached = getByIdComputedCache.get(id);
     if (cached) {
@@ -94,7 +96,5 @@ export const createAdapterStoreModule = <
       adaptedCache.clear();
       getByIdComputedCache.clear();
     },
-    applyServerUpdate: setById,
-    applyServerDelete: deleteById,
   };
 };

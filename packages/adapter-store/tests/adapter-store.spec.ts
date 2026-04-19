@@ -5,6 +5,7 @@ import type { LoadingService } from "@script-development/fs-loading";
 import type {
   Adapted,
   Adapter,
+  AdapterStoreBroadcast,
   AdapterStoreConfig,
   AdapterStoreModule,
   Item,
@@ -823,25 +824,82 @@ describe("createAdapterStoreModule", () => {
     });
   });
 
-  describe("applyServerUpdate", () => {
-    it("should insert an externally-sourced item into the store without calling http", () => {
+  describe("broadcast integration", () => {
+    const captureBroadcast = (): {
+      broadcast: AdapterStoreBroadcast<TestItem>;
+      subscribe: ReturnType<typeof vi.fn>;
+      unsubscribe: ReturnType<typeof vi.fn>;
+      getHandlers: () => {
+        onUpdate: (item: TestItem) => void;
+        onDelete: (id: number) => void;
+      };
+    } => {
+      let handlers: {
+        onUpdate: (item: TestItem) => void;
+        onDelete: (id: number) => void;
+      } | null = null;
+      const unsubscribe = vi.fn();
+      const subscribe = vi.fn((h: typeof handlers) => {
+        handlers = h;
+        return unsubscribe;
+      });
+      return {
+        broadcast: { subscribe } as AdapterStoreBroadcast<TestItem>,
+        subscribe,
+        unsubscribe,
+        getHandlers: () => {
+          if (!handlers) throw new Error("subscribe was not called");
+          return handlers;
+        },
+      };
+    };
+
+    it("should call subscribe exactly once at construction with onUpdate and onDelete", () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
       const loadingService: TestLoadingService = {
         ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+      const { broadcast, subscribe } = captureBroadcast();
+
+      // Act
+      createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
         domainName: "test-items",
         adapter: createTestAdapter,
         httpService,
         storageService,
         loadingService,
+        broadcast,
+      });
+
+      // Assert
+      expect(subscribe).toHaveBeenCalledTimes(1);
+      expect(subscribe).toHaveBeenCalledWith({
+        onUpdate: expect.any(Function) as unknown,
+        onDelete: expect.any(Function) as unknown,
+      });
+    });
+
+    it("should apply onUpdate events to the store without calling http", () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const store = createAdapterStoreModule(config);
+      const { broadcast, getHandlers } = captureBroadcast();
+      const store = createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
+        domainName: "test-items",
+        adapter: createTestAdapter,
+        httpService,
+        storageService,
+        loadingService,
+        broadcast,
+      });
 
       // Act
-      store.applyServerUpdate({
+      getHandlers().onUpdate({
         id: 9,
         name: "Pushed Item",
         createdAt: "2024-01-01T00:00:00Z",
@@ -853,22 +911,23 @@ describe("createAdapterStoreModule", () => {
       expect(httpService.getRequest).not.toHaveBeenCalled();
     });
 
-    it("should replace an existing item and refresh its adapted view", () => {
+    it("should replace existing items and refresh adapted views via onUpdate", () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
       const loadingService: TestLoadingService = {
         ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+      const { broadcast, getHandlers } = captureBroadcast();
+      const store = createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
         domainName: "test-items",
         adapter: createTestAdapter,
         httpService,
         storageService,
         loadingService,
-      };
-      const store = createAdapterStoreModule(config);
-      store.applyServerUpdate({
+        broadcast,
+      });
+      getHandlers().onUpdate({
         id: 1,
         name: "Original",
         createdAt: "2024-01-01T00:00:00Z",
@@ -877,7 +936,7 @@ describe("createAdapterStoreModule", () => {
       expect(store.getById(1).value?.name).toBe("Original");
 
       // Act
-      store.applyServerUpdate({
+      getHandlers().onUpdate({
         id: 1,
         name: "Updated",
         createdAt: "2024-01-01T00:00:00Z",
@@ -888,24 +947,25 @@ describe("createAdapterStoreModule", () => {
       expect(store.getById(1).value?.name).toBe("Updated");
     });
 
-    it("should persist to storage service", () => {
+    it("should persist onUpdate events to storage", () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
       const loadingService: TestLoadingService = {
         ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+      const { broadcast, getHandlers } = captureBroadcast();
+      createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
         domainName: "test-items",
         adapter: createTestAdapter,
         httpService,
         storageService,
         loadingService,
-      };
-      const store = createAdapterStoreModule(config);
+        broadcast,
+      });
 
       // Act
-      store.applyServerUpdate({
+      getHandlers().onUpdate({
         id: 4,
         name: "Item 4",
         createdAt: "2024-01-01T00:00:00Z",
@@ -918,25 +978,24 @@ describe("createAdapterStoreModule", () => {
         expect.objectContaining({ 4: expect.any(Object) as unknown }),
       );
     });
-  });
 
-  describe("applyServerDelete", () => {
-    it("should remove an item from the store without calling http", () => {
+    it("should apply onDelete events to the store without calling http", () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
       const loadingService: TestLoadingService = {
         ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+      const { broadcast, getHandlers } = captureBroadcast();
+      const store = createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
         domainName: "test-items",
         adapter: createTestAdapter,
         httpService,
         storageService,
         loadingService,
-      };
-      const store = createAdapterStoreModule(config);
-      store.applyServerUpdate({
+        broadcast,
+      });
+      getHandlers().onUpdate({
         id: 5,
         name: "Doomed",
         createdAt: "2024-01-01T00:00:00Z",
@@ -945,50 +1004,52 @@ describe("createAdapterStoreModule", () => {
       expect(store.getById(5).value).toBeDefined();
 
       // Act
-      store.applyServerDelete(5);
+      getHandlers().onDelete(5);
 
       // Assert
       expect(store.getById(5).value).toBeUndefined();
       expect(httpService.getRequest).not.toHaveBeenCalled();
     });
 
-    it("should be a no-op when the id is not in the store", () => {
+    it("should be a no-op when onDelete is fired for an unknown id", () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
       const loadingService: TestLoadingService = {
         ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+      const { broadcast, getHandlers } = captureBroadcast();
+      const store = createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
         domainName: "test-items",
         adapter: createTestAdapter,
         httpService,
         storageService,
         loadingService,
-      };
-      const store = createAdapterStoreModule(config);
+        broadcast,
+      });
 
       // Act & Assert
-      expect(() => store.applyServerDelete(404)).not.toThrow();
+      expect(() => getHandlers().onDelete(404)).not.toThrow();
       expect(store.getAll.value).toHaveLength(0);
     });
 
-    it("should persist the updated state to storage service", () => {
+    it("should persist onDelete events to storage", () => {
       // Arrange
       const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
       const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
       const loadingService: TestLoadingService = {
         ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
       };
-      const config: AdapterStoreConfig<TestItem, TestAdapted, TestNewAdapted> = {
+      const { broadcast, getHandlers } = captureBroadcast();
+      createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
         domainName: "test-items",
         adapter: createTestAdapter,
         httpService,
         storageService,
         loadingService,
-      };
-      const store = createAdapterStoreModule(config);
-      store.applyServerUpdate({
+        broadcast,
+      });
+      getHandlers().onUpdate({
         id: 6,
         name: "Item 6",
         createdAt: "2024-01-01T00:00:00Z",
@@ -997,13 +1058,33 @@ describe("createAdapterStoreModule", () => {
       vi.mocked(storageService.put).mockClear();
 
       // Act
-      store.applyServerDelete(6);
+      getHandlers().onDelete(6);
 
       // Assert
       expect(storageService.put).toHaveBeenCalledWith(
         "test-items",
         expect.not.objectContaining({ 6: expect.anything() }),
       );
+    });
+
+    it("should not attempt to subscribe when broadcast is omitted", () => {
+      // Arrange
+      const httpService: Pick<HttpService, "getRequest"> = { getRequest: vi.fn() };
+      const storageService: TestStorageService = { put: vi.fn(), get: vi.fn().mockReturnValue({}) };
+      const loadingService: TestLoadingService = {
+        ensureLoadingFinished: vi.fn().mockResolvedValue(undefined),
+      };
+
+      // Act & Assert
+      expect(() =>
+        createAdapterStoreModule<TestItem, TestAdapted, TestNewAdapted>({
+          domainName: "test-items",
+          adapter: createTestAdapter,
+          httpService,
+          storageService,
+          loadingService,
+        }),
+      ).not.toThrow();
     });
   });
 
