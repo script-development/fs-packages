@@ -181,6 +181,59 @@ try {
 
 The store automatically persists state to the provided storage service. When the page reloads, stored data is available immediately while `retrieveAll()` fetches fresh data from the API. This provides a fast initial render without loading spinners.
 
+## Syncing External Updates
+
+Some resources are updated outside of the store's own CRUD calls — by another user over a WebSocket, by a background job, by an in-process event emitter. The `broadcast` config slot is the single, narrow bridge for feeding those updates into the store without going through HTTP.
+
+```typescript
+import type { AdapterStoreBroadcast } from "@script-development/fs-adapter-store";
+
+const broadcast: AdapterStoreBroadcast<User> = {
+  subscribe: ({ onUpdate, onDelete }) => {
+    eventSource.on("user.updated", onUpdate);
+    eventSource.on("user.deleted", onDelete);
+    return () => {
+      eventSource.off("user.updated", onUpdate);
+      eventSource.off("user.deleted", onDelete);
+    };
+  },
+};
+
+const usersStore = createAdapterStoreModule<User>({
+  domainName: "users",
+  adapter: resourceAdapter,
+  httpService: http,
+  storageService: storage,
+  loadingService: loading,
+  broadcast,
+});
+```
+
+The store calls `subscribe` exactly once at construction and wires the handlers straight into its internal mutation path. `onUpdate(item)` replaces or inserts; `onDelete(id)` removes. Both update reactive state, refresh adapted views, and persist to storage — identical to what `update()` / `delete()` do after a successful HTTP call.
+
+::: tip Why isn't there a public `setById` / `applyUpdate` method?
+By design. Exposing a raw mutation method would let any caller bypass HTTP, which is almost always a bug (you'd end up with stale server state). The `broadcast` contract forces the bridge to be declared explicitly at store construction, scoped to one event source per store.
+:::
+
+### Lifecycle
+
+The `subscribe` call happens once, when the store is created. The unsubscribe return is retained internally and never exposed. In practice stores live for the app's lifetime, so teardown isn't needed — but if your event source has its own lifecycle (e.g., a channel you join and leave), manage that _outside_ the store. The store only cares about incoming events, not which channel they came from.
+
+A common pattern is a small in-process emitter as a middleman: your transport layer (WebSocket, SSE, channel service, whatever) joins and leaves connections as views mount/unmount, and forwards incoming payloads onto an emitter that the store subscribes to. The store stays agnostic of transport and lifecycle.
+
+### The Contract
+
+```typescript
+type AdapterStoreBroadcast<T> = {
+  subscribe: (handlers: {
+    onUpdate: (item: T) => void;
+    onDelete: (id: number) => void;
+  }) => () => void; // unsubscribe
+};
+```
+
+That's it. Any event source that can emit "updated" and "deleted" events for your resource type can implement this.
+
 ## Custom New Types
 
 By default, `generateNew()` creates an object with all fields except `id`. You can customize this with a third type parameter:
@@ -219,23 +272,25 @@ import { EntryNotFoundError, MissingResponseDataError } from "@script-developmen
 
 ### `createAdapterStoreModule(config)`
 
-| Parameter               | Type                                            | Description                                  |
-| ----------------------- | ----------------------------------------------- | -------------------------------------------- |
-| `config.domainName`     | `string`                                        | Resource endpoint name (e.g., `"users"`)     |
-| `config.adapter`        | `Adapter`                                       | CRUD adapter factory (use `resourceAdapter`) |
-| `config.httpService`    | `Pick<HttpService, "getRequest">`               | HTTP service for fetching                    |
-| `config.storageService` | `Pick<StorageService, "get" \| "put">`          | Storage for persistence                      |
-| `config.loadingService` | `Pick<LoadingService, "ensureLoadingFinished">` | Loading service for sync                     |
+| Parameter               | Type                                            | Description                                                 |
+| ----------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
+| `config.domainName`     | `string`                                        | Resource endpoint name (e.g., `"users"`)                    |
+| `config.adapter`        | `Adapter`                                       | CRUD adapter factory (use `resourceAdapter`)                |
+| `config.httpService`    | `Pick<HttpService, "getRequest">`               | HTTP service for fetching                                   |
+| `config.storageService` | `Pick<StorageService, "get" \| "put">`          | Storage for persistence                                     |
+| `config.loadingService` | `Pick<LoadingService, "ensureLoadingFinished">` | Loading service for sync                                    |
+| `config.broadcast?`     | `AdapterStoreBroadcast<T>`                      | Optional external-event bridge for server-initiated updates |
 
 ### Store Module Methods
 
-| Method              | Returns                             | Description                            |
-| ------------------- | ----------------------------------- | -------------------------------------- |
-| `getAll`            | `ComputedRef<Adapted[]>`            | Reactive list of all adapted resources |
-| `getById(id)`       | `ComputedRef<Adapted \| undefined>` | Reactive lookup by ID                  |
-| `getOrFailById(id)` | `Promise<Adapted>`                  | Wait for loading, throw if not found   |
-| `generateNew()`     | `NewAdapted`                        | Create a new unsaved resource          |
-| `retrieveAll()`     | `Promise<void>`                     | Fetch all from API and update state    |
+| Method              | Returns                             | Description                                |
+| ------------------- | ----------------------------------- | ------------------------------------------ |
+| `getAll`            | `ComputedRef<Adapted[]>`            | Reactive list of all adapted resources     |
+| `getById(id)`       | `ComputedRef<Adapted \| undefined>` | Reactive lookup by ID                      |
+| `getOrFailById(id)` | `Promise<Adapted>`                  | Wait for loading, throw if not found       |
+| `generateNew()`     | `NewAdapted`                        | Create a new unsaved resource              |
+| `retrieveById(id)`  | `Promise<void>`                     | Fetch a single resource from the API by id |
+| `retrieveAll()`     | `Promise<void>`                     | Fetch all from API and update state        |
 
 ### Adapted Properties
 
