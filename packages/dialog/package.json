@@ -41,7 +41,7 @@
     "test:mutation": "stryker run"
   },
   "dependencies": {
-    "vue-component-type-helpers": "^3.2.6"
+    "vue-component-type-helpers": "^3.2.7"
   },
   "devDependencies": {
     "@vue/test-utils": "^2.4.6",
