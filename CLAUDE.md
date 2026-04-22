@@ -70,16 +70,19 @@ Last synced: 2026-04-17
 ### Applicable
 
 #### ADR-0013: Adapter-Store Pattern
+
 - Published here as `fs-adapter-store`. This territory is the canonical home of the pattern.
 - Preserve the reactive adapter-store contract: `createAdapterStoreModule()` factory returning a module with `resourceAdapter` for CRUD plus typed `Adapted<T>` / `NewAdapted<T>` records.
 - Changes to the pattern's surface (function signatures, exported types) are breaking for every consumer — treat them as major version decisions and coordinate with consumer territories (kendo, BIO).
 
 #### ADR-0015: ADR Governance
+
 - War Room ADRs are canonical at `adrs.script.nl`. Projections (this section) are distilled into territory CLAUDE.md by the War Room.
 - Do not amend projections in this file directly. Propose amendments through the war room; the update propagates here.
 - fs-packages is a full territory under the war room (not exempt like BIO).
 
 #### ADR-0017: Page Integration Tests
+
 - Kendo, BIO, and Entreezuil mock only `@script-development/fs-http` when running page integration tests. fs-http is the mock target; its public API (`createHttpService`, middleware hooks, `isAxiosError`) is the contract consumers depend on.
 - Do not introduce breaking changes to fs-http's public API without coordinating with consumer territories' mock-server infrastructure.
 
