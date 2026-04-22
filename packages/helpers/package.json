@@ -42,5 +42,8 @@
   },
   "dependencies": {
     "string-ts": "^2.3.1"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
