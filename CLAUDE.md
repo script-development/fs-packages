@@ -7,7 +7,7 @@ Shared frontend service packages monorepo under the `@script-development` npm sc
 - **Language:** TypeScript 5.9+ (strict mode, `verbatimModuleSyntax`)
 - **Build:** tsdown (Rolldown/oxc) — dual ESM + CJS output
 - **Test:** vitest 4 (100% coverage threshold) + Stryker (90% mutation threshold)
-- **Lint:** oxlint
+- **Lint:** oxlint (explicit config at `.oxlintrc.json`)
 - **Format:** oxfmt
 - **Package lint:** publint + attw (Are The Types Wrong)
 - **Publish:** OIDC Trusted Publishing to public npm registry (no stored tokens)
@@ -53,6 +53,16 @@ Shared frontend service packages monorepo under the `@script-development` npm sc
 | `npm audit`             | Check for dependency vulnerabilities           |
 
 **Build before typecheck.** Cross-package type resolution requires built `.d.mts` files. The CI pipeline enforces this order.
+
+## Lint Rules
+
+Lint configuration lives at `.oxlintrc.json` (repo-root, no per-package overrides). The explicit config declares three defaults so rule additions/removals land as a deliberate diff rather than silent upstream drift when oxlint bumps:
+
+- **Plugins:** `typescript`, `unicorn`, `oxc` — the three plugins enabled by oxlint's own defaults.
+- **Categories:** `correctness: "error"` — all 107 Correctness rules fail CI (was `warn`, so violations were silently tolerated pre-config).
+- **`perf`, `suspicious`, `pedantic`, `style`, `restriction`, `nursery`:** unset — library posture is Correctness-only, opt-in per-rule for anything else.
+
+To add a rule, set it in the `rules` object (e.g. `"perf/no-accumulating-spread": "error"`). To disable a default, set it to `"off"`. To opt into a whole category, add it to `categories` (be deliberate — `pedantic` has false positives, `nursery` is unstable). See `npx oxlint --rules` for the full catalog with default-on/off markers.
 
 ## Adding a Package
 
