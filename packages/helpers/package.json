@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/script-development/fs-packages.git",
+    "url": "git+https://github.com/script-development/fs-packages.git",
     "directory": "packages/helpers"
   },
   "files": [
