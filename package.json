@@ -28,12 +28,12 @@
     "@stryker-mutator/core": "^9",
     "@stryker-mutator/vitest-runner": "^9",
     "@vitest/coverage-v8": "^4",
-    "happy-dom": "^20.8.9",
-    "oxfmt": "^0.44.0",
-    "oxlint": "^1.59",
+    "happy-dom": "^20.9.0",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60",
     "publint": "^0.3.18",
-    "tsdown": "^0.21.7",
-    "typescript": "^5.9",
+    "tsdown": "^0.21.9",
+    "typescript": "^6.0",
     "vitepress": "^2.0.0-alpha.17",
     "vitest": "^4"
   }

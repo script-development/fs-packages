@@ -55,6 +55,20 @@ export type Adapter<
   (storeModule: AdapterStoreModule<T>, resourceGetter: () => T): E;
 };
 
+/**
+ * Contract for binding server-initiated events (e.g. WebSocket broadcasts)
+ * to an adapter-store. The store calls `subscribe` once at construction and
+ * routes incoming events straight into its internal mutation path. The
+ * handlers are never exposed on the public store API, so consumers cannot
+ * acquire them to bypass HTTP.
+ */
+export type AdapterStoreBroadcast<T extends Item> = {
+  subscribe: (handlers: {
+    onUpdate: (item: T) => void;
+    onDelete: (id: number) => void;
+  }) => () => void;
+};
+
 /** Configuration for createAdapterStoreModule. */
 export type AdapterStoreConfig<
   T extends Item,
@@ -66,6 +80,7 @@ export type AdapterStoreConfig<
   httpService: Pick<HttpService, "getRequest">;
   storageService: Pick<StorageService, "get" | "put">;
   loadingService: Pick<LoadingService, "ensureLoadingFinished">;
+  broadcast?: AdapterStoreBroadcast<T>;
 };
 
 /** Public API of a store module. */

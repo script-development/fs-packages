@@ -19,7 +19,7 @@ export const createAdapterStoreModule = <
 >(
   config: AdapterStoreConfig<T, E, N>,
 ): StoreModuleForAdapter<T, E, N> => {
-  const { domainName, adapter, httpService, storageService, loadingService } = config;
+  const { domainName, adapter, httpService, storageService, loadingService, broadcast } = config;
 
   const storedItems = storageService.get<{ [id: number]: T }>(domainName, {});
   const frozenStoredItems = Object.fromEntries(
@@ -50,13 +50,17 @@ export const createAdapterStoreModule = <
   const deleteById = (id: number): void => {
     state.value = Object.fromEntries(
       Object.entries(state.value).filter(([key]) => Number(key) !== id),
-    ) as { [id: number]: Readonly<T> };
+    ) as {
+      [id: number]: Readonly<T>;
+    };
     storageService.put(domainName, state.value);
     adaptedCache.delete(id);
     getByIdComputedCache.delete(id);
   };
 
   const storeModule: AdapterStoreModule<T> = { setById, deleteById };
+
+  broadcast?.subscribe({ onUpdate: setById, onDelete: deleteById });
 
   const getById = (id: number): ComputedRef<E | undefined> => {
     const cached = getByIdComputedCache.get(id);
