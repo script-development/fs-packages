@@ -1,6 +1,6 @@
 {
   "name": "@script-development/fs-adapter-store",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Reactive adapter-store pattern with domain state management and CRUD resource adapters",
   "homepage": "https://packages.script.nl/packages/adapter-store",
   "license": "MIT",
