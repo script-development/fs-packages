@@ -23,52 +23,36 @@ Translations are organized as a two-level nested object: **sections** containing
 
 ```typescript
 const translations = {
-  en: {
-    common: {
-      save: "Save",
-      cancel: "Cancel",
-      delete: "Delete",
+    en: {
+        common: {save: 'Save', cancel: 'Cancel', delete: 'Delete'},
+        users: {title: 'Users', empty: 'No users found', created: 'User {name} created'},
     },
-    users: {
-      title: "Users",
-      empty: "No users found",
-      created: "User {name} created",
+    nl: {
+        common: {save: 'Opslaan', cancel: 'Annuleren', delete: 'Verwijderen'},
+        users: {title: 'Gebruikers', empty: 'Geen gebruikers gevonden', created: 'Gebruiker {name} aangemaakt'},
     },
-  },
-  nl: {
-    common: {
-      save: "Opslaan",
-      cancel: "Annuleren",
-      delete: "Verwijderen",
-    },
-    users: {
-      title: "Gebruikers",
-      empty: "Geen gebruikers gevonden",
-      created: "Gebruiker {name} aangemaakt",
-    },
-  },
 };
 ```
 
 ### Create the Service
 
 ```typescript
-import { createTranslationService } from "@script-development/fs-translation";
+import {createTranslationService} from '@script-development/fs-translation';
 
-const translation = createTranslationService(translations, "en");
+const translation = createTranslationService(translations, 'en');
 ```
 
 ### Use in Components
 
 ```vue
 <script setup lang="ts">
-import { translation } from "@/services";
+import {translation} from '@/services';
 </script>
 
 <template>
-  <h1>{{ translation.t("users.title").value }}</h1>
-  <p v-if="!users.length">{{ translation.t("users.empty").value }}</p>
-  <button>{{ translation.t("common.save").value }}</button>
+    <h1>{{ translation.t('users.title').value }}</h1>
+    <p v-if="!users.length">{{ translation.t('users.empty').value }}</p>
+    <button>{{ translation.t('common.save').value }}</button>
 </template>
 ```
 
@@ -77,10 +61,10 @@ import { translation } from "@/services";
 Translation keys are validated at compile time using TypeScript's template literal types. The `t()` function only accepts keys that exist in your translation schema:
 
 ```typescript
-translation.t("common.save"); // compiles — "common.save" exists
-translation.t("common.delete"); // compiles — "common.delete" exists
-translation.t("common.submit"); // compile error — "common.submit" doesn't exist
-translation.t("invalid.key"); // compile error — "invalid" section doesn't exist
+translation.t('common.save'); // compiles — "common.save" exists
+translation.t('common.delete'); // compiles — "common.delete" exists
+translation.t('common.submit'); // compile error — "common.submit" doesn't exist
+translation.t('invalid.key'); // compile error — "invalid" section doesn't exist
 ```
 
 Keys use dot notation: `"section.key"`. This catches typos before your code ever runs.
@@ -91,13 +75,13 @@ Use `{param}` placeholders in translation strings and pass values at call time:
 
 ```typescript
 // Translation: "User {name} created"
-const message = translation.t("users.created", { name: "Alice" });
+const message = translation.t('users.created', {name: 'Alice'});
 // Result: "User Alice created"
 ```
 
 ```vue
 <template>
-  <p>{{ translation.t("users.created", { name: userName }).value }}</p>
+    <p>{{ translation.t('users.created', {name: userName}).value }}</p>
 </template>
 ```
 
@@ -106,23 +90,23 @@ const message = translation.t("users.created", { name: "Alice" });
 The `locale` property is a reactive `Ref`. Assign to it to switch languages — all `t()` results update automatically:
 
 ```typescript
-translation.locale.value = "nl";
+translation.locale.value = 'nl';
 // Every ComputedRef from t() now returns Dutch translations
 ```
 
 ```vue
 <script setup lang="ts">
-import { translation } from "@/services";
+import {translation} from '@/services';
 </script>
 
 <template>
-  <select v-model="translation.locale.value">
-    <option value="en">English</option>
-    <option value="nl">Nederlands</option>
-  </select>
+    <select v-model="translation.locale.value">
+        <option value="en">English</option>
+        <option value="nl">Nederlands</option>
+    </select>
 
-  <!-- Updates automatically when locale changes -->
-  <h1>{{ translation.t("users.title").value }}</h1>
+    <!-- Updates automatically when locale changes -->
+    <h1>{{ translation.t('users.title').value }}</h1>
 </template>
 ```
 
@@ -156,9 +140,9 @@ Translations must be a two-level nested object:
 
 ```typescript
 {
-  section: {
-    key: "Translation string with optional {param} placeholders";
-  }
+    section: {
+        key: 'Translation string with optional {param} placeholders';
+    }
 }
 ```
 

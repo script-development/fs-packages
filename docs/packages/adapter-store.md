@@ -30,25 +30,25 @@ A typical application has domain resources — users, projects, invoices — tha
 
 ```typescript
 interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: "admin" | "editor" | "viewer";
+    id: number;
+    name: string;
+    email: string;
+    role: 'admin' | 'editor' | 'viewer';
 }
 ```
 
 ### 2. Create the Store Module
 
 ```typescript
-import { createAdapterStoreModule, resourceAdapter } from "@script-development/fs-adapter-store";
-import { http, storage, loading } from "@/services";
+import {createAdapterStoreModule, resourceAdapter} from '@script-development/fs-adapter-store';
+import {http, storage, loading} from '@/services';
 
 const usersStore = createAdapterStoreModule<User>({
-  domainName: "users", // API endpoint: /users
-  adapter: resourceAdapter, // CRUD adapter factory
-  httpService: http, // for API calls
-  storageService: storage, // for offline persistence
-  loadingService: loading, // for waiting on data
+    domainName: 'users', // API endpoint: /users
+    adapter: resourceAdapter, // CRUD adapter factory
+    httpService: http, // for API calls
+    storageService: storage, // for offline persistence
+    loadingService: loading, // for waiting on data
 });
 ```
 
@@ -64,15 +64,13 @@ const allUsers = usersStore.getAll; // ComputedRef<Adapted<User>[]>
 
 ```vue
 <script setup lang="ts">
-import { usersStore } from "@/stores";
+import {usersStore} from '@/stores';
 </script>
 
 <template>
-  <ul>
-    <li v-for="user in usersStore.getAll.value" :key="user.id">
-      {{ user.name }} — {{ user.email }}
-    </li>
-  </ul>
+    <ul>
+        <li v-for="user in usersStore.getAll.value" :key="user.id">{{ user.name }} — {{ user.email }}</li>
+    </ul>
 </template>
 ```
 
@@ -86,12 +84,12 @@ const user = usersStore.getById(42); // ComputedRef<Adapted<User> | undefined>
 </script>
 
 <template>
-  <form v-if="user.value" @submit.prevent="user.value.update()">
-    <input v-model="user.value.mutable.value.name" />
-    <input v-model="user.value.mutable.value.email" />
-    <button type="submit">Save</button>
-    <button type="button" @click="user.value.reset()">Reset</button>
-  </form>
+    <form v-if="user.value" @submit.prevent="user.value.update()">
+        <input v-model="user.value.mutable.value.name" />
+        <input v-model="user.value.mutable.value.email" />
+        <button type="submit">Save</button>
+        <button type="button" @click="user.value.reset()">Reset</button>
+    </form>
 </template>
 ```
 
@@ -100,8 +98,8 @@ const user = usersStore.getById(42); // ComputedRef<Adapted<User> | undefined>
 ```typescript
 const newUser = usersStore.generateNew();
 
-newUser.mutable.value.name = "Alice";
-newUser.mutable.value.email = "alice@example.com";
+newUser.mutable.value.name = 'Alice';
+newUser.mutable.value.email = 'alice@example.com';
 
 await newUser.create(); // POST /users → adds to store
 ```
@@ -123,11 +121,11 @@ user.name; // "Alice"
 user.email; // "alice@example.com"
 
 // Edit via mutable ref
-user.mutable.value.name = "Bob";
+user.mutable.value.name = 'Bob';
 
 // Save changes
 await user.update(); // PUT /users/1 — sends full object
-await user.patch({ name: "Bob" }); // PATCH /users/1 — sends partial update
+await user.patch({name: 'Bob'}); // PATCH /users/1 — sends partial update
 
 // Discard edits
 user.reset(); // mutable reverts to original values
@@ -148,7 +146,7 @@ newUser.name; // "" (empty defaults)
 newUser.email; // ""
 
 // Edit via mutable ref
-newUser.mutable.value.name = "Alice";
+newUser.mutable.value.name = 'Alice';
 
 // Save to API
 await newUser.create(); // POST /users → returns full User with id
@@ -167,13 +165,13 @@ An existing resource has `update()`, `patch()`, and `delete()`. A new resource h
 
 ```typescript
 try {
-  const user = await usersStore.getOrFailById(42);
-  // user is guaranteed to exist
+    const user = await usersStore.getOrFailById(42);
+    // user is guaranteed to exist
 } catch (error) {
-  if (error instanceof EntryNotFoundError) {
-    // user 42 doesn't exist in the store
-    redirectTo404();
-  }
+    if (error instanceof EntryNotFoundError) {
+        // user 42 doesn't exist in the store
+        redirectTo404();
+    }
 }
 ```
 
@@ -186,26 +184,26 @@ The store automatically persists state to the provided storage service. When the
 Some resources are updated outside of the store's own CRUD calls — by another user over a WebSocket, by a background job, by an in-process event emitter. The `broadcast` config slot is the single, narrow bridge for feeding those updates into the store without going through HTTP.
 
 ```typescript
-import type { AdapterStoreBroadcast } from "@script-development/fs-adapter-store";
+import type {AdapterStoreBroadcast} from '@script-development/fs-adapter-store';
 
 const broadcast: AdapterStoreBroadcast<User> = {
-  subscribe: ({ onUpdate, onDelete }) => {
-    eventSource.on("user.updated", onUpdate);
-    eventSource.on("user.deleted", onDelete);
-    return () => {
-      eventSource.off("user.updated", onUpdate);
-      eventSource.off("user.deleted", onDelete);
-    };
-  },
+    subscribe: ({onUpdate, onDelete}) => {
+        eventSource.on('user.updated', onUpdate);
+        eventSource.on('user.deleted', onDelete);
+        return () => {
+            eventSource.off('user.updated', onUpdate);
+            eventSource.off('user.deleted', onDelete);
+        };
+    },
 };
 
 const usersStore = createAdapterStoreModule<User>({
-  domainName: "users",
-  adapter: resourceAdapter,
-  httpService: http,
-  storageService: storage,
-  loadingService: loading,
-  broadcast,
+    domainName: 'users',
+    adapter: resourceAdapter,
+    httpService: http,
+    storageService: storage,
+    loadingService: loading,
+    broadcast,
 });
 ```
 
@@ -225,10 +223,7 @@ A common pattern is a small in-process emitter as a middleman: your transport la
 
 ```typescript
 type AdapterStoreBroadcast<T> = {
-  subscribe: (handlers: {
-    onUpdate: (item: T) => void;
-    onDelete: (id: number) => void;
-  }) => () => void; // unsubscribe
+    subscribe: (handlers: {onUpdate: (item: T) => void; onDelete: (id: number) => void}) => () => void; // unsubscribe
 };
 ```
 
@@ -240,17 +235,17 @@ By default, `generateNew()` creates an object with all fields except `id`. You c
 
 ```typescript
 interface CreateUserData {
-  name: string;
-  email: string;
-  // no role — assigned server-side
+    name: string;
+    email: string;
+    // no role — assigned server-side
 }
 
 const usersStore = createAdapterStoreModule<User, Adapted<User, CreateUserData>, CreateUserData>({
-  domainName: "users",
-  adapter: resourceAdapter,
-  httpService: http,
-  storageService: storage,
-  loadingService: loading,
+    domainName: 'users',
+    adapter: resourceAdapter,
+    httpService: http,
+    storageService: storage,
+    loadingService: loading,
 });
 
 const newUser = usersStore.generateNew();
@@ -262,7 +257,7 @@ const newUser = usersStore.generateNew();
 The package exports two error classes:
 
 ```typescript
-import { EntryNotFoundError, MissingResponseDataError } from "@script-development/fs-adapter-store";
+import {EntryNotFoundError, MissingResponseDataError} from '@script-development/fs-adapter-store';
 ```
 
 - **`EntryNotFoundError`** — thrown by `getOrFailById` when the resource doesn't exist in the store

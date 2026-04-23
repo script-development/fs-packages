@@ -1,43 +1,44 @@
+import {describe, expect, it} from 'vitest';
+
 // @vitest-environment happy-dom
-import { EntryNotFoundError, MissingResponseDataError } from "../src/errors";
-import { describe, expect, it } from "vitest";
+import {EntryNotFoundError, MissingResponseDataError} from '../src/errors';
 
-describe("EntryNotFoundError", () => {
-  it("should create error with correct message", () => {
-    // Act
-    const error = new EntryNotFoundError("users", 42);
+describe('EntryNotFoundError', () => {
+    it('should create error with correct message', () => {
+        // Act
+        const error = new EntryNotFoundError('users', 42);
 
-    // Assert
-    expect(error.message).toBe("users with id 42 not found");
-    expect(error.name).toBe("EntryNotFoundError");
-  });
+        // Assert
+        expect(error.message).toBe('users with id 42 not found');
+        expect(error.name).toBe('EntryNotFoundError');
+    });
 
-  it("should be an instance of Error", () => {
-    // Act
-    const error = new EntryNotFoundError("items", 1);
+    it('should be an instance of Error', () => {
+        // Act
+        const error = new EntryNotFoundError('items', 1);
 
-    // Assert
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(EntryNotFoundError);
-  });
+        // Assert
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toBeInstanceOf(EntryNotFoundError);
+    });
 });
 
-describe("MissingResponseDataError", () => {
-  it("should create error with correct message", () => {
-    // Act
-    const error = new MissingResponseDataError("No data returned");
+describe('MissingResponseDataError', () => {
+    it('should create error with correct message', () => {
+        // Act
+        const error = new MissingResponseDataError('No data returned');
 
-    // Assert
-    expect(error.message).toBe("No data returned");
-    expect(error.name).toBe("MissingResponseDataError");
-  });
+        // Assert
+        expect(error.message).toBe('No data returned');
+        expect(error.name).toBe('MissingResponseDataError');
+    });
 
-  it("should be an instance of Error", () => {
-    // Act
-    const error = new MissingResponseDataError("test");
+    it('should be an instance of Error', () => {
+        // Act
+        const error = new MissingResponseDataError('test');
 
-    // Assert
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(MissingResponseDataError);
-  });
+        // Assert
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toBeInstanceOf(MissingResponseDataError);
+    });
 });

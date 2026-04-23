@@ -17,7 +17,7 @@ npm install @script-development/fs-dialog
 ### 1. Create the Service
 
 ```typescript
-import { createDialogService } from "@script-development/fs-dialog";
+import {createDialogService} from '@script-development/fs-dialog';
 
 const dialog = createDialogService();
 ```
@@ -27,22 +27,22 @@ const dialog = createDialogService();
 ```vue
 <!-- App.vue -->
 <template>
-  <div id="app">
-    <router-view />
-    <dialog.DialogContainerComponent />
-  </div>
+    <div id="app">
+        <router-view />
+        <dialog.DialogContainerComponent />
+    </div>
 </template>
 ```
 
 ### 3. Open Dialogs
 
 ```typescript
-import ConfirmDialog from "@/components/ConfirmDialog.vue";
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 dialog.open(ConfirmDialog, {
-  title: "Delete user?",
-  message: "This action cannot be undone.",
-  onConfirm: () => deleteUser(userId),
+    title: 'Delete user?',
+    message: 'This action cannot be undone.',
+    onConfirm: () => deleteUser(userId),
 });
 ```
 
@@ -54,10 +54,10 @@ Dialogs are managed as a **LIFO stack** (last in, first out). Opening a new dial
 
 ```typescript
 dialog.open(SettingsDialog, {
-  /* ... */
+    /* ... */
 }); // stack: [Settings]
 dialog.open(ConfirmDialog, {
-  /* ... */
+    /* ... */
 }); // stack: [Settings, Confirm]
 
 // Confirm is on top, Settings is behind it
@@ -87,33 +87,28 @@ Your dialog component can close itself. A common pattern is to accept callback p
 ```vue
 <!-- ConfirmDialog.vue -->
 <script setup lang="ts">
-const props = defineProps<{
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}>();
+const props = defineProps<{title: string; message: string; onConfirm: () => void; onCancel: () => void}>();
 </script>
 
 <template>
-  <div class="dialog">
-    <h2>{{ title }}</h2>
-    <p>{{ message }}</p>
-    <button @click="onConfirm">Confirm</button>
-    <button @click="onCancel">Cancel</button>
-  </div>
+    <div class="dialog">
+        <h2>{{ title }}</h2>
+        <p>{{ message }}</p>
+        <button @click="onConfirm">Confirm</button>
+        <button @click="onCancel">Cancel</button>
+    </div>
 </template>
 ```
 
 ```typescript
 dialog.open(ConfirmDialog, {
-  title: "Delete?",
-  message: "This cannot be undone.",
-  onConfirm: () => {
-    deleteUser(userId);
-    dialog.closeAll();
-  },
-  onCancel: () => dialog.closeAll(),
+    title: 'Delete?',
+    message: 'This cannot be undone.',
+    onConfirm: () => {
+        deleteUser(userId);
+        dialog.closeAll();
+    },
+    onCancel: () => dialog.closeAll(),
 });
 ```
 
@@ -122,14 +117,14 @@ dialog.open(ConfirmDialog, {
 Errors thrown inside dialog components are caught via Vue's `onErrorCaptured`. You can register middleware to handle them:
 
 ```typescript
-dialog.registerErrorMiddleware((error, { closeAll }) => {
-  if (error instanceof ValidationError) {
-    showValidationFeedback(error);
-    return false; // stop propagation — error is handled
-  }
+dialog.registerErrorMiddleware((error, {closeAll}) => {
+    if (error instanceof ValidationError) {
+        showValidationFeedback(error);
+        return false; // stop propagation — error is handled
+    }
 
-  // return true to pass the error to the next middleware
-  return true;
+    // return true to pass the error to the next middleware
+    return true;
 });
 ```
 
@@ -141,16 +136,16 @@ A powerful pattern: register HTTP error middleware that opens an error dialog, a
 ```typescript
 // HTTP errors → open error dialog
 http.registerResponseErrorMiddleware((error) => {
-  if (error.response?.status === 403) {
-    dialog.open(ForbiddenDialog, { message: "Access denied" });
-  }
+    if (error.response?.status === 403) {
+        dialog.open(ForbiddenDialog, {message: 'Access denied'});
+    }
 });
 
 // Errors inside dialogs → handle gracefully
-dialog.registerErrorMiddleware((error, { closeAll }) => {
-  console.error("Dialog error:", error);
-  closeAll();
-  return false;
+dialog.registerErrorMiddleware((error, {closeAll}) => {
+    console.error('Dialog error:', error);
+    closeAll();
+    return false;
 });
 ```
 
@@ -163,8 +158,8 @@ Dialog content is wrapped in `<Suspense>`, so you can use async setup in your di
 ```typescript
 // Lazy-loaded dialog — only fetched when opened
 dialog.open(
-  defineAsyncComponent(() => import("@/components/HeavyDialog.vue")),
-  { id: 42 },
+    defineAsyncComponent(() => import('@/components/HeavyDialog.vue')),
+    {id: 42},
 );
 ```
 
@@ -190,5 +185,5 @@ Returns a dialog service. No parameters.
 ### Error Handler Signature
 
 ```typescript
-type DialogErrorHandler = (error: Error, context: { closeAll: () => void }) => boolean; // false = handled, true = pass to next handler
+type DialogErrorHandler = (error: Error, context: {closeAll: () => void}) => boolean; // false = handled, true = pass to next handler
 ```

@@ -11,20 +11,17 @@ npm install @script-development/fs-http
 ## Usage
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
+import {createHttpService} from '@script-development/fs-http';
 
-const http = createHttpService("https://api.example.com", {
-  withCredentials: true,
-  smartCredentials: true,
-});
+const http = createHttpService('https://api.example.com', {withCredentials: true, smartCredentials: true});
 
 // Standard requests
-const response = await http.getRequest<User[]>("/users");
-await http.postRequest("/users", { name: "Alice" });
+const response = await http.getRequest<User[]>('/users');
+await http.postRequest('/users', {name: 'Alice'});
 
 // Middleware
 const unregister = http.registerRequestMiddleware((request) => {
-  request.headers.set("X-Custom", "value");
+    request.headers.set('X-Custom', 'value');
 });
 
 // Later: clean up

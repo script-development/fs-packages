@@ -15,10 +15,10 @@ npm install @script-development/fs-theme
 ## Basic Usage
 
 ```typescript
-import { createStorageService } from "@script-development/fs-storage";
-import { createThemeService } from "@script-development/fs-theme";
+import {createStorageService} from '@script-development/fs-storage';
+import {createThemeService} from '@script-development/fs-theme';
 
-const storage = createStorageService("myapp");
+const storage = createStorageService('myapp');
 const theme = createThemeService(storage);
 
 // Reactive boolean — true means dark mode
@@ -32,13 +32,13 @@ In a Vue component:
 
 ```vue
 <script setup lang="ts">
-import { theme } from "@/services";
+import {theme} from '@/services';
 </script>
 
 <template>
-  <button @click="theme.toggleTheme()">
-    {{ theme.isDark.value ? "Switch to Light" : "Switch to Dark" }}
-  </button>
+    <button @click="theme.toggleTheme()">
+        {{ theme.isDark.value ? 'Switch to Light' : 'Switch to Dark' }}
+    </button>
 </template>
 ```
 
@@ -58,8 +58,8 @@ Every toggle saves the new preference to storage automatically.
 
 ```typescript
 interface ThemeStorageContract {
-  get<T>(key: string): T | undefined;
-  put(key: string, value: unknown): void;
+    get<T>(key: string): T | undefined;
+    put(key: string, value: unknown): void;
 }
 ```
 
@@ -67,17 +67,17 @@ This means you can pass any compatible storage implementation:
 
 ```typescript
 // fs-storage works because it matches the contract
-const theme = createThemeService(createStorageService("myapp"));
+const theme = createThemeService(createStorageService('myapp'));
 
 // A simple object works too — useful in tests
 const fakeStorage = {
-  data: {} as Record<string, unknown>,
-  get<T>(key: string) {
-    return this.data[key] as T | undefined;
-  },
-  put(key: string, value: unknown) {
-    this.data[key] = value;
-  },
+    data: {} as Record<string, unknown>,
+    get<T>(key: string) {
+        return this.data[key] as T | undefined;
+    },
+    put(key: string, value: unknown) {
+        this.data[key] = value;
+    },
 };
 const theme = createThemeService(fakeStorage);
 ```
@@ -91,7 +91,7 @@ This is the [Architecture](/architecture#structural-typing-duck-types) pattern i
 The `getSystemThemePreference()` utility reads the OS/browser theme setting:
 
 ```typescript
-import { getSystemThemePreference } from "@script-development/fs-theme";
+import {getSystemThemePreference} from '@script-development/fs-theme';
 
 const systemTheme = getSystemThemePreference(); // "dark" or "light"
 ```

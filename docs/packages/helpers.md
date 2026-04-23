@@ -15,16 +15,12 @@ npm install @script-development/fs-helpers
 Creates a deep clone of objects, arrays, and dates. Faster than `structuredClone` for typical application data:
 
 ```typescript
-import { deepCopy } from "@script-development/fs-helpers";
+import {deepCopy} from '@script-development/fs-helpers';
 
-const original = {
-  name: "Alice",
-  roles: ["admin", "editor"],
-  createdAt: new Date(),
-};
+const original = {name: 'Alice', roles: ['admin', 'editor'], createdAt: new Date()};
 
 const copy = deepCopy(original);
-copy.roles.push("viewer");
+copy.roles.push('viewer');
 
 original.roles; // ["admin", "editor"] — unchanged
 copy.roles; // ["admin", "editor", "viewer"]
@@ -36,13 +32,13 @@ copy.roles; // ["admin", "editor", "viewer"]
 
 ```typescript
 interface User {
-  readonly id: number;
-  readonly name: string;
+    readonly id: number;
+    readonly name: string;
 }
 
-const user: User = { id: 1, name: "Alice" };
+const user: User = {id: 1, name: 'Alice'};
 const mutable = deepCopy(user);
-mutable.name = "Bob"; // allowed — Writable<User> removes readonly
+mutable.name = 'Bob'; // allowed — Writable<User> removes readonly
 ```
 
 ::: warning Supported types
@@ -56,23 +52,23 @@ mutable.name = "Bob"; // allowed — Writable<User> removes readonly
 Checks whether an object has an `id` property — useful for distinguishing between new (unsaved) and existing (saved) domain objects:
 
 ```typescript
-import { isExisting } from "@script-development/fs-helpers";
+import {isExisting} from '@script-development/fs-helpers';
 
 interface User {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
 }
 
-type NewUser = Omit<User, "id">;
+type NewUser = Omit<User, 'id'>;
 
 function saveUser(user: User | NewUser) {
-  if (isExisting(user)) {
-    // TypeScript knows: user is User (has id)
-    updateUser(user.id, user);
-  } else {
-    // TypeScript knows: user is NewUser (no id)
-    createUser(user);
-  }
+    if (isExisting(user)) {
+        // TypeScript knows: user is User (has id)
+        updateUser(user.id, user);
+    } else {
+        // TypeScript knows: user is NewUser (no id)
+        createUser(user);
+    }
 }
 ```
 
@@ -81,7 +77,7 @@ function saveUser(user: User | NewUser) {
 Convert between `camelCase` and `snake_case` with full type safety:
 
 ```typescript
-import { toCamelCaseTyped, deepCamelKeys, deepSnakeKeys } from "@script-development/fs-helpers";
+import {toCamelCaseTyped, deepCamelKeys, deepSnakeKeys} from '@script-development/fs-helpers';
 ```
 
 ### toCamelCaseTyped
@@ -90,13 +86,13 @@ Converts a `snake_case` object to `camelCase` with preserved TypeScript types:
 
 ```typescript
 interface User {
-  firstName: string;
-  lastName: string;
-  createdAt: string;
+    firstName: string;
+    lastName: string;
+    createdAt: string;
 }
 
 // API returns snake_case
-const apiResponse = { first_name: "Alice", last_name: "Smith", created_at: "2026-01-01" };
+const apiResponse = {first_name: 'Alice', last_name: 'Smith', created_at: '2026-01-01'};
 
 const user = toCamelCaseTyped<User>(apiResponse);
 // { firstName: "Alice", lastName: "Smith", createdAt: "2026-01-01" }
@@ -108,13 +104,7 @@ const user = toCamelCaseTyped<User>(apiResponse);
 Deep conversion for nested objects (re-exported from [string-ts](https://github.com/gustavoguichard/string-ts)):
 
 ```typescript
-const apiData = {
-  user_name: "Alice",
-  user_settings: {
-    dark_mode: true,
-    font_size: 14,
-  },
-};
+const apiData = {user_name: 'Alice', user_settings: {dark_mode: true, font_size: 14}};
 
 const camelData = deepCamelKeys(apiData);
 // { userName: "Alice", userSettings: { darkMode: true, fontSize: 14 } }

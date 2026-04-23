@@ -1,43 +1,43 @@
 {
-  "name": "fs-packages",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "scripts": {
-    "build": "npm run build --workspaces",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:mutation": "npm run test:mutation --workspaces",
-    "lint": "oxlint .",
-    "typecheck": "npm run typecheck --workspaces",
-    "lint:pkg": "node scripts/lint-pkg.mjs",
-    "audit": "npm audit",
-    "format": "oxfmt --write .",
-    "format:check": "oxfmt --check .",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "npm run build && changeset publish",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
-  },
-  "devDependencies": {
-    "@arethetypeswrong/cli": "^0.18.2",
-    "@changesets/cli": "^2",
-    "@stryker-mutator/core": "^9",
-    "@stryker-mutator/vitest-runner": "^9",
-    "@vitest/coverage-v8": "^4",
-    "happy-dom": "^20.9.0",
-    "oxfmt": "^0.45.0",
-    "oxlint": "^1.60",
-    "publint": "^0.3.18",
-    "tsdown": "^0.21.9",
-    "typescript": "^6.0",
-    "vitepress": "^2.0.0-alpha.17",
-    "vitest": "^4"
-  },
-  "engines": {
-    "node": ">=24.0.0"
-  }
+    "name": "fs-packages",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "audit": "npm audit",
+        "build": "npm run build --workspaces",
+        "changeset": "changeset",
+        "docs:build": "vitepress build docs",
+        "docs:dev": "vitepress dev docs",
+        "docs:preview": "vitepress preview docs",
+        "format": "oxfmt --write .",
+        "format:check": "oxfmt --check .",
+        "lint": "oxlint .",
+        "lint:pkg": "node scripts/lint-pkg.mjs",
+        "release": "npm run build && changeset publish",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:mutation": "npm run test:mutation --workspaces",
+        "typecheck": "npm run typecheck --workspaces",
+        "version": "changeset version"
+    },
+    "devDependencies": {
+        "@arethetypeswrong/cli": "^0.18.2",
+        "@changesets/cli": "^2",
+        "@stryker-mutator/core": "^9",
+        "@stryker-mutator/vitest-runner": "^9",
+        "@vitest/coverage-v8": "^4",
+        "happy-dom": "^20.9.0",
+        "oxfmt": "^0.45.0",
+        "oxlint": "^1.60",
+        "publint": "^0.3.18",
+        "tsdown": "^0.21.9",
+        "typescript": "^6.0",
+        "vitepress": "^2.0.0-alpha.17",
+        "vitest": "^4"
+    },
+    "engines": {
+        "node": ">=24.0.0"
+    }
 }

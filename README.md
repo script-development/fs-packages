@@ -38,10 +38,10 @@ npm install @script-development/fs-http
 ```
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
+import {createHttpService} from '@script-development/fs-http';
 
-const http = createHttpService("https://api.example.com");
-const response = await http.getRequest<User[]>("/users");
+const http = createHttpService('https://api.example.com');
+const response = await http.getRequest<User[]>('/users');
 ```
 
 See the [documentation](https://packages.script.nl) for the full getting started guide, architecture deep-dive, and package API tours.

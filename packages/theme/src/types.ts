@@ -1,6 +1,6 @@
-import type { Ref } from "vue";
+import type {Ref} from 'vue';
 
-export type Theme = "dark" | "light";
+export type Theme = 'dark' | 'light';
 
 /**
  * Minimal storage contract for theme persistence.
@@ -10,12 +10,6 @@ export type Theme = "dark" | "light";
  * importing it. This keeps the packages loosely coupled: fs-theme depends on a shape,
  * not a package.
  */
-export type ThemeStorageContract = {
-  get: <T>(key: string) => T | undefined;
-  put: (key: string, value: unknown) => void;
-};
+export type ThemeStorageContract = {get: <T>(key: string) => T | undefined; put: (key: string, value: unknown) => void};
 
-export type ThemeService = {
-  isDark: Ref<boolean>;
-  toggleTheme: () => void;
-};
+export type ThemeService = {isDark: Ref<boolean>; toggleTheme: () => void};

@@ -1,79 +1,79 @@
 name: Publish
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "**/package.json"
+    push:
+        branches: [main]
+        paths:
+            - '**/package.json'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-      - run: npm ci --ignore-scripts
-      - run: npm run build
-      - uses: actions/upload-artifact@v7
-        with:
-          name: build-output
-          path: packages/*/dist/
-          retention-days: 1
-          if-no-files-found: error
+    build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+            - run: npm ci --ignore-scripts
+            - run: npm run build
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: build-output
+                  path: packages/*/dist/
+                  retention-days: 1
+                  if-no-files-found: error
 
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          registry-url: "https://registry.npmjs.org"
-          scope: "@script-development"
-      - uses: actions/download-artifact@v8
-        with:
-          name: build-output
-          path: packages
-      - run: npm ci --ignore-scripts
-      - name: Validate dist artifacts
-        shell: bash
-        run: |
-          set -euo pipefail
-          REQUIRED=("dist/index.mjs" "dist/index.cjs" "dist/index.d.mts" "dist/index.d.cts")
-          FAILED=0
-          for pkg_dir in packages/*/; do
-            pkg_name=$(node -p "require('./${pkg_dir}package.json').name")
-            pack_json=$(cd "$pkg_dir" && npm pack --dry-run --json 2>/dev/null)
-            for required in "${REQUIRED[@]}"; do
-              size=$(node -e "
-          const files = JSON.parse(process.argv[1])[0].files;
-          const f = files.find(e => e.path === process.argv[2]);
-          if (!f) { console.log('MISSING'); process.exit(0); }
-          console.log(f.size);
-          " "$pack_json" "$required")
-              if [ "$size" = "MISSING" ]; then
-                echo "::error::${pkg_name} is missing ${required} in published tarball"
-                FAILED=1
-              elif [ "$size" = "0" ]; then
-                echo "::error::${pkg_name} ${required} is 0 bytes"
-                FAILED=1
-              fi
-            done
-          done
-          if [ "$FAILED" = "1" ]; then
-            echo "Pre-publish dist validation failed. Refusing to publish empty or incomplete tarballs."
-            exit 1
-          fi
-          echo "All packages validated: required dist/ artifacts present and non-empty."
-      - run: npx changeset publish
-        env:
-          NPM_CONFIG_PROVENANCE: "true"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    publish:
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            id-token: write
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  registry-url: 'https://registry.npmjs.org'
+                  scope: '@script-development'
+            - uses: actions/download-artifact@v8
+              with:
+                  name: build-output
+                  path: packages
+            - run: npm ci --ignore-scripts
+            - name: Validate dist artifacts
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  REQUIRED=("dist/index.mjs" "dist/index.cjs" "dist/index.d.mts" "dist/index.d.cts")
+                  FAILED=0
+                  for pkg_dir in packages/*/; do
+                    pkg_name=$(node -p "require('./${pkg_dir}package.json').name")
+                    pack_json=$(cd "$pkg_dir" && npm pack --dry-run --json 2>/dev/null)
+                    for required in "${REQUIRED[@]}"; do
+                      size=$(node -e "
+                  const files = JSON.parse(process.argv[1])[0].files;
+                  const f = files.find(e => e.path === process.argv[2]);
+                  if (!f) { console.log('MISSING'); process.exit(0); }
+                  console.log(f.size);
+                  " "$pack_json" "$required")
+                      if [ "$size" = "MISSING" ]; then
+                        echo "::error::${pkg_name} is missing ${required} in published tarball"
+                        FAILED=1
+                      elif [ "$size" = "0" ]; then
+                        echo "::error::${pkg_name} ${required} is 0 bytes"
+                        FAILED=1
+                      fi
+                    done
+                  done
+                  if [ "$FAILED" = "1" ]; then
+                    echo "Pre-publish dist validation failed. Refusing to publish empty or incomplete tarballs."
+                    exit 1
+                  fi
+                  echo "All packages validated: required dist/ artifacts present and non-empty."
+            - run: npx changeset publish
+              env:
+                  NPM_CONFIG_PROVENANCE: 'true'
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
