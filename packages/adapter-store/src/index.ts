@@ -9,5 +9,6 @@ export type {
   Adapter,
   AdapterStoreModule,
   AdapterStoreConfig,
+  AdapterStoreBroadcast,
   StoreModuleForAdapter,
 } from "./types";
