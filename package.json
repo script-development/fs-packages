@@ -11,7 +11,7 @@
     "test:mutation": "npm run test:mutation --workspaces",
     "lint": "oxlint .",
     "typecheck": "npm run typecheck --workspaces",
-    "lint:pkg": "npm run lint:pkg --workspaces",
+    "lint:pkg": "node scripts/lint-pkg.mjs",
     "audit": "npm audit",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
