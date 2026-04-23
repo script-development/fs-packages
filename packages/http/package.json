@@ -45,5 +45,8 @@
   },
   "devDependencies": {
     "axios-mock-adapter": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
