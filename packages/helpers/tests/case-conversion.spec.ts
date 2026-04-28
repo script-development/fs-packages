@@ -1,40 +1,41 @@
-import { toCamelCaseTyped, deepCamelKeys, deepSnakeKeys } from "../src";
-import { describe, expect, it } from "vitest";
+import {describe, expect, it} from 'vitest';
 
-describe("toCamelCaseTyped", () => {
-  it("should convert snake_case keys to camelCase", () => {
-    const input = { first_name: "John", last_name: "Doe" };
+import {toCamelCaseTyped, deepCamelKeys, deepSnakeKeys} from '../src';
 
-    const result = toCamelCaseTyped<{ firstName: string; lastName: string }>(input);
+describe('toCamelCaseTyped', () => {
+    it('should convert snake_case keys to camelCase', () => {
+        const input = {first_name: 'John', last_name: 'Doe'};
 
-    expect(result).toEqual({ firstName: "John", lastName: "Doe" });
-  });
+        const result = toCamelCaseTyped<{firstName: string; lastName: string}>(input);
 
-  it("should handle nested objects", () => {
-    const input = { user_data: { first_name: "John" } };
+        expect(result).toEqual({firstName: 'John', lastName: 'Doe'});
+    });
 
-    const result = toCamelCaseTyped<{ userData: { firstName: string } }>(input);
+    it('should handle nested objects', () => {
+        const input = {user_data: {first_name: 'John'}};
 
-    expect(result).toEqual({ userData: { firstName: "John" } });
-  });
+        const result = toCamelCaseTyped<{userData: {firstName: string}}>(input);
 
-  it("should handle already camelCase data", () => {
-    const input = { firstName: "John" };
+        expect(result).toEqual({userData: {firstName: 'John'}});
+    });
 
-    const result = toCamelCaseTyped<{ firstName: string }>(input);
+    it('should handle already camelCase data', () => {
+        const input = {firstName: 'John'};
 
-    expect(result).toEqual({ firstName: "John" });
-  });
+        const result = toCamelCaseTyped<{firstName: string}>(input);
+
+        expect(result).toEqual({firstName: 'John'});
+    });
 });
 
-describe("re-exports", () => {
-  it("should re-export deepCamelKeys from string-ts", () => {
-    expect(typeof deepCamelKeys).toBe("function");
-    expect(deepCamelKeys({ snake_case: 1 })).toEqual({ snakeCase: 1 });
-  });
+describe('re-exports', () => {
+    it('should re-export deepCamelKeys from string-ts', () => {
+        expect(typeof deepCamelKeys).toBe('function');
+        expect(deepCamelKeys({snake_case: 1})).toEqual({snakeCase: 1});
+    });
 
-  it("should re-export deepSnakeKeys from string-ts", () => {
-    expect(typeof deepSnakeKeys).toBe("function");
-    expect(deepSnakeKeys({ camelCase: 1 })).toEqual({ camel_case: 1 });
-  });
+    it('should re-export deepSnakeKeys from string-ts', () => {
+        expect(typeof deepSnakeKeys).toBe('function');
+        expect(deepSnakeKeys({camelCase: 1})).toEqual({camel_case: 1});
+    });
 });

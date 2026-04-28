@@ -1,32 +1,31 @@
-import type { Theme, ThemeService, ThemeStorageContract } from "./types";
+import {ref} from 'vue';
 
-import { ref } from "vue";
+import type {Theme, ThemeService, ThemeStorageContract} from './types';
 
-const STORAGE_KEY = "theme";
+const STORAGE_KEY = 'theme';
 
 const applyTheme = (theme: Theme): void => {
-  if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
-  else document.documentElement.removeAttribute("data-theme");
+    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
 };
 
 export const getSystemThemePreference = (): Theme =>
-  typeof window.matchMedia === "function" &&
-  window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
+    typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: light)').matches
+        ? 'light'
+        : 'dark';
 
 export const createThemeService = (storage: ThemeStorageContract): ThemeService => {
-  const stored = storage.get<Theme>(STORAGE_KEY) ?? getSystemThemePreference();
-  applyTheme(stored);
+    const stored = storage.get<Theme>(STORAGE_KEY) ?? getSystemThemePreference();
+    applyTheme(stored);
 
-  const isDark = ref(stored === "dark");
+    const isDark = ref(stored === 'dark');
 
-  const toggleTheme = (): void => {
-    isDark.value = !isDark.value;
-    const theme: Theme = isDark.value ? "dark" : "light";
-    storage.put(STORAGE_KEY, theme);
-    applyTheme(theme);
-  };
+    const toggleTheme = (): void => {
+        isDark.value = !isDark.value;
+        const theme: Theme = isDark.value ? 'dark' : 'light';
+        storage.put(STORAGE_KEY, theme);
+        applyTheme(theme);
+    };
 
-  return { isDark, toggleTheme };
+    return {isDark, toggleTheme};
 };

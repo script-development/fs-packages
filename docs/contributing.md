@@ -100,45 +100,33 @@ mkdir -p packages/{name}/src packages/{name}/tests
 
 ```json
 {
-  "name": "@script-development/fs-{name}",
-  "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "files": ["dist"],
-  "scripts": {
-    "build": "tsdown",
-    "typecheck": "tsc --noEmit",
-    "lint:pkg": "publint && attw --pack .",
-    "test:mutation": "stryker run"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "@script-development/fs-{name}",
+    "version": "0.0.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": {"types": "./dist/index.d.mts", "default": "./dist/index.mjs"},
+            "require": {"types": "./dist/index.d.cts", "default": "./dist/index.cjs"}
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
+    "files": ["dist"],
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc --noEmit",
+        "lint:pkg": "publint && attw --pack .",
+        "test:mutation": "stryker run"
+    },
+    "publishConfig": {"access": "public"}
 }
 ```
 
 If your package uses Vue, add it as a peer dependency:
 
 ```json
-{
-  "peerDependencies": {
-    "vue": "^3.5.0"
-  }
-}
+{"peerDependencies": {"vue": "^3.5.0"}}
 ```
 
 ### 3. Set up configuration files
@@ -174,16 +162,16 @@ Every service package exports a `createXxxService()` factory:
 
 ```typescript
 export function createExampleService(config: ExampleConfig): ExampleService {
-  // private state here
-  const state = ref(initialValue);
+    // private state here
+    const state = ref(initialValue);
 
-  // return public API as plain object
-  return {
-    value: computed(() => state.value),
-    doSomething() {
-      /* ... */
-    },
-  };
+    // return public API as plain object
+    return {
+        value: computed(() => state.value),
+        doSomething() {
+            /* ... */
+        },
+    };
 }
 ```
 
@@ -193,8 +181,8 @@ Export all types that consumers need. Use named exports, never default:
 
 ```typescript
 // src/index.ts
-export { createExampleService } from "./example-service";
-export type { ExampleService, ExampleConfig } from "./types";
+export {createExampleService} from './example-service';
+export type {ExampleService, ExampleConfig} from './types';
 ```
 
 ### Peer Dependencies
@@ -202,11 +190,7 @@ export type { ExampleService, ExampleConfig } from "./types";
 If your package depends on another `@script-development/fs-*` package, declare it as a **peer dependency**, not a regular dependency. This prevents duplicate installations:
 
 ```json
-{
-  "peerDependencies": {
-    "@script-development/fs-http": "^1.0.0"
-  }
-}
+{"peerDependencies": {"@script-development/fs-http": "^1.0.0"}}
 ```
 
 ### Testing
@@ -214,14 +198,14 @@ If your package depends on another `@script-development/fs-*` package, declare i
 Write tests alongside your source code in the `tests/` directory. Use `describe` + `it` blocks:
 
 ```typescript
-import { describe, expect, it } from "vitest";
-import { createExampleService } from "../src";
+import {describe, expect, it} from 'vitest';
+import {createExampleService} from '../src';
 
-describe("createExampleService", () => {
-  it("returns the initial value", () => {
-    const service = createExampleService({ initial: 42 });
-    expect(service.value.value).toBe(42);
-  });
+describe('createExampleService', () => {
+    it('returns the initial value', () => {
+        const service = createExampleService({initial: 42});
+        expect(service.value.value).toBe(42);
+    });
 });
 ```
 

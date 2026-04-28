@@ -16,13 +16,13 @@
  * ```
  */
 export interface Get {
-  <T>(key: string): T | undefined;
-  <T>(key: string, defaultValue: T): T;
+    <T>(key: string): T | undefined;
+    <T>(key: string, defaultValue: T): T;
 }
 
 export interface StorageService {
-  put: (key: string, value: unknown) => void;
-  get: Get;
-  remove: (key: string) => void;
-  clear: () => void;
+    put: (key: string, value: unknown) => void;
+    get: Get;
+    remove: (key: string) => void;
+    clear: () => void;
 }

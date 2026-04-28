@@ -1,49 +1,49 @@
 {
-  "name": "@script-development/fs-helpers",
-  "version": "0.1.1",
-  "description": "Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion",
-  "homepage": "https://packages.script.nl/packages/helpers",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/script-development/fs-packages.git",
-    "directory": "packages/helpers"
-  },
-  "files": [
-    "dist"
-  ],
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+    "name": "@script-development/fs-helpers",
+    "version": "0.1.1",
+    "description": "Tree-shakeable shared utility helpers: deep copy, type guards, and case conversion",
+    "homepage": "https://packages.script.nl/packages/helpers",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/script-development/fs-packages.git",
+        "directory": "packages/helpers"
+    },
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org"
+    },
+    "scripts": {
+        "build": "tsdown",
+        "lint:pkg": "publint && attw --pack",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:mutation": "stryker run",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "string-ts": "^2.3.1"
+    },
+    "engines": {
+        "node": ">=24.0.0"
     }
-  },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org"
-  },
-  "scripts": {
-    "build": "tsdown",
-    "typecheck": "tsc --noEmit",
-    "lint:pkg": "publint && attw --pack",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:mutation": "stryker run"
-  },
-  "dependencies": {
-    "string-ts": "^2.3.1"
-  },
-  "engines": {
-    "node": ">=24.0.0"
-  }
 }

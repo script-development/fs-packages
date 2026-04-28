@@ -33,13 +33,13 @@ npm install @script-development/fs-router
 Every package follows the same pattern: import a factory function, call it, use the returned service object.
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
+import {createHttpService} from '@script-development/fs-http';
 
 // Create a service — you own the instance
-const http = createHttpService("https://api.example.com");
+const http = createHttpService('https://api.example.com');
 
 // Use it
-const response = await http.getRequest<User[]>("/users");
+const response = await http.getRequest<User[]>('/users');
 ```
 
 That's the entire mental model. No classes to extend, no providers to register, no global state to configure. You call a factory, you get an object with methods, you use it.
@@ -51,14 +51,14 @@ Packages are designed to work together through **composition**, not inheritance.
 Here's a realistic setup that shows how services layer on top of each other:
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
-import { createStorageService } from "@script-development/fs-storage";
-import { createLoadingService, registerLoadingMiddleware } from "@script-development/fs-loading";
-import { createThemeService } from "@script-development/fs-theme";
+import {createHttpService} from '@script-development/fs-http';
+import {createStorageService} from '@script-development/fs-storage';
+import {createLoadingService, registerLoadingMiddleware} from '@script-development/fs-loading';
+import {createThemeService} from '@script-development/fs-theme';
 
 // 1. Create foundation services
-const http = createHttpService("https://api.example.com");
-const storage = createStorageService("myapp");
+const http = createHttpService('https://api.example.com');
+const storage = createStorageService('myapp');
 
 // 2. Create loading service and wire it to HTTP
 const loading = createLoadingService();
@@ -82,14 +82,14 @@ Services are plain objects with reactive properties. Use them in Vue components 
 
 ```vue
 <script setup lang="ts">
-import { loading } from "@/services"; // your app's service setup file
+import {loading} from '@/services'; // your app's service setup file
 
 // loading.isLoading is a ComputedRef<boolean> — it just works in templates
 </script>
 
 <template>
-  <div v-if="loading.isLoading.value" class="spinner">Loading...</div>
-  <slot v-else />
+    <div v-if="loading.isLoading.value" class="spinner">Loading...</div>
+    <slot v-else />
 </template>
 ```
 
@@ -99,18 +99,18 @@ In practice, you create all services once in a setup file and export them for us
 
 ```typescript
 // services/index.ts
-import { createHttpService } from "@script-development/fs-http";
-import { createStorageService } from "@script-development/fs-storage";
-import { createLoadingService, registerLoadingMiddleware } from "@script-development/fs-loading";
-import { createThemeService } from "@script-development/fs-theme";
-import { createToastService } from "@script-development/fs-toast";
-import { createDialogService } from "@script-development/fs-dialog";
-import { createTranslationService } from "@script-development/fs-translation";
-import MyToastComponent from "@/components/MyToast.vue";
+import {createHttpService} from '@script-development/fs-http';
+import {createStorageService} from '@script-development/fs-storage';
+import {createLoadingService, registerLoadingMiddleware} from '@script-development/fs-loading';
+import {createThemeService} from '@script-development/fs-theme';
+import {createToastService} from '@script-development/fs-toast';
+import {createDialogService} from '@script-development/fs-dialog';
+import {createTranslationService} from '@script-development/fs-translation';
+import MyToastComponent from '@/components/MyToast.vue';
 
 // Foundation
-export const http = createHttpService("https://api.example.com");
-export const storage = createStorageService("myapp");
+export const http = createHttpService('https://api.example.com');
+export const storage = createStorageService('myapp');
 
 // Loading — wired to HTTP
 export const loading = createLoadingService();
@@ -126,20 +126,17 @@ export const toast = createToastService(MyToastComponent);
 export const dialog = createDialogService();
 
 // Translation
-export const translation = createTranslationService(
-  { en: { common: { save: "Save", cancel: "Cancel" } } },
-  "en",
-);
+export const translation = createTranslationService({en: {common: {save: 'Save', cancel: 'Cancel'}}}, 'en');
 ```
 
 Then import what you need in any component or composable:
 
 ```typescript
-import { http, toast } from "@/services";
+import {http, toast} from '@/services';
 
 async function saveUser(data: UserData) {
-  await http.postRequest("/users", data);
-  toast.show({ message: "User saved", type: "success" });
+    await http.postRequest('/users', data);
+    toast.show({message: 'User saved', type: 'success'});
 }
 ```
 

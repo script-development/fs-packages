@@ -13,40 +13,38 @@ npm install @script-development/fs-http
 ## Basic Usage
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
+import {createHttpService} from '@script-development/fs-http';
 
-const http = createHttpService("https://api.example.com");
+const http = createHttpService('https://api.example.com');
 
 // All methods are generic — pass your response type
-const response = await http.getRequest<User[]>("/users");
+const response = await http.getRequest<User[]>('/users');
 const users = response.data;
 
 // POST with data
-await http.postRequest<User>("/users", { name: "Alice", email: "alice@example.com" });
+await http.postRequest<User>('/users', {name: 'Alice', email: 'alice@example.com'});
 
 // PUT, PATCH, DELETE
-await http.putRequest<User>("/users/1", updatedUser);
-await http.patchRequest<User>("/users/1", { name: "Bob" });
-await http.deleteRequest("/users/1");
+await http.putRequest<User>('/users/1', updatedUser);
+await http.patchRequest<User>('/users/1', {name: 'Bob'});
+await http.deleteRequest('/users/1');
 ```
 
 ## Configuration
 
 ```typescript
-const http = createHttpService("https://api.example.com", {
-  // Send cookies with cross-origin requests (default: true)
-  withCredentials: true,
+const http = createHttpService('https://api.example.com', {
+    // Send cookies with cross-origin requests (default: true)
+    withCredentials: true,
 
-  // Include XSRF token header (default: false)
-  withXSRFToken: false,
+    // Include XSRF token header (default: false)
+    withXSRFToken: false,
 
-  // Auto-toggle credentials based on same-origin check (default: false)
-  smartCredentials: true,
+    // Auto-toggle credentials based on same-origin check (default: false)
+    smartCredentials: true,
 
-  // Additional default headers
-  headers: {
-    "X-Custom-Header": "value",
-  },
+    // Additional default headers
+    headers: {'X-Custom-Header': 'value'},
 });
 ```
 
@@ -64,10 +62,10 @@ Runs before each request is sent. Use it for authentication headers, request log
 
 ```typescript
 const unregister = http.registerRequestMiddleware((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.set("Authorization", `Bearer ${token}`);
-  }
+    const token = getAuthToken();
+    if (token) {
+        config.headers.set('Authorization', `Bearer ${token}`);
+    }
 });
 
 // Later: stop intercepting
@@ -80,7 +78,7 @@ Runs after a successful response. Use it for response logging, analytics, or cac
 
 ```typescript
 const unregister = http.registerResponseMiddleware((response) => {
-  console.log(`${response.config.method} ${response.config.url} → ${response.status}`);
+    console.log(`${response.config.method} ${response.config.url} → ${response.status}`);
 });
 ```
 
@@ -90,13 +88,13 @@ Runs when a request fails. Use it for global error handling, authentication redi
 
 ```typescript
 const unregister = http.registerResponseErrorMiddleware((error) => {
-  if (error.response?.status === 401) {
-    redirectToLogin();
-  }
+    if (error.response?.status === 401) {
+        redirectToLogin();
+    }
 
-  if (error.response?.status === 500) {
-    reportToSentry(error);
-  }
+    if (error.response?.status === 500) {
+        reportToSentry(error);
+    }
 });
 ```
 
@@ -111,7 +109,7 @@ Other packages hook into these middleware points. `fs-loading` registers request
 Downloads a file and triggers a browser save dialog:
 
 ```typescript
-await http.downloadRequest("/reports/annual", "annual-report", "application/pdf");
+await http.downloadRequest('/reports/annual', 'annual-report', 'application/pdf');
 ```
 
 ### Preview
@@ -119,7 +117,7 @@ await http.downloadRequest("/reports/annual", "annual-report", "application/pdf"
 Creates a blob URL for inline preview (images, PDFs):
 
 ```typescript
-const blobUrl = await http.previewRequest("/documents/123/preview");
+const blobUrl = await http.previewRequest('/documents/123/preview');
 // Use in an <img> or <iframe> src
 ```
 
@@ -128,13 +126,7 @@ const blobUrl = await http.previewRequest("/documents/123/preview");
 Uses the native `fetch` API for streaming responses (useful for server-sent events or AI completions):
 
 ```typescript
-const response = await http.streamRequest(
-  "/ai/generate",
-  {
-    prompt: "Hello",
-  },
-  abortController.signal,
-);
+const response = await http.streamRequest('/ai/generate', {prompt: 'Hello'}, abortController.signal);
 
 const reader = response.body?.getReader();
 ```
@@ -144,15 +136,15 @@ const reader = response.body?.getReader();
 Use the `isAxiosError` type guard to safely check errors:
 
 ```typescript
-import { isAxiosError } from "@script-development/fs-http";
+import {isAxiosError} from '@script-development/fs-http';
 
 try {
-  await http.postRequest("/users", data);
+    await http.postRequest('/users', data);
 } catch (error) {
-  if (isAxiosError<{ message: string }>(error)) {
-    // error.response?.data is typed as { message: string }
-    console.error(error.response?.data.message);
-  }
+    if (isAxiosError<{message: string}>(error)) {
+        // error.response?.data is typed as { message: string }
+        console.error(error.response?.data.message);
+    }
 }
 ```
 

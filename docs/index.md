@@ -1,33 +1,33 @@
 ---
 layout: home
 hero:
-  name: FS Packages
-  text: Shared frontend services
-  tagline: A collection of framework-agnostic and Vue-powered service packages built by Script Development.
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /getting-started
-    - theme: alt
-      text: View on GitHub
-      link: https://github.com/script-development/fs-packages
-    - theme: alt
-      text: Browse on npm
-      link: https://www.npmjs.com/org/script-development
+    name: FS Packages
+    text: Shared frontend services
+    tagline: A collection of framework-agnostic and Vue-powered service packages built by Script Development.
+    actions:
+        - theme: brand
+          text: Get Started
+          link: /getting-started
+        - theme: alt
+          text: View on GitHub
+          link: https://github.com/script-development/fs-packages
+        - theme: alt
+          text: Browse on npm
+          link: https://www.npmjs.com/org/script-development
 
 features:
-  - title: Factory Pattern
-    details: Every package exports a createXxxService() factory that returns a plain object. No classes, no singletons, no hidden state. You control when and where services are created.
-  - title: Loose Coupling
-    details: Packages communicate through structural typing (duck types), not direct imports. Swap implementations without changing consumers. fs-theme doesn't import fs-storage — it accepts anything with get() and put().
-  - title: Middleware Architecture
-    details: HTTP, loading, dialog, and router all support composable middleware pipelines. Register a handler, get an unregister function back. Stack behaviors without modifying source code.
-  - title: 100% Test Coverage
-    details: Every package maintains 100% code coverage and 90% mutation testing score. An 8-gate CI pipeline runs audit, format, lint, build, typecheck, package lint, coverage, and mutation testing on every PR.
-  - title: Component Agnostic
-    details: Toast and dialog services manage lifecycle and state — you bring your own Vue components. No opinionated UI. Your design system, our plumbing.
-  - title: Type Safe
-    details: Built with TypeScript 5.9+ in strict mode. Router navigation is type-checked against your route definitions. Translation keys are validated at compile time. No stringly-typed APIs.
+    - title: Factory Pattern
+      details: Every package exports a createXxxService() factory that returns a plain object. No classes, no singletons, no hidden state. You control when and where services are created.
+    - title: Loose Coupling
+      details: Packages communicate through structural typing (duck types), not direct imports. Swap implementations without changing consumers. fs-theme doesn't import fs-storage — it accepts anything with get() and put().
+    - title: Middleware Architecture
+      details: HTTP, loading, dialog, and router all support composable middleware pipelines. Register a handler, get an unregister function back. Stack behaviors without modifying source code.
+    - title: 100% Test Coverage
+      details: Every package maintains 100% code coverage and 90% mutation testing score. An 8-gate CI pipeline runs audit, format, lint, build, typecheck, package lint, coverage, and mutation testing on every PR.
+    - title: Component Agnostic
+      details: Toast and dialog services manage lifecycle and state — you bring your own Vue components. No opinionated UI. Your design system, our plumbing.
+    - title: Type Safe
+      details: Built with TypeScript 5.9+ in strict mode. Router navigation is type-checked against your route definitions. Translation keys are validated at compile time. No stringly-typed APIs.
 ---
 
 ## The Packages

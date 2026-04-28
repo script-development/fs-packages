@@ -7,8 +7,8 @@ This page explains the design decisions behind the package collection. If you're
 Every package exports a `createXxxService()` function that returns a plain object:
 
 ```typescript
-const http = createHttpService("https://api.example.com");
-const storage = createStorageService("myapp");
+const http = createHttpService('https://api.example.com');
+const storage = createStorageService('myapp');
 const loading = createLoadingService();
 ```
 
@@ -18,10 +18,10 @@ Classes create hidden coupling. When you `new` a class, you commit to an inherit
 
 ```typescript
 // What you get back is just an object with methods
-const http = createHttpService("https://api.example.com");
+const http = createHttpService('https://api.example.com');
 
 // You can destructure it, pass individual methods around, or store it — no surprises
-const { getRequest, postRequest } = http;
+const {getRequest, postRequest} = http;
 ```
 
 ### Why not singletons?
@@ -30,12 +30,12 @@ Singletons are convenient until you need two instances. A factory lets you creat
 
 ```typescript
 // Two HTTP services pointing at different APIs
-const apiHttp = createHttpService("https://api.example.com");
-const authHttp = createHttpService("https://auth.example.com");
+const apiHttp = createHttpService('https://api.example.com');
+const authHttp = createHttpService('https://auth.example.com');
 
 // Two storage services with different prefixes
-const userStorage = createStorageService("user");
-const cacheStorage = createStorageService("cache");
+const userStorage = createStorageService('user');
+const cacheStorage = createStorageService('cache');
 ```
 
 In testing, factories make setup trivial — create a fresh service per test, no global state to reset.
@@ -51,12 +51,12 @@ The clearest example is `fs-theme`. It needs something that can `get()` and `put
 ```typescript
 // fs-theme defines what it needs
 interface ThemeStorageContract {
-  get<T>(key: string): T | undefined;
-  put(key: string, value: unknown): void;
+    get<T>(key: string): T | undefined;
+    put(key: string, value: unknown): void;
 }
 
 // fs-storage happens to match — but theme doesn't import it
-const storage = createStorageService("myapp");
+const storage = createStorageService('myapp');
 const theme = createThemeService(storage); // works because the shape matches
 ```
 
@@ -64,7 +64,7 @@ const theme = createThemeService(storage); // works because the shape matches
 In tests, you can pass a plain object instead of a real storage service:
 
 ```typescript
-const fakeStorage = { get: () => undefined, put: () => {} };
+const fakeStorage = {get: () => undefined, put: () => {}};
 const theme = createThemeService(fakeStorage);
 ```
 
@@ -81,12 +81,7 @@ When packages do depend on each other (like `fs-loading` using `fs-http`'s middl
 
 ```json
 // fs-loading's package.json
-{
-  "peerDependencies": {
-    "@script-development/fs-http": "^1.0.0",
-    "vue": "^3.5.0"
-  }
-}
+{"peerDependencies": {"@script-development/fs-http": "^1.0.0", "vue": "^3.5.0"}}
 ```
 
 ## Middleware Architecture
@@ -98,23 +93,23 @@ Several packages support **middleware** — functions you register to intercept 
 `fs-http` provides three middleware hooks that form a request lifecycle:
 
 ```typescript
-const http = createHttpService("https://api.example.com");
+const http = createHttpService('https://api.example.com');
 
 // 1. Before the request goes out
 const unregReq = http.registerRequestMiddleware((config) => {
-  config.headers.set("Authorization", `Bearer ${token}`);
+    config.headers.set('Authorization', `Bearer ${token}`);
 });
 
 // 2. When a successful response comes back
 const unregRes = http.registerResponseMiddleware((response) => {
-  trackAnalytics(response.config.url, response.status);
+    trackAnalytics(response.config.url, response.status);
 });
 
 // 3. When a request fails
 const unregErr = http.registerResponseErrorMiddleware((error) => {
-  if (error.response?.status === 401) {
-    redirectToLogin();
-  }
+    if (error.response?.status === 401) {
+        redirectToLogin();
+    }
 });
 
 // Clean up when done
@@ -128,14 +123,14 @@ unregErr();
 The middleware system enables packages to compose without direct coupling. `fs-loading` doesn't modify `fs-http` — it hooks into it:
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
-import { createLoadingService, registerLoadingMiddleware } from "@script-development/fs-loading";
+import {createHttpService} from '@script-development/fs-http';
+import {createLoadingService, registerLoadingMiddleware} from '@script-development/fs-loading';
 
-const http = createHttpService("https://api.example.com");
+const http = createHttpService('https://api.example.com');
 const loading = createLoadingService();
 
 // This registers request + response + error middleware on the HTTP service
-const { unregister } = registerLoadingMiddleware(http, loading);
+const {unregister} = registerLoadingMiddleware(http, loading);
 
 // Now loading.isLoading automatically reflects pending HTTP requests
 // When done, clean up all three middleware registrations at once:
@@ -151,12 +146,12 @@ In single-page applications, services outlive individual components. If a compon
 ```typescript
 // In a Vue composable or component setup
 const unregister = http.registerResponseErrorMiddleware((error) => {
-  showErrorNotification(error);
+    showErrorNotification(error);
 });
 
 // Clean up on unmount
 onUnmounted(() => {
-  unregister();
+    unregister();
 });
 ```
 
@@ -165,13 +160,13 @@ onUnmounted(() => {
 `fs-toast` and `fs-dialog` manage **state and lifecycle** — the queue, the stack, the open/close logic — but they don't render anything. You provide the Vue component, they handle the plumbing:
 
 ```typescript
-import { createToastService } from "@script-development/fs-toast";
-import MyToast from "@/components/MyToast.vue"; // YOUR component
+import {createToastService} from '@script-development/fs-toast';
+import MyToast from '@/components/MyToast.vue'; // YOUR component
 
 const toast = createToastService(MyToast);
 
 // Show a toast — props are type-checked against your component
-toast.show({ message: "Saved", type: "success" });
+toast.show({message: 'Saved', type: 'success'});
 ```
 
 ### Why not built-in components?
@@ -182,11 +177,11 @@ The service provides a `ContainerComponent` that you mount once in your app root
 
 ```vue
 <template>
-  <div id="app">
-    <router-view />
-    <toast.ToastContainerComponent />
-    <dialog.DialogContainerComponent />
-  </div>
+    <div id="app">
+        <router-view />
+        <toast.ToastContainerComponent />
+        <dialog.DialogContainerComponent />
+    </div>
 </template>
 ```
 
@@ -207,12 +202,12 @@ This means services integrate naturally with Vue's ecosystem:
 
 ```vue
 <script setup lang="ts">
-import { watch } from "vue";
-import { loading } from "@/services";
+import {watch} from 'vue';
+import {loading} from '@/services';
 
 // Standard Vue reactivity — nothing special
 watch(loading.isLoading, (isLoading) => {
-  document.title = isLoading ? "Loading..." : "My App";
+    document.title = isLoading ? 'Loading...' : 'My App';
 });
 </script>
 ```
@@ -235,18 +230,12 @@ TypeScript isn't just for autocomplete — it catches entire categories of bugs 
 `fs-router` extracts route names from your route definitions and validates navigation calls:
 
 ```typescript
-const routes = [
-  createCrudRoutes("/users", "users", Layout, {
-    overview: UsersList,
-    create: UserCreate,
-    edit: UserEdit,
-  }),
-];
+const routes = [createCrudRoutes('/users', 'users', Layout, {overview: UsersList, create: UserCreate, edit: UserEdit})];
 
 const router = createRouterService(routes);
 
-router.goToEditPage("users", 42); // compiles — "users" exists and has an edit page
-router.goToEditPage("projects", 42); // compile error — "projects" is not a valid route
+router.goToEditPage('users', 42); // compiles — "users" exists and has an edit page
+router.goToEditPage('projects', 42); // compile error — "projects" is not a valid route
 ```
 
 ### Translation Type Safety
@@ -255,17 +244,12 @@ router.goToEditPage("projects", 42); // compile error — "projects" is not a va
 
 ```typescript
 const translation = createTranslationService(
-  {
-    en: {
-      common: { save: "Save", cancel: "Cancel" },
-      users: { title: "Users", empty: "No users found" },
-    },
-  },
-  "en",
+    {en: {common: {save: 'Save', cancel: 'Cancel'}, users: {title: 'Users', empty: 'No users found'}}},
+    'en',
 );
 
-translation.t("common.save"); // compiles — "common.save" exists
-translation.t("common.delete"); // compile error — "common.delete" doesn't exist
+translation.t('common.save'); // compiles — "common.save" exists
+translation.t('common.delete'); // compile error — "common.delete" doesn't exist
 ```
 
 ## The Dependency Graph

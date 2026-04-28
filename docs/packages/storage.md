@@ -13,18 +13,18 @@ npm install @script-development/fs-storage
 ## Basic Usage
 
 ```typescript
-import { createStorageService } from "@script-development/fs-storage";
+import {createStorageService} from '@script-development/fs-storage';
 
-const storage = createStorageService("myapp");
+const storage = createStorageService('myapp');
 
 // Stores as "myapp:username" in localStorage
-storage.put("username", "Alice");
+storage.put('username', 'Alice');
 
 // Retrieves from "myapp:username"
-const name = storage.get<string>("username"); // "Alice"
+const name = storage.get<string>('username'); // "Alice"
 
 // Remove a single key
-storage.remove("username");
+storage.remove('username');
 
 // Remove all keys with this prefix
 storage.clear();
@@ -36,13 +36,13 @@ The service handles JSON serialization automatically. You can store any value th
 
 ```typescript
 // Objects and arrays are JSON-stringified on put, parsed on get
-storage.put("settings", { theme: "dark", language: "en" });
-const settings = storage.get<Settings>("settings"); // { theme: "dark", language: "en" }
+storage.put('settings', {theme: 'dark', language: 'en'});
+const settings = storage.get<Settings>('settings'); // { theme: "dark", language: "en" }
 
 // Numbers, booleans, arrays — all work
-storage.put("count", 42);
-storage.put("enabled", true);
-storage.put("tags", ["admin", "editor"]);
+storage.put('count', 42);
+storage.put('enabled', true);
+storage.put('tags', ['admin', 'editor']);
 ```
 
 ## Default Values
@@ -51,7 +51,7 @@ The `get` method accepts a default value that is returned when the key doesn't e
 
 ```typescript
 // Returns "guest" if "role" hasn't been stored
-const role = storage.get("role", "guest"); // "guest"
+const role = storage.get('role', 'guest'); // "guest"
 ```
 
 ::: tip Smart parsing behavior
@@ -63,14 +63,14 @@ When you pass a **string** default value, the stored value is returned as a raw 
 The prefix is prepended to every key with a `:` separator:
 
 ```typescript
-const userStorage = createStorageService("user");
-const cacheStorage = createStorageService("cache");
+const userStorage = createStorageService('user');
+const cacheStorage = createStorageService('cache');
 
-userStorage.put("name", "Alice"); // localStorage key: "user:name"
-cacheStorage.put("name", "stale"); // localStorage key: "cache:name"
+userStorage.put('name', 'Alice'); // localStorage key: "user:name"
+cacheStorage.put('name', 'stale'); // localStorage key: "cache:name"
 
-userStorage.get("name"); // "Alice"
-cacheStorage.get("name"); // "stale"
+userStorage.get('name'); // "Alice"
+cacheStorage.get('name'); // "stale"
 
 // clear() only removes keys with the matching prefix
 userStorage.clear(); // removes "user:*", leaves "cache:*" intact
@@ -87,10 +87,10 @@ This is particularly useful when:
 `fs-storage` provides the storage shape that other packages accept. For example, `fs-theme` needs a storage contract — and `fs-storage` matches it naturally:
 
 ```typescript
-import { createStorageService } from "@script-development/fs-storage";
-import { createThemeService } from "@script-development/fs-theme";
+import {createStorageService} from '@script-development/fs-storage';
+import {createThemeService} from '@script-development/fs-theme';
 
-const storage = createStorageService("myapp");
+const storage = createStorageService('myapp');
 const theme = createThemeService(storage);
 // Theme preference is persisted under "myapp:theme"
 ```

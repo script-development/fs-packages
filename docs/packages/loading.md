@@ -17,7 +17,7 @@ npm install @script-development/fs-loading
 ### Manual Tracking
 
 ```typescript
-import { createLoadingService } from "@script-development/fs-loading";
+import {createLoadingService} from '@script-development/fs-loading';
 
 const loading = createLoadingService();
 
@@ -41,32 +41,32 @@ loading.isLoading.value; // false (counter = 0)
 The real power is the middleware integration. Register it once and every HTTP request automatically tracks loading state:
 
 ```typescript
-import { createHttpService } from "@script-development/fs-http";
-import { createLoadingService, registerLoadingMiddleware } from "@script-development/fs-loading";
+import {createHttpService} from '@script-development/fs-http';
+import {createLoadingService, registerLoadingMiddleware} from '@script-development/fs-loading';
 
-const http = createHttpService("https://api.example.com");
+const http = createHttpService('https://api.example.com');
 const loading = createLoadingService();
 
 // Wire them together
 registerLoadingMiddleware(http, loading);
 
 // Now every request automatically updates loading state
-await http.getRequest("/users"); // isLoading: true → false
-await http.postRequest("/users", data); // isLoading: true → false
+await http.getRequest('/users'); // isLoading: true → false
+await http.postRequest('/users', data); // isLoading: true → false
 ```
 
 In a Vue component:
 
 ```vue
 <script setup lang="ts">
-import { loading } from "@/services";
+import {loading} from '@/services';
 </script>
 
 <template>
-  <div v-if="loading.isLoading.value" class="spinner" />
-  <main v-else>
-    <slot />
-  </main>
+    <div v-if="loading.isLoading.value" class="spinner" />
+    <main v-else>
+        <slot />
+    </main>
 </template>
 ```
 
@@ -76,7 +76,7 @@ Long-running or stuck requests can leave loading state active forever. The middl
 
 ```typescript
 registerLoadingMiddleware(http, loading, {
-  timeoutMs: 30000, // 30 seconds — auto-recover if a request hangs
+    timeoutMs: 30000, // 30 seconds — auto-recover if a request hangs
 });
 ```
 
@@ -102,7 +102,7 @@ await loading.ensureLoadingFinished();
 The `registerLoadingMiddleware` function returns an object with an `unregister` method that removes all middleware and clears pending timeouts:
 
 ```typescript
-const { unregister } = registerLoadingMiddleware(http, loading);
+const {unregister} = registerLoadingMiddleware(http, loading);
 
 // Later: clean up everything
 unregister();
