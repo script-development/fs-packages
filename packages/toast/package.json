@@ -46,10 +46,10 @@
     "devDependencies": {
         "@vue/test-utils": "^2.4.6",
         "happy-dom": "^20.9.0",
-        "vue": "^3.5.32"
+        "vue": "^3.5.33"
     },
     "peerDependencies": {
-        "vue": "^3.5.32"
+        "vue": "^3.5.33"
     },
     "engines": {
         "node": ">=24.0.0"
