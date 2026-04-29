@@ -44,10 +44,10 @@
         "string-ts": "^2.3.1"
     },
     "devDependencies": {
-        "vue": "^3.5.32"
+        "vue": "^3.5.33"
     },
     "peerDependencies": {
-        "vue": "^3.5.32"
+        "vue": "^3.5.33"
     },
     "engines": {
         "node": ">=24.0.0"

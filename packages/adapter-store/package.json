@@ -46,14 +46,14 @@
         "@script-development/fs-loading": "^0.1.0",
         "@script-development/fs-storage": "^0.1.0",
         "happy-dom": "^20.9.0",
-        "vue": "^3.5.32"
+        "vue": "^3.5.33"
     },
     "peerDependencies": {
         "@script-development/fs-helpers": "^0.1.0",
         "@script-development/fs-http": "^0.1.0",
         "@script-development/fs-loading": "^0.1.0",
         "@script-development/fs-storage": "^0.1.0",
-        "vue": "^3.5.32"
+        "vue": "^3.5.33"
     },
     "engines": {
         "node": ">=24.0.0"
