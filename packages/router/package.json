@@ -41,7 +41,7 @@
         "typecheck": "tsc --noEmit"
     },
     "devDependencies": {
-        "@vue/test-utils": "^2.4.6",
+        "@vue/test-utils": "^2.4.9",
         "happy-dom": "^20.9.0",
         "vue": "^3.5.33",
         "vue-router": "^5.0.6"
