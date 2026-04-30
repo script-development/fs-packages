@@ -13,6 +13,13 @@ export type HttpServiceOptions = {
     withCredentials?: boolean;
     withXSRFToken?: boolean;
     smartCredentials?: boolean;
+    /**
+     * Request timeout in milliseconds. Defaults to 30_000 (30s).
+     * Set 0 to disable (caller takes responsibility per Doctrine #8).
+     * Per-request override available via the `AxiosRequestConfig.timeout`
+     * parameter on each method.
+     */
+    timeout?: number;
 };
 
 export type HttpService = {

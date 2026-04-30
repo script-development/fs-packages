@@ -2,7 +2,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {createHttpService, isAxiosError} from '../src/index';
+import {DEFAULT_TIMEOUT_MS, createHttpService, isAxiosError} from '../src/index';
 
 const BASE_URL = 'https://api.example.com';
 
@@ -73,6 +73,20 @@ describe('createHttpService', () => {
             expect(response.config.withXSRFToken).toBe(false);
             expect(response.config.headers.Accept).toBe('application/json');
         });
+
+        it('applies the 30000ms default timeout when timeout option is unset', async () => {
+            // Arrange — Doctrine #8 library-author extension: factory must default to
+            // a compliant timeout so consumers cannot silently inherit indefinite hangs.
+            mock.onGet(/.*/).reply(200, {});
+            const service = createHttpService(BASE_URL);
+
+            // Act
+            const response = await service.getRequest('/test');
+
+            // Assert
+            expect(DEFAULT_TIMEOUT_MS).toBe(30_000);
+            expect(response.config.timeout).toBe(30_000);
+        });
     });
 
     describe('custom options', () => {
@@ -111,6 +125,33 @@ describe('createHttpService', () => {
 
             // Assert
             expect(response.config.withXSRFToken).toBe(true);
+        });
+
+        it('overrides the default timeout when timeout option is provided', async () => {
+            // Arrange
+            mock.onGet(/.*/).reply(200, {});
+            const service = createHttpService(BASE_URL, {timeout: 5_000});
+
+            // Act
+            const response = await service.getRequest('/test');
+
+            // Assert
+            expect(response.config.timeout).toBe(5_000);
+        });
+
+        it('disables the timeout when timeout: 0 is provided (kills ?? -> || mutation)', async () => {
+            // Arrange — `0` is falsy but explicitly defined. With `??` the caller's 0 is
+            // honored (timeout disabled, consumer accepts Doctrine #8 responsibility).
+            // With `||` the 0 would be coerced back to DEFAULT_TIMEOUT_MS — this test
+            // discriminates the two and kills the operator-swap mutation.
+            mock.onGet(/.*/).reply(200, {});
+            const service = createHttpService(BASE_URL, {timeout: 0});
+
+            // Act
+            const response = await service.getRequest('/test');
+
+            // Assert
+            expect(response.config.timeout).toBe(0);
         });
     });
 

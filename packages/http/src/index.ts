@@ -1,4 +1,4 @@
-export {createHttpService} from './http';
+export {DEFAULT_TIMEOUT_MS, createHttpService} from './http';
 export type {
     HttpService,
     HttpServiceOptions,
