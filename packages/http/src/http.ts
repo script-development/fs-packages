@@ -14,10 +14,6 @@ import type {
 
 import {isAxiosError} from './utils';
 
-const HEADERS_TO_TYPE: Record<string, string> = {
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'application/xlsx',
-};
-
 /**
  * Default request timeout in milliseconds (30s). Applied when
  * `HttpServiceOptions.timeout` is unset. Per Doctrine #8 (library-author
@@ -26,12 +22,6 @@ const HEADERS_TO_TYPE: Record<string, string> = {
  * indefinite hangs.
  */
 export const DEFAULT_TIMEOUT_MS = 30_000;
-
-// axios 1.15+ types `response.headers[key]` as `AxiosHeaderValue | undefined`
-// (string | string[] | number | boolean | null | AxiosHeaders | undefined). For
-// content-type handling we only honor a real string; any other shape falls back
-// to undefined so the consumer's default applies.
-const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
 
 const unregister = <T>(array: T[], item: T): UnregisterMiddleware => {
     return () => {
@@ -103,40 +93,17 @@ export const createHttpService = (baseURL: string, options?: HttpServiceOptions)
     const deleteRequest = <T = unknown>(endpoint: string, options?: AxiosRequestConfig) =>
         http.delete<T>(endpoint, options);
 
-    // Browser-dependent methods
+    // Blob-returning request methods. Identical transport (responseType: 'blob');
+    // separate names communicate intent to consumers (download = save-to-disk,
+    // preview = inline-display). Neither touches the DOM — orchestration of the
+    // download dance and object-URL lifecycle lives with the consumer (see
+    // `triggerDownload` in `@script-development/fs-helpers`).
 
-    const getContentType = (headerContentType?: string, type?: string): string => {
-        if (type) return type;
-        if (headerContentType) return HEADERS_TO_TYPE[headerContentType] || headerContentType;
-        throw new Error('No content type found');
-    };
+    const downloadRequest = (endpoint: string, options?: AxiosRequestConfig) =>
+        http.get<Blob>(endpoint, {...options, responseType: 'blob'});
 
-    const downloadRequest = async (endpoint: string, documentName: string, type?: string) => {
-        const response = await http.get(endpoint, {responseType: 'blob'});
-        const {data, headers} = response;
-
-        const actualType = getContentType(asString(headers['content-type']), type);
-
-        const blob = new Blob([data], {type: actualType});
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = documentName;
-        link.click();
-        // Revoke the object URL after the click so the browser can release the
-        // blob reference. The download itself captures its own reference during
-        // link.click(), so revoking here does not interrupt it.
-        window.URL.revokeObjectURL(link.href);
-
-        return response;
-    };
-
-    const previewRequest = async (endpoint: string): Promise<string> => {
-        const response = await http.get(endpoint, {responseType: 'blob'});
-        const contentType = asString(response.headers['content-type']) ?? 'application/octet-stream';
-        const blob = new Blob([response.data], {type: contentType});
-
-        return window.URL.createObjectURL(blob);
-    };
+    const previewRequest = (endpoint: string, options?: AxiosRequestConfig) =>
+        http.get<Blob>(endpoint, {...options, responseType: 'blob'});
 
     const streamRequest = (endpoint: string, data: unknown, signal?: AbortSignal): Promise<Response> => {
         const headers: Record<string, string> = {'content-type': 'application/json', accept: 'application/json'};
