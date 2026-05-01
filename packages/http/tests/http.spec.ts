@@ -532,6 +532,17 @@ describe('createHttpService', () => {
             );
         });
 
+        it('throws when content-type header is non-string (axios 1.15+ AxiosHeaderValue)', async () => {
+            // Arrange — axios 1.15+ types header values as
+            // `AxiosHeaders | string | string[] | number | boolean | null`. Non-string values
+            // fall through `asString` to undefined, hitting the same path as a missing header.
+            mock.onGet(`${BASE_URL}/download/odd`).reply(200, 'data', {'content-type': null as unknown as string});
+            const service = createHttpService(BASE_URL);
+
+            // Act & Assert
+            await expect(service.downloadRequest('/download/odd', 'file.bin')).rejects.toThrow('No content type found');
+        });
+
         it('revokes the object URL after triggering the download', async () => {
             // Arrange
             mock.onGet(`${BASE_URL}/download/file.pdf`).reply(200, 'file-content', {'content-type': 'application/pdf'});
@@ -567,6 +578,22 @@ describe('createHttpService', () => {
         it('uses fallback content type when header is missing', async () => {
             // Arrange
             mock.onGet(`${BASE_URL}/preview/doc`).reply(200, 'blob-data', {});
+            const service = createHttpService(BASE_URL);
+
+            // Act
+            const url = await service.previewRequest('/preview/doc');
+
+            // Assert
+            expect(url).toBe('blob:http://localhost/fake-object-url');
+            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
+            expect(BlobMock).toHaveBeenCalledWith(['blob-data'], {type: 'application/octet-stream'});
+        });
+
+        it('uses fallback content type when header is non-string (axios 1.15+ AxiosHeaderValue)', async () => {
+            // Arrange — axios 1.15+ types header values as a union including arrays, numbers,
+            // booleans, and null. Any non-string value falls through `asString` and hits the
+            // same fallback path as a missing header.
+            mock.onGet(`${BASE_URL}/preview/doc`).reply(200, 'blob-data', {'content-type': null as unknown as string});
             const service = createHttpService(BASE_URL);
 
             // Act

@@ -27,6 +27,12 @@ const HEADERS_TO_TYPE: Record<string, string> = {
  */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 
+// axios 1.15+ types `response.headers[key]` as `AxiosHeaderValue | undefined`
+// (string | string[] | number | boolean | null | AxiosHeaders | undefined). For
+// content-type handling we only honor a real string; any other shape falls back
+// to undefined so the consumer's default applies.
+const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
 const unregister = <T>(array: T[], item: T): UnregisterMiddleware => {
     return () => {
         const index = array.indexOf(item);
@@ -109,7 +115,7 @@ export const createHttpService = (baseURL: string, options?: HttpServiceOptions)
         const response = await http.get(endpoint, {responseType: 'blob'});
         const {data, headers} = response;
 
-        const actualType = getContentType(headers['content-type'], type);
+        const actualType = getContentType(asString(headers['content-type']), type);
 
         const blob = new Blob([data], {type: actualType});
         const link = document.createElement('a');
@@ -126,7 +132,7 @@ export const createHttpService = (baseURL: string, options?: HttpServiceOptions)
 
     const previewRequest = async (endpoint: string): Promise<string> => {
         const response = await http.get(endpoint, {responseType: 'blob'});
-        const contentType: string = response.headers['content-type'] ?? 'application/octet-stream';
+        const contentType = asString(response.headers['content-type']) ?? 'application/octet-stream';
         const blob = new Blob([response.data], {type: contentType});
 
         return window.URL.createObjectURL(blob);
