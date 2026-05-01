@@ -18,6 +18,15 @@ const HEADERS_TO_TYPE: Record<string, string> = {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'application/xlsx',
 };
 
+/**
+ * Default request timeout in milliseconds (30s). Applied when
+ * `HttpServiceOptions.timeout` is unset. Per Doctrine #8 (library-author
+ * extension, 2026-04-22) — a shared HTTP factory must expose a compliant
+ * timeout surface so consumer territories cannot silently inherit
+ * indefinite hangs.
+ */
+export const DEFAULT_TIMEOUT_MS = 30_000;
+
 // axios 1.15+ types `response.headers[key]` as `AxiosHeaderValue | undefined`
 // (string | string[] | number | boolean | null | AxiosHeaders | undefined). For
 // content-type handling we only honor a real string; any other shape falls back
@@ -39,6 +48,7 @@ export const createHttpService = (baseURL: string, options?: HttpServiceOptions)
         withCredentials: options?.withCredentials ?? true,
         withXSRFToken: options?.withXSRFToken ?? false,
         headers: {Accept: 'application/json', ...options?.headers},
+        timeout: options?.timeout ?? DEFAULT_TIMEOUT_MS,
     });
 
     // Middleware stacks

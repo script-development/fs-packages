@@ -1,6 +1,6 @@
 {
     "name": "@script-development/fs-loading",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Reactive loading state service with counter-based tracking and HTTP middleware for fs-http",
     "homepage": "https://packages.script.nl/packages/loading",
     "license": "MIT",
@@ -41,14 +41,14 @@
         "typecheck": "tsc --noEmit"
     },
     "devDependencies": {
-        "@script-development/fs-http": "^0.1.0",
+        "@script-development/fs-http": "^0.1.0 || ^0.2.0",
         "@vue/test-utils": "^2.4.9",
         "axios": "^1.15.2",
         "happy-dom": "^20.9.0",
         "vue": "^3.5.33"
     },
     "peerDependencies": {
-        "@script-development/fs-http": "^0.1.0",
+        "@script-development/fs-http": "^0.1.0 || ^0.2.0",
         "vue": "^3.5.33"
     },
     "engines": {
