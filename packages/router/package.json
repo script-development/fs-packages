@@ -1,6 +1,6 @@
 {
     "name": "@script-development/fs-router",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Type-safe router service factory with CRUD navigation, middleware pipeline, and custom components for Vue Router",
     "homepage": "https://packages.script.nl/packages/router",
     "license": "MIT",
