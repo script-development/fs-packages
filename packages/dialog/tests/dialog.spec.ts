@@ -817,6 +817,144 @@ describe('dialog service', () => {
         });
     });
 
+    describe('host ARIA attributes', () => {
+        it('should set aria-label on the dialog element when option is provided', async () => {
+            // Arrange
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act
+            service.open(TestDialogContent, {title: 'Test'}, {ariaLabel: 'Confirm action'});
+            await nextTick();
+
+            // Assert
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-label')).toBe('Confirm action');
+        });
+
+        it('should set aria-labelledby on the dialog element when option is provided', async () => {
+            // Arrange
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act
+            service.open(TestDialogContent, {title: 'Test'}, {ariaLabelledBy: 'dialog-title-id'});
+            await nextTick();
+
+            // Assert
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-labelledby')).toBe('dialog-title-id');
+        });
+
+        it('should set aria-describedby on the dialog element when option is provided', async () => {
+            // Arrange
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act
+            service.open(TestDialogContent, {title: 'Test'}, {ariaDescribedBy: 'dialog-desc-id'});
+            await nextTick();
+
+            // Assert
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-describedby')).toBe('dialog-desc-id');
+        });
+
+        it('should set all three ARIA attributes simultaneously when all are provided', async () => {
+            // Arrange
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act
+            service.open(
+                TestDialogContent,
+                {title: 'Test'},
+                {ariaLabel: 'overall-label', ariaLabelledBy: 'title-ref', ariaDescribedBy: 'desc-ref'},
+            );
+            await nextTick();
+
+            // Assert — each option maps to its dedicated host attribute, not aliased
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-label')).toBe('overall-label');
+            expect(dialog.attributes('aria-labelledby')).toBe('title-ref');
+            expect(dialog.attributes('aria-describedby')).toBe('desc-ref');
+        });
+
+        it('should not set ARIA host attributes when options are omitted', async () => {
+            // Arrange
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act — omit the options arg entirely (covers optional-chain falsy path)
+            service.open(TestDialogContent, {title: 'No ARIA'});
+            await nextTick();
+
+            // Assert — none of the ARIA host attributes are present on the dialog element
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-label')).toBeUndefined();
+            expect(dialog.attributes('aria-labelledby')).toBeUndefined();
+            expect(dialog.attributes('aria-describedby')).toBeUndefined();
+        });
+
+        it('should not set ARIA attributes that are absent from a partial options object', async () => {
+            // Arrange — provide only one ARIA option; the other two must remain absent.
+            // This guards against accidentally cross-wiring options to the wrong attribute.
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act
+            service.open(TestDialogContent, {title: 'Test'}, {ariaLabelledBy: 'only-this'});
+            await nextTick();
+
+            // Assert
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-labelledby')).toBe('only-this');
+            expect(dialog.attributes('aria-label')).toBeUndefined();
+            expect(dialog.attributes('aria-describedby')).toBeUndefined();
+        });
+
+        it('should not forward ARIA host options into the inner component props', async () => {
+            // Arrange — host ARIA options must apply to the <dialog> element only,
+            // never leak into the rendered component's props.
+            const PropSpy = defineComponent({
+                props: {
+                    title: String,
+                    onClose: Function,
+                    ariaLabel: {type: String, default: 'untouched'},
+                    ariaLabelledBy: {type: String, default: 'untouched'},
+                    ariaDescribedBy: {type: String, default: 'untouched'},
+                },
+                render() {
+                    return h('div', {class: 'prop-spy'}, [
+                        h('span', {class: 'spy-label'}, this.ariaLabel),
+                        h('span', {class: 'spy-labelled-by'}, this.ariaLabelledBy),
+                        h('span', {class: 'spy-described-by'}, this.ariaDescribedBy),
+                    ]);
+                },
+            });
+
+            const service = createDialogService();
+            const wrapper = mount(service.DialogContainerComponent);
+
+            // Act
+            service.open(
+                PropSpy,
+                {title: 'Test'},
+                {ariaLabel: 'host-label', ariaLabelledBy: 'host-title', ariaDescribedBy: 'host-desc'},
+            );
+            await nextTick();
+
+            // Assert — inner component sees its prop defaults, host attributes sit on <dialog>
+            expect(wrapper.find('.spy-label').text()).toBe('untouched');
+            expect(wrapper.find('.spy-labelled-by').text()).toBe('untouched');
+            expect(wrapper.find('.spy-described-by').text()).toBe('untouched');
+            const dialog = wrapper.find('dialog');
+            expect(dialog.attributes('aria-label')).toBe('host-label');
+            expect(dialog.attributes('aria-labelledby')).toBe('host-title');
+            expect(dialog.attributes('aria-describedby')).toBe('host-desc');
+        });
+    });
+
     describe('dialog key uniqueness', () => {
         it('should generate unique keys for sequential dialogs', async () => {
             // Arrange

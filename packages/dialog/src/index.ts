@@ -8,10 +8,20 @@ type UnregisterMiddleware = () => void;
 /** Error handler for dialog middleware chain. Return `false` to stop propagation. */
 export type DialogErrorHandler = (error: Error, context: {closeAll: () => void}) => boolean;
 
+/** Host-level options applied to the `<dialog>` element itself, not the inner component. */
+export interface DialogOpenOptions {
+    /** Sets `aria-label` on the host `<dialog>` element. */
+    ariaLabel?: string;
+    /** Sets `aria-labelledby` on the host `<dialog>` element. */
+    ariaLabelledBy?: string;
+    /** Sets `aria-describedby` on the host `<dialog>` element. */
+    ariaDescribedBy?: string;
+}
+
 /** Public API of a dialog service instance. */
 export interface DialogService {
     /** Open a component in a new dialog on top of the stack. */
-    open: <C extends Component>(component: C, props: ComponentProps<C>) => void;
+    open: <C extends Component>(component: C, props: ComponentProps<C>, options?: DialogOpenOptions) => void;
     /** Close all dialogs in the stack. */
     closeAll: () => void;
     /** Register an error middleware handler. Returns an unregister function. */
@@ -73,7 +83,7 @@ export const createDialogService = (): DialogService => {
         updateBodyScroll();
     };
 
-    const open = <C extends Component>(component: C, props: ComponentProps<C>): void => {
+    const open = <C extends Component>(component: C, props: ComponentProps<C>, options?: DialogOpenOptions): void => {
         const key = `dialog-${dialogId++}`;
         const rawComponent = markRaw(component);
 
@@ -87,6 +97,9 @@ export const createDialogService = (): DialogService => {
                 {
                     key,
                     style: DIALOG_STYLE,
+                    'aria-label': options?.ariaLabel,
+                    'aria-labelledby': options?.ariaLabelledBy,
+                    'aria-describedby': options?.ariaDescribedBy,
                     onCancel: (event: Event) => event.preventDefault(),
                     onClick: (event: MouseEvent) => {
                         if ((event.target as HTMLElement).tagName === 'DIALOG') {
