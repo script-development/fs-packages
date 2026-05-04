@@ -34,6 +34,9 @@ await http.deleteRequest('/users/1');
 
 ```typescript
 const http = createHttpService('https://api.example.com', {
+    // Request timeout in milliseconds (default: 30000, pass 0 to disable)
+    timeout: 30_000,
+
     // Send cookies with cross-origin requests (default: true)
     withCredentials: true,
 
@@ -51,6 +54,50 @@ const http = createHttpService('https://api.example.com', {
 ### Smart Credentials
 
 When `smartCredentials` is enabled, the service automatically includes credentials for same-origin requests and excludes them for cross-origin requests. This is useful when your application talks to both your own API and third-party services.
+
+## Timeout
+
+The factory ships a compliant timeout surface per the **Doctrine #8 library-author extension** (war-room CLAUDE.md, 2026-04-22).
+
+> Library-author extension (2026-04-22) — Shared HTTP factory packages (e.g., `@script-development/fs-http`) must expose a compliant timeout surface: a default, a required option, or a documented contract plus consumer-level enforcement. Inheriting framework defaults at the library layer silently propagates the violation to every consumer territory.
+
+### Default
+
+Every request method that goes through the axios pipeline — `getRequest`, `postRequest`, `putRequest`, `patchRequest`, `deleteRequest` — inherits a **30000ms (30s) default timeout** when no override is provided. This default is the Armory's compliance posture: consumer territories that adopt fs-http inherit Doctrine #8 enforcement automatically rather than re-implementing it per call.
+
+### Service-wide Override
+
+Pass `timeout` in the options to tighten (or relax) the service-wide default for every request the service issues:
+
+```typescript
+// Tighten for a fast-API service
+const http = createHttpService('https://api.example.com', {timeout: 5_000});
+```
+
+### Service-wide Opt-out
+
+Pass `timeout: 0` to disable the default. The consumer accepts Doctrine #8 enforcement at the call layer — typical use cases are AI streaming endpoints with their own timeout discipline, where a bounded request timeout is wrong by construction:
+
+```typescript
+const http = createHttpService('https://ai.example.com', {timeout: 0});
+```
+
+### Per-request Override
+
+The existing `AxiosRequestConfig.timeout` parameter on each method overrides the service-wide value for a single call. Use this when most calls fit the service default but a specific endpoint needs different latency tolerance:
+
+```typescript
+// Service default (30000ms) for most calls; per-call override for the long one
+await http.postRequest('/generate-report', payload, {timeout: 120_000});
+```
+
+### `DEFAULT_TIMEOUT_MS`
+
+The default is also exported as a barrel-level constant for consumers that want to reference it explicitly (e.g., to derive a related timeout, or to assert parity in a test):
+
+```typescript
+import {DEFAULT_TIMEOUT_MS} from '@script-development/fs-http';
+```
 
 ## Middleware
 
@@ -152,13 +199,20 @@ try {
 
 ### `createHttpService(baseURL, options?)`
 
-| Parameter                  | Type                     | Description                                          |
-| -------------------------- | ------------------------ | ---------------------------------------------------- |
-| `baseURL`                  | `string`                 | Base URL for all requests                            |
-| `options.headers`          | `Record<string, string>` | Default headers                                      |
-| `options.withCredentials`  | `boolean`                | Send cookies cross-origin (default: `true`)          |
-| `options.withXSRFToken`    | `boolean`                | Include XSRF token (default: `false`)                |
-| `options.smartCredentials` | `boolean`                | Auto-toggle credentials by origin (default: `false`) |
+| Parameter                  | Type                     | Description                                                            |
+| -------------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| `baseURL`                  | `string`                 | Base URL for all requests                                              |
+| `options.timeout`          | `number \| undefined`    | Request timeout in milliseconds (default: `30000`; pass `0` to disable) |
+| `options.headers`          | `Record<string, string>` | Default headers                                                        |
+| `options.withCredentials`  | `boolean`                | Send cookies cross-origin (default: `true`)                            |
+| `options.withXSRFToken`    | `boolean`                | Include XSRF token (default: `false`)                                  |
+| `options.smartCredentials` | `boolean`                | Auto-toggle credentials by origin (default: `false`)                   |
+
+### Constants
+
+| Constant             | Type           | Description                                                                              |
+| -------------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| `DEFAULT_TIMEOUT_MS` | `const number` | Service-wide default timeout in milliseconds (`30000`); barrel-exported for consumer use |
 
 ### Service Methods
 

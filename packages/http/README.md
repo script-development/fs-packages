@@ -44,31 +44,7 @@ Creates a new HTTP service instance.
 
 ### Timeout
 
-The factory applies a **30000ms (30s) default timeout** to every request. This default is the Armory's compliance posture for the war-room **Doctrine #8 library-author extension** (CLAUDE.md, 2026-04-22):
-
-> Library-author extension (2026-04-22) — Shared HTTP factory packages (e.g., `@script-development/fs-http`) must expose a compliant timeout surface: a default, a required option, or a documented contract plus consumer-level enforcement. Inheriting framework defaults at the library layer silently propagates the violation to every consumer territory.
-
-To override the service-wide default, pass `timeout` in the options:
-
-```typescript
-// Tighten for a fast-API service
-const http = createHttpService('https://api.example.com', {timeout: 5_000});
-```
-
-To disable the default and accept Doctrine #8 responsibility at the consumer layer (e.g., AI streaming endpoints with their own timeout discipline), pass `timeout: 0`:
-
-```typescript
-const http = createHttpService('https://ai.example.com', {timeout: 0});
-```
-
-Per-request overrides remain available via the existing `AxiosRequestConfig.timeout` parameter on each method:
-
-```typescript
-// Service default (30000ms) for most calls; per-call override for the long one
-await http.postRequest('/generate-report', payload, {timeout: 120_000});
-```
-
-The constant is also exported as `DEFAULT_TIMEOUT_MS` for consumers that want to reference it explicitly.
+Per **Doctrine #8 library-author extension** (war-room CLAUDE.md, 2026-04-22), the factory applies a **30000ms default timeout** with `timeout: 0` opt-out and per-request override. See [the docs site Timeout section](https://packages.script.nl/packages/http#timeout) for the full surface contract.
 
 ### Request Methods
 
