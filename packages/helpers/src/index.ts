@@ -4,3 +4,5 @@ export type {Writable} from './deep-copy';
 export {isExisting} from './type-guards';
 
 export {toCamelCaseTyped, deepCamelKeys, deepSnakeKeys} from './case-conversion';
+
+export {triggerDownload} from './dom-download';

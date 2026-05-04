@@ -11,20 +11,9 @@ let mock: MockAdapter;
 beforeEach(() => {
     mock = new MockAdapter(axios);
 
-    // Stub browser globals
-    vi.stubGlobal('document', {createElement: vi.fn(() => ({href: '', download: '', click: vi.fn()})), cookie: ''});
-
-    vi.stubGlobal('window', {
-        URL: {createObjectURL: vi.fn(() => 'blob:http://localhost/fake-object-url'), revokeObjectURL: vi.fn()},
-    });
-
-    vi.stubGlobal(
-        'Blob',
-        vi.fn(function MockBlob(this: {parts: unknown[]; options: unknown}, parts: unknown[], options?: unknown) {
-            this.parts = parts;
-            this.options = options;
-        }),
-    );
+    // Browser globals — only those streamRequest still touches. The download
+    // and preview methods are pure transport in 0.3.0+, no DOM coupling.
+    vi.stubGlobal('document', {cookie: ''});
 
     vi.stubGlobal(
         'fetch',
@@ -456,153 +445,77 @@ describe('createHttpService', () => {
     });
 
     describe('downloadRequest', () => {
-        it('makes GET with responseType blob and creates download link', async () => {
-            // Arrange
-            const blobData = 'file-content';
-            mock.onGet(`${BASE_URL}/download/file.pdf`).reply(200, blobData, {'content-type': 'application/pdf'});
-            const service = createHttpService(BASE_URL);
-            const clickFn = vi.fn();
-            const mockLink = {href: '', download: '', click: clickFn};
-            const createElementFn = vi.fn(() => mockLink);
-            vi.stubGlobal('document', {createElement: createElementFn, cookie: ''});
-
-            // Act
-            const response = await service.downloadRequest('/download/file.pdf', 'report.pdf');
-
-            // Assert
-            expect(response.config.responseType).toBe('blob');
-            expect(createElementFn).toHaveBeenCalledWith('a');
-            expect(mockLink.download).toBe('report.pdf');
-            expect(mockLink.href).toBe('blob:http://localhost/fake-object-url');
-            expect(clickFn).toHaveBeenCalledTimes(1);
-
-            // Verify Blob was constructed with response data and correct type
-            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
-            expect(BlobMock).toHaveBeenCalledWith([blobData], {type: 'application/pdf'});
-        });
-
-        it('uses explicit type override when provided', async () => {
-            // Arrange
-            mock.onGet(`${BASE_URL}/download/file`).reply(200, 'data', {'content-type': 'application/octet-stream'});
-            const service = createHttpService(BASE_URL);
-            const clickFn = vi.fn();
-            vi.stubGlobal('document', {
-                createElement: vi.fn(() => ({href: '', download: '', click: clickFn})),
-                cookie: '',
-            });
-
-            // Act
-            await service.downloadRequest('/download/file', 'doc.xlsx', 'application/xlsx');
-
-            // Assert — type override takes precedence over header
-            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
-            expect(BlobMock).toHaveBeenCalledWith(['data'], {type: 'application/xlsx'});
-            expect(clickFn).toHaveBeenCalled();
-        });
-
-        it('maps known content-type headers', async () => {
-            // Arrange
-            mock.onGet(`${BASE_URL}/download/spreadsheet`).reply(200, 'data', {
-                'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-            const service = createHttpService(BASE_URL);
-            const clickFn = vi.fn();
-            vi.stubGlobal('document', {
-                createElement: vi.fn(() => ({href: '', download: '', click: clickFn})),
-                cookie: '',
-            });
-
-            // Act
-            await service.downloadRequest('/download/spreadsheet', 'report.xlsx');
-
-            // Assert — OOXML content-type mapped to application/xlsx
-            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
-            expect(BlobMock).toHaveBeenCalledWith(['data'], {type: 'application/xlsx'});
-            expect(clickFn).toHaveBeenCalled();
-        });
-
-        it('throws when no content type is available', async () => {
-            // Arrange
-            mock.onGet(`${BASE_URL}/download/unknown`).reply(200, 'data', {});
-            const service = createHttpService(BASE_URL);
-
-            // Act & Assert
-            await expect(service.downloadRequest('/download/unknown', 'file.bin')).rejects.toThrow(
-                'No content type found',
-            );
-        });
-
-        it('throws when content-type header is non-string (axios 1.15+ AxiosHeaderValue)', async () => {
-            // Arrange — axios 1.15+ types header values as
-            // `AxiosHeaders | string | string[] | number | boolean | null`. Non-string values
-            // fall through `asString` to undefined, hitting the same path as a missing header.
-            mock.onGet(`${BASE_URL}/download/odd`).reply(200, 'data', {'content-type': null as unknown as string});
-            const service = createHttpService(BASE_URL);
-
-            // Act & Assert
-            await expect(service.downloadRequest('/download/odd', 'file.bin')).rejects.toThrow('No content type found');
-        });
-
-        it('revokes the object URL after triggering the download', async () => {
+        it('makes GET with responseType blob and returns the AxiosResponse', async () => {
             // Arrange
             mock.onGet(`${BASE_URL}/download/file.pdf`).reply(200, 'file-content', {'content-type': 'application/pdf'});
             const service = createHttpService(BASE_URL);
-            const mockLink = {href: '', download: '', click: vi.fn()};
-            vi.stubGlobal('document', {createElement: vi.fn(() => mockLink), cookie: ''});
 
             // Act
-            await service.downloadRequest('/download/file.pdf', 'report.pdf');
+            const response = await service.downloadRequest('/download/file.pdf');
 
-            // Assert — revoke fires with the same URL that was assigned to href
-            expect(window.URL.revokeObjectURL).toHaveBeenCalledTimes(1);
-            expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/fake-object-url');
+            // Assert — transport-only: no DOM side effects, raw response handed back
+            expect(response.status).toBe(200);
+            expect(response.config.responseType).toBe('blob');
+            expect(response.data).toBe('file-content');
+            expect(response.headers['content-type']).toBe('application/pdf');
+        });
+
+        it('passes additional AxiosRequestConfig options through', async () => {
+            // Arrange
+            mock.onGet(`${BASE_URL}/download/file`).reply(200, 'data');
+            const service = createHttpService(BASE_URL);
+
+            // Act
+            const response = await service.downloadRequest('/download/file', {
+                timeout: 5000,
+                headers: {'X-Trace-Id': 'abc-123'},
+            });
+
+            // Assert — caller-supplied options reach axios; responseType is forced to blob
+            expect(response.config.timeout).toBe(5000);
+            expect(response.config.headers['X-Trace-Id']).toBe('abc-123');
+            expect(response.config.responseType).toBe('blob');
+        });
+
+        it('rejects on transport errors without DOM side effects', async () => {
+            // Arrange
+            mock.onGet(`${BASE_URL}/download/forbidden`).reply(403);
+            const service = createHttpService(BASE_URL);
+
+            // Act & Assert
+            await expect(service.downloadRequest('/download/forbidden')).rejects.toMatchObject({
+                response: {status: 403},
+            });
         });
     });
 
     describe('previewRequest', () => {
-        it('makes GET with responseType blob and returns object URL', async () => {
+        it('makes GET with responseType blob and returns the AxiosResponse', async () => {
             // Arrange
             mock.onGet(`${BASE_URL}/preview/doc`).reply(200, 'blob-data', {'content-type': 'application/pdf'});
             const service = createHttpService(BASE_URL);
 
             // Act
-            const url = await service.previewRequest('/preview/doc');
+            const response = await service.previewRequest('/preview/doc');
 
-            // Assert
-            expect(url).toBe('blob:http://localhost/fake-object-url');
-            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
-            expect(BlobMock).toHaveBeenCalledWith(['blob-data'], {type: 'application/pdf'});
-            expect(window.URL.createObjectURL).toHaveBeenCalled();
+            // Assert — caller receives the raw blob; object-URL lifecycle is theirs to manage
+            expect(response.status).toBe(200);
+            expect(response.config.responseType).toBe('blob');
+            expect(response.data).toBe('blob-data');
+            expect(response.headers['content-type']).toBe('application/pdf');
         });
 
-        it('uses fallback content type when header is missing', async () => {
+        it('passes additional AxiosRequestConfig options through', async () => {
             // Arrange
-            mock.onGet(`${BASE_URL}/preview/doc`).reply(200, 'blob-data', {});
+            mock.onGet(`${BASE_URL}/preview/doc`).reply(200, 'blob-data');
             const service = createHttpService(BASE_URL);
 
             // Act
-            const url = await service.previewRequest('/preview/doc');
+            const response = await service.previewRequest('/preview/doc', {timeout: 5000});
 
             // Assert
-            expect(url).toBe('blob:http://localhost/fake-object-url');
-            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
-            expect(BlobMock).toHaveBeenCalledWith(['blob-data'], {type: 'application/octet-stream'});
-        });
-
-        it('uses fallback content type when header is non-string (axios 1.15+ AxiosHeaderValue)', async () => {
-            // Arrange — axios 1.15+ types header values as a union including arrays, numbers,
-            // booleans, and null. Any non-string value falls through `asString` and hits the
-            // same fallback path as a missing header.
-            mock.onGet(`${BASE_URL}/preview/doc`).reply(200, 'blob-data', {'content-type': null as unknown as string});
-            const service = createHttpService(BASE_URL);
-
-            // Act
-            const url = await service.previewRequest('/preview/doc');
-
-            // Assert
-            expect(url).toBe('blob:http://localhost/fake-object-url');
-            const BlobMock = globalThis.Blob as unknown as ReturnType<typeof vi.fn>;
-            expect(BlobMock).toHaveBeenCalledWith(['blob-data'], {type: 'application/octet-stream'});
+            expect(response.config.timeout).toBe(5000);
+            expect(response.config.responseType).toBe('blob');
         });
     });
 
