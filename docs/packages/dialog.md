@@ -167,6 +167,42 @@ dialog.open(
 
 The service supports `v-model` prop updates — if your dialog emits `update:modelValue` events, the internal state stays in sync.
 
+## Accessibility — Host ARIA Attributes
+
+Native `<dialog>` elements need an accessible name (and usually a description) so screen readers announce more than a generic "dialog". `dialog.open()` accepts a third options arg that applies ARIA attributes directly to the host `<dialog>` element — your inner component does not need to walk `closest('dialog')` from a template ref.
+
+```typescript
+dialog.open(
+    ConfirmDialog,
+    {title: 'Delete user?', message: 'This action cannot be undone.'},
+    {ariaLabelledBy: 'confirm-dialog-title', ariaDescribedBy: 'confirm-dialog-message'},
+);
+```
+
+```vue
+<!-- ConfirmDialog.vue — the ids match the host attributes above -->
+<template>
+    <div>
+        <h2 id="confirm-dialog-title">{{ title }}</h2>
+        <p id="confirm-dialog-message">{{ message }}</p>
+    </div>
+</template>
+```
+
+For dialogs without a visible title element, use `ariaLabel` instead:
+
+```typescript
+dialog.open(
+    IconOnlyDialog,
+    {
+        /* … */
+    },
+    {ariaLabel: 'Delete confirmation'},
+);
+```
+
+All three options are independent and optional — pass any combination. Options omitted leave the corresponding attribute off the `<dialog>` element entirely (no empty-string attributes).
+
 ## API Reference
 
 ### `createDialogService()`
@@ -175,12 +211,22 @@ Returns a dialog service. No parameters.
 
 ### Service Properties
 
-| Property                           | Type                                | Description                  |
-| ---------------------------------- | ----------------------------------- | ---------------------------- |
-| `open(component, props)`           | `(component, props) => void`        | Push a dialog onto the stack |
-| `closeAll()`                       | `() => void`                        | Clear the entire stack       |
-| `registerErrorMiddleware(handler)` | `(handler) => UnregisterMiddleware` | Register an error handler    |
-| `DialogContainerComponent`         | `Component`                         | Mount this in your app root  |
+| Property                           | Type                                                      | Description                  |
+| ---------------------------------- | --------------------------------------------------------- | ---------------------------- |
+| `open(component, props, options?)` | `(component, props, options?: DialogOpenOptions) => void` | Push a dialog onto the stack |
+| `closeAll()`                       | `() => void`                                              | Clear the entire stack       |
+| `registerErrorMiddleware(handler)` | `(handler) => UnregisterMiddleware`                       | Register an error handler    |
+| `DialogContainerComponent`         | `Component`                                               | Mount this in your app root  |
+
+### `DialogOpenOptions`
+
+```typescript
+interface DialogOpenOptions {
+    ariaLabel?: string; // sets aria-label on the host <dialog>
+    ariaLabelledBy?: string; // sets aria-labelledby on the host <dialog>
+    ariaDescribedBy?: string; // sets aria-describedby on the host <dialog>
+}
+```
 
 ### Error Handler Signature
 
