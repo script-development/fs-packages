@@ -41,7 +41,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "vue-component-type-helpers": "^3.2.9"
+        "vue-component-type-helpers": "^3.3.2"
     },
     "devDependencies": {
         "@vue/test-utils": "^2.4.10",
