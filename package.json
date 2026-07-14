@@ -34,7 +34,7 @@
         "oxlint": "^1.72",
         "publint": "^0.3.21",
         "tsdown": "^0.22.7",
-        "typescript": "^6.0",
+        "typescript": "^7.0",
         "vitepress": "^2.0.0-alpha.17",
         "vitest": "^4"
     },
