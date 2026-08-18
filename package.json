@@ -34,7 +34,7 @@
         "@vitest/browser-playwright": "^4.1.10",
         "@vitest/coverage-v8": "^4",
         "axe-core": "^4.12.1",
-        "happy-dom": "^20.11.0",
+        "happy-dom": "^20.11.2",
         "oxfmt": "^0.61.0",
         "oxlint": "^1.74",
         "playwright": "^1.61.1",
