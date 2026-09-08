@@ -32,8 +32,8 @@
         "@stryker-mutator/core": "^10",
         "@stryker-mutator/vitest-runner": "^10",
         "@vitejs/plugin-vue": "^6.0.8",
-        "@vitest/browser-playwright": "^4.1.11",
-        "@vitest/coverage-v8": "^4",
+        "@vitest/browser-playwright": "^5.0.0",
+        "@vitest/coverage-v8": "^5",
         "axe-core": "^4.13.0",
         "happy-dom": "^20.14.0",
         "oxfmt": "^0.66.0",
@@ -43,7 +43,7 @@
         "tsdown": "^0.23.0",
         "typescript": "^6.0",
         "vitepress": "^2.0.0-alpha.19",
-        "vitest": "^4",
+        "vitest": "^5",
         "vitest-browser-vue": "^2.1.0"
     },
     "overrides": {
