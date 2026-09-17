@@ -1,6 +1,6 @@
 {
     "name": "@script-development/fs-auth",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Sanctum SPA-cookie session store, safe-redirect guard and auth registrars for fs-http + fs-router",
     "homepage": "https://packages.script.nl/packages/auth",
     "license": "MIT",
