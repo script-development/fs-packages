@@ -46,11 +46,11 @@
         "@vue/test-utils": "^2.5.0",
         "axios": "^1.20.0",
         "happy-dom": "^20.14.3",
-        "vue": "^3.5.42"
+        "vue": "^3.5.43"
     },
     "peerDependencies": {
         "@script-development/fs-http": "^0.5.0 || ^0.6.0",
-        "vue": "^3.5.42"
+        "vue": "^3.5.43"
     },
     "engines": {
         "node": ">=24.0.0"
