@@ -183,8 +183,13 @@ and an assertion on the unchanged value for the proxy.
 ## D11 — Six surviving mutants
 
 _Fifth added in fix round 3; sixth in fix round 4, 2026-09-16. Score re-measured
-at each: 98.00 → 97.71 → 97.61 → 97.67 → 97.71. Rounds 5, 6 and 7 each added
-no new survivor; the six below are exactly the six measured._
+at each: 98.00 → 97.71 → 97.61 → 97.67 → 97.71, and **97.74 at 0.2.0**
+(2026-09-21, full run with the incremental file deleted: 266 mutants, 257
+killed, 3 timed out, 6 survived). Rounds 5, 6 and 7 each added no new survivor,
+and neither did 0.2.0 — the six below are exactly the six measured, in the same
+six shapes. The only 0.2.0 change is to the third entry's quoted line: the
+sentinel carries a `state` property now (D23), and emptying it is equivalent for
+the same reason it always was._
 
 The mutation gate is 90. Five survivors have no observable behaviour change; one
 (the fifth) has one nobody can provoke on purpose. Named here so a later reader
@@ -198,8 +203,10 @@ type-safe, and the set's behaviour is what makes the mutant equivalent.
   and a last-writer comparison; counting down satisfies both.
 - `() => false` → `() => undefined` on the `isChallenge` default. Both falsy at
   the only place the value is read.
-- `const SUPERSEDED = {status: undefined, body: undefined}` → `{}`. Every caller
-  reads both properties back as `undefined` either way.
+- `const SUPERSEDED = {status: undefined, body: undefined, state: undefined}` →
+  `{}`. Every caller reads all three properties back as `undefined` either way —
+  including `loadSession()`'s `read.state === undefined` check, which is what
+  maps the sentinel to `undefined` at the public boundary (D23).
 - `status !== undefined && SIGNED_OUT_STATUSES.has(status)` → `true && …`, now
   in `isSignedOutStatus` (`endpoints.ts`). It moved there in fix round 4 when
   `logout()` became its second reader — one survivor for one idiom, rather than
