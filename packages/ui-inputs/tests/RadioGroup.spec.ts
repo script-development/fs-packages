@@ -4,7 +4,10 @@ import {describe, expect, it} from 'vitest';
 
 import RadioGroup from '../src/components/RadioGroup.vue';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},
@@ -101,7 +104,10 @@ describe('RadioGroup', () => {
     });
 
     it('round-trips string ids and resolves member labels via a getter', async () => {
-        type Tag = {id: string; title: string};
+        interface Tag {
+            id: string;
+            title: string;
+        }
         const tags: Tag[] = [
             {id: 'b', title: 'beta'},
             {id: 'a', title: 'alpha'},

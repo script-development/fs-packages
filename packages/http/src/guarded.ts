@@ -42,15 +42,12 @@ const defaultOnError: GuardedMiddlewareErrorHandler = (error) => {
  *                error tracker). Do not re-throw from it.
  * @returns a middleware function of the same shape that never throws.
  */
-export const guarded = <T>(
-    fn: (arg: T) => void,
-    onError: GuardedMiddlewareErrorHandler = defaultOnError,
-): ((arg: T) => void) => {
-    return (arg: T) => {
+export const guarded =
+    <T>(fn: (arg: T) => void, onError: GuardedMiddlewareErrorHandler = defaultOnError): ((arg: T) => void) =>
+    (arg: T) => {
         try {
             fn(arg);
         } catch (error) {
             onError(error);
         }
     };
-};

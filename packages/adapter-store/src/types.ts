@@ -5,7 +5,9 @@ import type {StorageService} from '@script-development/fs-storage';
 import type {ComputedRef, Ref} from 'vue';
 
 /** Base constraint for all domain items — must have a numeric id. */
-export type Item = {id: number};
+export interface Item {
+    id: number;
+}
 
 /** Default type for new resources — strips the id field. Territories can override. */
 export type DefaultNew<T extends Item> = Omit<T, 'id'>;
@@ -15,7 +17,10 @@ export type DefaultNew<T extends Item> = Omit<T, 'id'>;
  * NOT part of the public API — adapters use this to mutate store state
  * after successful CRUD operations.
  */
-export type AdapterStoreModule<T extends Item> = {setById: (item: T) => void; deleteById: (id: number) => void};
+export interface AdapterStoreModule<T extends Item> {
+    setById: (item: T) => void;
+    deleteById: (id: number) => void;
+}
 
 /** Base of a resource adapter: readonly resource + mutable ref + reset. */
 type BaseResourceAdapter<T extends object> = Readonly<T> & {
@@ -38,10 +43,10 @@ export type NewAdapted<T extends Item, N extends object = DefaultNew<T>> = BaseR
 };
 
 /** Callable adapter type — overloaded for existing vs new resources. */
-export type Adapter<T extends Item, E extends Adapted<T, object>, N extends NewAdapted<T, object>> = {
+export interface Adapter<T extends Item, E extends Adapted<T, object>, N extends NewAdapted<T, object>> {
     (storeModule: AdapterStoreModule<T>): N;
     (storeModule: AdapterStoreModule<T>, resourceGetter: () => T): E;
-};
+}
 
 /**
  * Contract for binding server-initiated events (e.g. WebSocket broadcasts)
@@ -71,13 +76,13 @@ export type Adapter<T extends Item, E extends Adapted<T, object>, N extends NewA
  * it still reassigns state and calls `storageService.put`. Nested values replace the
  * stored value wholesale; there is no deep merge.
  */
-export type AdapterStoreBroadcast<T extends Item> = {
+export interface AdapterStoreBroadcast<T extends Item> {
     subscribe: (handlers: {
         onUpdate: (item: T) => void;
         onDelete: (id: number) => void;
         onPatch: (id: number, changes: Partial<Omit<T, 'id'>>) => void;
     }) => () => void;
-};
+}
 
 /**
  * The capability surface handed to the `extend` hook. The only way data enters the
@@ -89,7 +94,7 @@ export type AdapterStoreBroadcast<T extends Item> = {
  * cross-store coordination all stay expressible — only "write state with no server
  * response behind it" is removed, which is exactly the abuse.
  */
-export type ExtendCapabilities = {
+export interface ExtendCapabilities {
     /**
      * GET `endpoint` and upsert the response into the store — a single item or an
      * array of items. Each must be an object with an integer `id`, or
@@ -98,7 +103,7 @@ export type ExtendCapabilities = {
      * sole ingest path for `extend`.
      */
     retrieveInto: (endpoint: string, options?: Parameters<HttpService['getRequest']>[1]) => Promise<void>;
-};
+}
 
 /**
  * Constraint for the `extend` return type `X`: allows any NEW store-level method,
@@ -112,12 +117,12 @@ export type ExtendShape<T extends Item, E extends Adapted<T, object>, N extends 
 };
 
 /** Configuration for createAdapterStoreModule. */
-export type AdapterStoreConfig<
+export interface AdapterStoreConfig<
     T extends Item,
     E extends Adapted<T, object>,
     N extends NewAdapted<T, object>,
     X extends ExtendShape<T, E, N, X> = {},
-> = {
+> {
     domainName: string;
     adapter: Adapter<T, E, N>;
     httpService: Pick<HttpService, 'getRequest'>;
@@ -154,14 +159,14 @@ export type AdapterStoreConfig<
      * so a new built-in is a breaking change for extend-consumers.
      */
     extend?: (cap: ExtendCapabilities) => X;
-};
+}
 
 /** Public API of a store module. */
-export type StoreModuleForAdapter<T extends Item, E extends Adapted<T, object>, N extends NewAdapted<T, object>> = {
+export interface StoreModuleForAdapter<T extends Item, E extends Adapted<T, object>, N extends NewAdapted<T, object>> {
     getAll: ComputedRef<E[]>;
     getById: (id: number) => ComputedRef<E | undefined>;
     getOrFailById: (id: number) => Promise<E>;
     generateNew: () => N;
     retrieveById: (id: number) => Promise<void>;
     retrieveAll: () => Promise<void>;
-};
+}

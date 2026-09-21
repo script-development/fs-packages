@@ -74,7 +74,7 @@ export interface UseListboxOptions {
  * callbacks. Owns `open`/`pointer`, the position-keyed IDREFs, `aria-activedescendant`, the
  * clamp watcher, click-outside, floating-ui, and the keyboard-nav skeleton.
  */
-export function useListbox(options: UseListboxOptions) {
+export const useListbox = (options: UseListboxOptions) => {
     const {
         root,
         reference,
@@ -336,4 +336,4 @@ export function useListbox(options: UseListboxOptions) {
         highlightClear,
         resetHighlight,
     };
-}
+};

@@ -10,7 +10,7 @@ import type {ComputedRef} from 'vue';
  * of any leg of it requires re-thinking the protocol itself, which is a
  * separate concern.
  */
-export type CachedAdapterStoreOptions = {
+export interface CachedAdapterStoreOptions {
     /**
      * The cache key used both as the lookup key inside the `x-fs-cache-hashes`
      * response header AND as the localStorage key for the persisted hash
@@ -18,7 +18,7 @@ export type CachedAdapterStoreOptions = {
      * key in the header value whenever the underlying data changes.
      */
     cacheKey: string;
-};
+}
 
 /**
  * Public API of a cached-adapter-store wrapper. Strictly narrower than
@@ -35,11 +35,11 @@ export type CachedAdapterStoreOptions = {
  *      `orders/fs-packages/fs-cached-adapter-store-public-surface-narrowing-engineer-deployment.md`
  *      (Commander 2026-05-13 reversal of scaffold Lock #11 + new Locks #12/#13).
  */
-export type CachedStoreModuleForAdapter<
+export interface CachedStoreModuleForAdapter<
     T extends Item,
     E extends Adapted<T, object> = Adapted<T>,
     N extends NewAdapted<T, object> = NewAdapted<T>,
-> = {
+> {
     getAll: ComputedRef<E[]>;
     getById: (id: number) => ComputedRef<E | undefined>;
     getOrFailById: (id: number) => Promise<E>;
@@ -56,4 +56,4 @@ export type CachedStoreModuleForAdapter<
      * authoritative trigger for any subsequent re-fetches.
      */
     prime: () => Promise<void>;
-};
+}

@@ -38,8 +38,8 @@ const model = defineModel<number | null>({required: true});
 // Own the empty-input coercion ONCE, so no consumer reinvents it: a native number
 // input yields NaN for an empty or unparseable value — map that to null so the
 // model is always a real number or an explicit "no value", never NaN.
-function onInput(event: Event) {
+const onInput = (event: Event) => {
     const {valueAsNumber} = event.target as HTMLInputElement;
     model.value = Number.isNaN(valueAsNumber) ? null : valueAsNumber;
-}
+};
 </script>

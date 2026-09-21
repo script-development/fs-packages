@@ -80,12 +80,10 @@ const PUBLINT_BLOCK_RE = /^(Suggestions|Warnings|Errors):$/m;
 // enforcement queue #63.
 const ANSI_RE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*[a-zA-Z]`, 'g');
 
-function stripAnsi(text) {
-    return text.replace(ANSI_RE, '');
-}
+const stripAnsi = (text) => text.replace(ANSI_RE, '');
 
-function listPackageDirs() {
-    return readdirSync(PACKAGES_DIR)
+const listPackageDirs = () =>
+    readdirSync(PACKAGES_DIR)
         .map((name) => path.join(PACKAGES_DIR, name))
         .filter((dir) => {
             // A stray file in packages/ is legitimately not a package — skip it.
@@ -107,17 +105,12 @@ function listPackageDirs() {
             }
         })
         .sort();
-}
 
-function readManifest(manifestPath) {
-    return JSON.parse(readFileSync(manifestPath, 'utf8'));
-}
+const readManifest = (manifestPath) => JSON.parse(readFileSync(manifestPath, 'utf8'));
 
-function packageName(dir) {
-    return readManifest(path.join(dir, 'package.json')).name ?? dir;
-}
+const packageName = (dir) => readManifest(path.join(dir, 'package.json')).name ?? dir;
 
-function checkEnginesNode(manifestPath, label) {
+const checkEnginesNode = (manifestPath, label) => {
     const pkg = readManifest(manifestPath);
     if (pkg.engines === undefined || pkg.engines === null) {
         return `${label}: engines field missing (queue #31 — engines.node presence required)`;
@@ -127,7 +120,7 @@ function checkEnginesNode(manifestPath, label) {
         return `${label}: engines.node missing or not a non-empty string (queue #31)`;
     }
     return null;
-}
+};
 
 // --- queue #93: module-eval side-effect freedom ---------------------------
 
@@ -148,7 +141,7 @@ const DECLARATION_EXT_RE = /\.d\.(ts|mts|cts)$/;
 
 // Recursively collect TS source files under a package's `src/` dir,
 // skipping declaration files and test files/dirs.
-function listSourceFiles(srcDir) {
+const listSourceFiles = (srcDir) => {
     const out = [];
     let entries;
     try {
@@ -186,22 +179,17 @@ function listSourceFiles(srcDir) {
         }
     }
     return out;
-}
+};
 
-function isAssignmentOperatorKind(kind) {
-    return kind >= ts.SyntaxKind.FirstAssignment && kind <= ts.SyntaxKind.LastAssignment;
-}
+const isAssignmentOperatorKind = (kind) =>
+    kind >= ts.SyntaxKind.FirstAssignment && kind <= ts.SyntaxKind.LastAssignment;
 
 // In the modern TS AST, decorators live in the combined `modifiers` array
 // alongside keyword modifiers. A decorator is a CALL evaluated at the
 // declaration's definition time — for a top-level class that is module load.
-function hasModifier(node, kind) {
-    return (node.modifiers ?? []).some((m) => m.kind === kind);
-}
+const hasModifier = (node, kind) => (node.modifiers ?? []).some((m) => m.kind === kind);
 
-function hasDecorator(node) {
-    return hasModifier(node, ts.SyntaxKind.Decorator);
-}
+const hasDecorator = (node) => hasModifier(node, ts.SyntaxKind.Decorator);
 
 // Does defining this class run no observable side effect at module load? A class
 // DECLARATION only declares — but several member shapes evaluate at
@@ -210,7 +198,7 @@ function hasDecorator(node) {
 // decorator (class- or member-level). Methods, accessors, and instance-field
 // initializers do NOT run at definition (instance fields run at construction),
 // so they are safe.
-function isLoadSafeClass(node) {
+const isLoadSafeClass = (node) => {
     if (hasDecorator(node)) {
         return false;
     }
@@ -235,13 +223,13 @@ function isLoadSafeClass(node) {
         }
     }
     return true;
-}
+};
 
 // Does binding this name run no observable side effect at module load? A plain
 // identifier binds inertly; an object/array binding pattern's DEFAULT
 // initializers (`const {a = register()} = obj`) and computed property keys
 // evaluate at load, and nested patterns recurse.
-function isLoadSafeBindingName(name) {
+const isLoadSafeBindingName = (name) => {
     if (name.kind !== ts.SyntaxKind.ObjectBindingPattern && name.kind !== ts.SyntaxKind.ArrayBindingPattern) {
         return true;
     }
@@ -263,12 +251,12 @@ function isLoadSafeBindingName(name) {
         }
     }
     return true;
-}
+};
 
 // Is an object-literal property load-side-effect-free? A method/get/set member
 // only DEFINES a function (not invoked at load); a shorthand references a
 // binding; a spread / property value / computed key must itself be load-safe.
-function isLoadSafeProperty(prop) {
+const isLoadSafeProperty = (prop) => {
     switch (prop.kind) {
         case ts.SyntaxKind.ShorthandPropertyAssignment:
         case ts.SyntaxKind.MethodDeclaration:
@@ -285,7 +273,7 @@ function isLoadSafeProperty(prop) {
         default:
             return false;
     }
-}
+};
 
 // Does evaluating this expression at module load run no observable side effect?
 // Allowlist / default-deny: a value/function/class literal, a reference, or a
@@ -294,7 +282,7 @@ function isLoadSafeProperty(prop) {
 // is a side effect (`const _ = Object.defineProperty(globalThis, ...)`,
 // `export const x = register()`, `const y = (() => { patch(); return 1 })()`).
 // Unknown kinds fail closed: a side-effect gate must not pass on the unrecognized.
-function isLoadSafeExpression(expr) {
+const isLoadSafeExpression = (expr) => {
     if (expr === undefined) {
         return true;
     }
@@ -379,7 +367,7 @@ function isLoadSafeExpression(expr) {
         default:
             return false;
     }
-}
+};
 
 // Top-level control-flow statement kinds — each EXECUTES at module load, so all
 // are side effects. Mapped to a human label so an ally reading a CI failure
@@ -415,7 +403,7 @@ const CONTROL_FLOW_KINDS = new Set([
 // Everything else — a bare ExpressionStatement (call / assignment), top-level
 // control flow (if/for/while/try/labeled/block), or a class/namespace whose body
 // evaluates at definition time — is a side effect.
-function classifyTopLevelStatement(node) {
+const classifyTopLevelStatement = (node) => {
     switch (node.kind) {
         case ts.SyntaxKind.ImportDeclaration: {
             // A specifier-less import (`import './side-effect'`) has no
@@ -518,11 +506,11 @@ function classifyTopLevelStatement(node) {
             }
             return `top-level ${ts.SyntaxKind[node.kind] ?? 'statement'} (not a side-effect-free declaration)`;
     }
-}
+};
 
 // Parse one source file and return an array of failure strings (one per
 // offending top-level statement), or [] if the file is side-effect-free.
-function checkSideEffectFreedom(filePath, label) {
+const checkSideEffectFreedom = (filePath, label) => {
     const src = readFileSync(filePath, 'utf8');
     // A `.tsx` source must parse as TSX — under plain TS the JSX `<T>` form is
     // mis-read as a type assertion. `.mts`/`.cts` parse fine as TS.
@@ -545,9 +533,9 @@ function checkSideEffectFreedom(filePath, label) {
         }
     }
     return fileFailures;
-}
+};
 
-function runCaptured(cmd, args, cwd, extraEnv) {
+const runCaptured = (cmd, args, cwd, extraEnv) => {
     const result = spawnSync(cmd, args, {
         cwd,
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -560,9 +548,9 @@ function runCaptured(cmd, args, cwd, extraEnv) {
     process.stdout.write(stdout);
     process.stderr.write(stderr);
     return {stdout, stderr, status: result.status ?? 1};
-}
+};
 
-function main() {
+const main = () => {
     const dirs = listPackageDirs();
     const failures = [];
 
@@ -652,6 +640,6 @@ function main() {
     process.stdout.write(
         `\nlint:pkg gate PASS — ${dirs.length} packages + root clean (engines.node present; publint suggestions/warnings/errors all treated as fatal; every package source module asserted module-eval side-effect-free per sideEffects:false, queue #93).\n`,
     );
-}
+};
 
 main();

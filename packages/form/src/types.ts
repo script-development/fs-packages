@@ -4,15 +4,15 @@ import type {Ref} from 'vue';
 export type ValidationErrors<T extends string = string> = Partial<Record<T, string>>;
 
 /** Reactive validation-error state returned by `useValidationErrors`. */
-export type UseValidationErrors<T extends string = string> = {
+export interface UseValidationErrors<T extends string = string> {
     /** Current field errors. Populated from a 422 response, cleared on demand. */
     errors: Ref<ValidationErrors<T>>;
     /** Clear all field errors. */
     clearErrors: () => void;
-};
+}
 
 /** Options for `useValidationErrors`. */
-export type UseValidationErrorsOptions = {
+export interface UseValidationErrorsOptions {
     /**
      * Maps each raw backend field key to the key stored in the error bag.
      * Defaults to identity — keys are used verbatim (e.g. `first_name`). Pass a
@@ -21,10 +21,10 @@ export type UseValidationErrorsOptions = {
      * @default (key) => key
      */
     keyMapper?: (key: string) => string;
-};
+}
 
 /** Form-submit helper returned by `useFormSubmit`. */
-export type UseFormSubmit = {
+export interface UseFormSubmit {
     /**
      * Run a submit action with double-submit prevention. A 422 (validation)
      * rejection is swallowed — the field errors have already been surfaced by
@@ -34,7 +34,7 @@ export type UseFormSubmit = {
     handleSubmit: (action: () => Promise<void>) => Promise<void>;
     /** `true` while a submit action is in flight — the form's loading state. */
     submitting: Ref<boolean>;
-};
+}
 
 /** Options for `useForm`: the validation options plus `useForm`-only behaviour. */
 export type UseFormOptions = UseValidationErrorsOptions & {

@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "plugins": ["typescript", "unicorn", "oxc"],
+    "plugins": ["import", "typescript", "unicorn", "oxc"],
     "categories": {"correctness": "error"},
     "rules": {
         // Library-territory selective adoption from war-room canonical template (commit 321da5f).
@@ -12,7 +12,18 @@
         "typescript/no-unnecessary-type-conversion": "error",
         "typescript/no-unnecessary-type-parameters": "warn",
         "unicorn/no-useless-iterator-to-array": "warn",
-        "unicorn/import-style": "warn"
+        "unicorn/import-style": "warn",
+        // Arrow-function ruling (Commander 2026-09-21) — `function` declarations hoist and bind
+        // their own `this`; arrows do neither. The six canonical lines, war-room `templates/oxlintrc.json`.
+        // `no-use-before-define` is the same-scope form: it guards the class case only, and the
+        // all-scope form (`variables: true`) was run to its irreducible residual as a one-off
+        // migration instrument (see the execution report's mutual-recursion note).
+        "func-style": ["error", "expression"],
+        "prefer-arrow-callback": ["error", {"allowNamedFunctions": false, "allowUnboundThis": true}],
+        "arrow-body-style": ["error", "as-needed"],
+        "no-use-before-define": ["error", {"functions": false, "classes": true, "variables": false}],
+        "import/no-default-export": "error",
+        "typescript/consistent-type-definitions": ["error", "interface"]
         // Library-territory skips (per CLAUDE.md §Lint Rules Correctness-only posture):
         //   vue/* — no SFCs in fs-packages source; published Vue-aware packages expose factories/composables only.
         //   jsx-a11y/* — no JSX in this monorepo.
@@ -23,5 +34,14 @@
         //   Vue 2→3 deprecation guards, Composition-API safety, Options-API correctness — no Options API or template-API features used.
         //   complexity / max-* limits — library APIs are intentionally tight; existing Stryker + coverage gates govern complexity at the test-discipline layer.
     },
+    "overrides": [
+        {
+            // Shapes that MUST default-export. The first four are the canonical set; the last two are
+            // this repo's own: Stryker configs are `.mjs`, and VitePress's entry is named `config.mts`
+            // exactly, which the canonical `*.config.mts` glob does not match (`*` needs ≥1 char).
+            "files": ["*.vue", "*.config.ts", "*.config.mts", "*.d.ts", "*.config.mjs", "**/.vitepress/config.mts"],
+            "rules": {"import/no-default-export": "off"}
+        }
+    ],
     "env": {"builtin": true}
 }

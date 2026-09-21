@@ -18,9 +18,11 @@ export type UnregisterMiddleware = () => void;
  * to register the raw body unguarded — the deliberate escape hatch for a case
  * that genuinely wants a throw to propagate. No such case exists today.
  */
-export type RegisterMiddlewareOptions = {guard?: boolean};
+export interface RegisterMiddlewareOptions {
+    guard?: boolean;
+}
 
-export type HttpServiceOptions = {
+export interface HttpServiceOptions {
     headers?: Record<string, string>;
     withCredentials?: boolean;
     withXSRFToken?: boolean;
@@ -41,9 +43,9 @@ export type HttpServiceOptions = {
      * swallowed failure elsewhere. Must not re-throw.
      */
     onMiddlewareError?: GuardedMiddlewareErrorHandler;
-};
+}
 
-export type HttpService = {
+export interface HttpService {
     getRequest: <T = unknown>(endpoint: string, options?: AxiosRequestConfig) => Promise<AxiosResponse<T>>;
     postRequest: <T = unknown>(
         endpoint: string,
@@ -121,4 +123,4 @@ export type HttpService = {
         fn: ResponseErrorMiddlewareFunc,
         opts?: RegisterMiddlewareOptions,
     ) => UnregisterMiddleware;
-};
+}

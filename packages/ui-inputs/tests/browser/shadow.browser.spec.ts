@@ -10,7 +10,10 @@ import {createApp, defineComponent, h, ref} from 'vue';
 import MultiSelect from '../../src/components/MultiSelect.vue';
 import uiCss from '../../styles.css?inline';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},

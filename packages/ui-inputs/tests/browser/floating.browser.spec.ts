@@ -18,7 +18,10 @@ import Combobox from '../../src/components/Combobox.vue';
 import SingleSelect from '../../src/components/SingleSelect.vue';
 import '../../styles.css';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},
