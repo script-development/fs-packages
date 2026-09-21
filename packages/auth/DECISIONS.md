@@ -732,26 +732,63 @@ every consumer to re-derive a distinction the type now makes. It is gone.
 ## D23 — `loadSession()` answers what THIS read wrote
 
 _2026-09-21, Commander ruling. 0.2.0, breaking. WR-1588._
+_Amended the same day, fix round 1: the capture mechanism below is the SECOND
+one this entry has described. The first was wrong, and the paragraph saying so
+is kept rather than quietly replaced._
 
 `loadSession()` returned `void` while `runLoadSession` already computed
 everything a caller could want and threw it away: the status, the body, and the
 state it had just written. A consumer that needed any of it re-read the machine
 afterwards, which is a different question with a different answer.
 
-**The invariant: the returned `state` is the value this read wrote at the moment
-it wrote it — never a later read's.** It is captured inside `runLoadSession`, in
-the same synchronous block as the write, with no `await` between. Reading
-`state.value` after the await in `loadSession()` would be the defect this entry
-exists to avoid: a concurrent read that landed in between would have moved the
-machine, and the caller would be handed a fact about somebody else's request.
-That is the shape enforcement-queue row 227 names on lokalekeuze.
+**The invariant: the returned `state` is the value this read DECIDED to write —
+never a later read's, and never what the machine happens to hold afterwards.**
+Each branch decides a state and then writes it, and the decision is what is
+returned. Reading `state.value` after the await in `loadSession()` would be the
+obvious version of this defect: a concurrent read that landed in between would
+have moved the machine, and the caller would be handed a fact about somebody
+else's request. That is the shape enforcement-queue row 227 names on
+lokalekeuze.
 
-`state.value` read synchronously, rather than a literal per branch: the write is
-two lines up and the read cannot observe anything else, so the value is this
-read's by construction **and** stays true if either branch's write is ever
-changed. A literal would be a copy of the write with nothing keeping it in step
-— a claim rather than a mechanism, the same argument D19 makes about the
-endpoint list.
+**The first version of this entry got the mechanism wrong, and the argument it
+used is worth keeping because it is a good-looking argument.** It read
+`state.value` back **synchronously**, one line after the write, and defended
+that against a literal on the grounds that a literal is "a copy of the write
+with nothing keeping it in step — a claim rather than a mechanism", citing D19's
+reasoning about the endpoint list. The premise was that nothing can run between
+the write and the read.
+
+**Three finders converged on the same refutation, and it is simply true:
+arbitrary consumer code runs inside the write.** A `watch(store.state, cb,
+{flush: 'sync'})` — a documented Vue option, not a contrivance — invokes `cb`
+_during_ the assignment to `state`. A callback that calls
+`handleSessionExpired()` then ends the session before the assignment statement
+has finished, and the read one line later reports `signed_out` as the state it
+wrote. Measured: the read answered `{state: 'signed_out', status: 200, body:
+{id: 7}}` for a `me` that authenticated. The `outage` branch of the refusal path
+has the identical hole.
+
+So the state is decided **before** the write on every path — `'signed_out'` on
+the expiry branch (`endSession` writes it through `clearSession`,
+unconditionally), `'outage'` and `'authenticated'` as a `wrote` local on the
+others. The in-step worry the first version raised is real and is answered where
+it belongs: every ordinary spec asserts the returned `state` **and**
+`store.state.value` together, so a write that drifted from its branch's decision
+reds them. That is a mechanism; the prose was only ever a claim.
+
+**And the epoch is re-checked after `parseUser` returns.** Same class, second
+instance. `parseUser` is package-**called** and consumer-**written**, and nothing
+in its type forbids a side effect — one that starts another read takes a ticket
+_synchronously_, in the gap between `runLoadSession`'s epoch check and its
+writes. Measured: the overtaken read committed `{id: 1}` and answered
+`{state: 'authenticated', …}` while a newer read was already in flight. A second
+`if (issued !== ticket) return SUPERSEDED;` immediately after the guard returns
+closes it. It sits after the call and not around it, so **a throwing `parseUser`
+still propagates** (D13) — the check is only reached once the guard has answered.
+
+The refusal path needs no second check: nothing between its epoch check and its
+write is consumer code, and `endSession`'s listeners run _after_ the state is
+already decided.
 
 **`undefined` for an overtaken read, and no `superseded` arm.** A read a newer
 one overtook wrote nothing, so it has nothing to report; there is no partial
@@ -788,3 +825,35 @@ then reads `state.value` still gets the machine's current value, not the read's 
 the package cannot stop that and should not try. What it can do is make the
 read's own answer available, so reaching for the machine is a choice rather than
 the only option.
+
+**`read.body` is the API's answer, aliased and not copied — accepted.**
+
+_Fix round 1, 2026-09-21._
+
+On a successful `me`, `read.body` is `response.data` — the identical object
+`parseUser` was handed, and for a pass-through guard (`(body) => (isEmployer(body)
+? body : undefined)`, the shape this package's own README recommends) the object
+the user ref now holds. A consumer that mutates `read.body` therefore mutates the
+user, without going through `setUser` and without the `TypeError` that guards it
+(D3).
+
+**Measured, because the obvious statement of this is wrong.** The finding was
+filed as "`read.body` is the same object `user.value` holds", and
+`store.user.value === read.body` is **false**: `readonly()` hands back a
+**proxy**, so object identity does not survive the ref. It is the proxy's
+_target_ that is shared, which is the half that actually bites — the mutation is
+readable through `user.value` all the same. The spec asserts it that way round,
+as `not.toBe` plus an observed mutation, rather than as an identity that does not
+hold.
+
+Accepted, not fixed. `body` is typed `unknown` and is whatever the API sent —
+there is no safe clone for it (`structuredClone` throws on a function or a
+non-cloneable, and a shallow copy would be a half-guarantee that reads as a
+whole one), and cloning would also cost the identity a consumer classifying over
+`body` may legitimately rely on. The store stores what `parseUser` returns, by
+design: that is the single-source-of-identity rule D5 buys.
+
+The consumer's side of it, stated once so it is not folklore: **a consumer that
+mutates payloads clones in `parseUser`.** That is the one place with both the
+type and the knowledge to do it, and a guard that returns a fresh object breaks
+the alias for every reader at once.

@@ -1,4 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {watch} from 'vue';
 
 import type {LoginOutcome, SessionRead, SessionStore} from '../src';
 import type {HttpStub} from './support/http-stub';
@@ -237,6 +238,122 @@ describe('createSessionStore', () => {
             await first;
 
             expect(parseUser).toHaveBeenCalledExactlyOnceWith({id: 2});
+        });
+
+        it('hands back the API answer itself, aliased with the user a pass-through parseUser returned', async () => {
+            const store = build();
+            const body = {id: 7};
+            vi.mocked(http.getRequest).mockResolvedValue(respondWith(body));
+
+            const read = await store.loadSession();
+
+            /*
+             * Pinned, not guarded (DECISIONS D23). `body` is `unknown` and has no
+             * safe clone, so the read hands back the API's own object. Turning
+             * that into a copy costs a consumer the identity it may classify on,
+             * so it takes a case rather than a hunch — and reds this line first.
+             */
+            expect(read?.body).toBe(body);
+
+            /*
+             * `user.value` is NOT that object — `readonly()` hands back a proxy,
+             * so identity does not survive the ref. Its TARGET is that object
+             * though, which is the half that matters: a write through `read.body`
+             * is readable as the user, having gone nowhere near `setUser` and its
+             * TypeError (D3). Asserted as the mutation rather than as identity,
+             * because identity is the part that is false.
+             */
+            expect(store.user.value).not.toBe(body);
+
+            (read?.body as Employer).id = 99;
+
+            expect(store.user.value).toEqual({id: 99});
+        });
+
+        describe('a consumer that moves the machine INSIDE the write', () => {
+            /*
+             * `flush: 'sync'` runs the callback inside the assignment to `state`,
+             * which is the only window in which consumer code can move the machine
+             * between a read's write and its answer. It is a documented Vue option,
+             * not a contrived one — and `handleSessionExpired` is exactly what a
+             * shell wires to a state it does not like the look of.
+             */
+            const endTheSessionWhenTheMachineReaches = (
+                store: SessionStore<Employer, Credentials>,
+                target: SessionState,
+            ) =>
+                watch(
+                    store.state,
+                    (next) => {
+                        if (next === target) store.handleSessionExpired();
+                    },
+                    {flush: 'sync'},
+                );
+
+            it('answers the authenticated it wrote, not what the consumer left behind', async () => {
+                const store = build();
+                vi.mocked(http.getRequest).mockResolvedValue(respondWith({id: 7}));
+                const stop = endTheSessionWhenTheMachineReaches(store, 'authenticated');
+
+                const read = await store.loadSession();
+
+                stop();
+
+                // The read DID write `authenticated`. That the consumer's own
+                // effect ended the session a microtask-free instant later is the
+                // machine's news, not this read's answer (D23).
+                expect(read).toEqual({state: 'authenticated', status: 200, body: {id: 7}});
+                expect(store.state.value).toBe('signed_out');
+            });
+
+            it('answers the outage it wrote, not what the consumer left behind', async () => {
+                const store = build();
+                await signIn(store);
+                vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(503, {message: 'down'}));
+                const stop = endTheSessionWhenTheMachineReaches(store, 'outage');
+
+                const read = await store.loadSession();
+
+                stop();
+
+                expect(read).toEqual({state: 'outage', status: 503, body: {message: 'down'}});
+                expect(store.state.value).toBe('signed_out');
+            });
+        });
+
+        it('answers nothing for a read a re-entrant parseUser overtook, and never commits behind the newer one', async () => {
+            /*
+             * `parseUser` is package-CALLED and consumer-WRITTEN, and nothing in
+             * its type forbids a side effect. One that starts another read takes a
+             * ticket synchronously — after this read's epoch check and before its
+             * write — so without a re-check the overtaken read still commits and
+             * still claims to have written something.
+             */
+            let reenter: (() => void) | undefined;
+            const store = build({
+                parseUser: (body) => {
+                    const once = reenter;
+
+                    reenter = undefined;
+                    once?.();
+
+                    return isEmployer(body);
+                },
+            });
+            vi.mocked(http.getRequest)
+                .mockResolvedValueOnce(respondWith({id: 1}))
+                .mockResolvedValueOnce(respondWith({id: 2}));
+
+            let inner: Promise<SessionRead | undefined> | undefined;
+            reenter = () => {
+                inner = store.loadSession();
+            };
+
+            const outer = await store.loadSession();
+
+            expect(outer).toBeUndefined();
+            await expect(inner).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
+            expect(store.user.value).toEqual({id: 2});
         });
 
         describe('a 401 on a LIVE session is an expiry', () => {

@@ -84,7 +84,9 @@ read.status; // the `me` answer's status; undefined when nothing answered
 read.body; // the `me` answer's body: data on a 2xx, error data on a refusal
 ```
 
-`read.state` is captured where the write happens, so it is this read's fact and not `state.value` after the await — by then a concurrent read may have moved the machine. `undefined` and no `superseded` arm: a read a newer one overtook wrote nothing, so it has nothing to report (`DECISIONS.md` D23).
+`read.state` is the state this read **decided** to write, taken before the write rather than read back off `state.value` afterwards — a `watch(session.state, cb, {flush: 'sync'})` callback runs _inside_ that assignment, so the machine can already have moved on by the next line. `undefined` and no `superseded` arm: a read a newer one overtook wrote nothing, so it has nothing to report (`DECISIONS.md` D23).
+
+**`read.body` is the API's answer, not a copy.** On a 2xx it is the identical object `parseUser` was handed, so with a pass-through guard it is also what backs `user.value`. (`user.value` is not `===` it — `readonly()` returns a proxy — but the proxy reads through to that same object.) Mutating `read.body` therefore edits the user behind `setUser`'s back. If your app mutates payloads, clone in `parseUser`; that is the one place that can break the alias for every reader at once.
 
 **The classification is yours.** The package keeps four states and adds none. Every richer vocabulary a shell renders is _your_ reading of what the read returned, and none of the three rows below is a state this package holds:
 

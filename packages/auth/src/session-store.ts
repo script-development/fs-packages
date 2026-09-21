@@ -238,24 +238,26 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
                  * nothing when a login screen's own `me` answers 401.
                  */
                 endSession({reason: 'expired'});
-            } else {
+
                 /*
-                 * `user` is deliberately RETAINED on an outage. The ADR is explicit that
-                 * an outage is never a sign-out, so the identity is still presumed
-                 * good and a shell can keep naming it behind a notice; clearing it
-                 * would render a broken API as a sign-out by another route.
+                 * The branch decided `signed_out` and `endSession` wrote it through
+                 * `clearSession`, unconditionally. Reading `state.value` back here
+                 * instead would report whatever a SYNCHRONOUS consumer effect left —
+                 * a `watch(…, {flush: 'sync'})` fires inside the assignment — which
+                 * is the machine's later news and not this read's answer (D23).
                  */
-                state.value = 'outage';
+                return {status, body: error.response?.data, state: 'signed_out'};
             }
 
             /*
-             * `state.value` and not a literal: the write is two lines up with no
-             * await between, so this IS what this read wrote, and it stays true
-             * if either branch's write ever changes. Reading it after the await
-             * in `loadSession()` would be a different value entirely — a later
-             * read's (D23).
+             * `user` is deliberately RETAINED on an outage. The ADR is explicit that
+             * an outage is never a sign-out, so the identity is still presumed
+             * good and a shell can keep naming it behind a notice; clearing it
+             * would render a broken API as a sign-out by another route.
              */
-            return {status, body: error.response?.data, state: state.value};
+            state.value = 'outage';
+
+            return {status, body: error.response?.data, state: 'outage'};
         }
 
         if (issued !== ticket) return SUPERSEDED;
@@ -264,14 +266,31 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
         // consumer's defect and must reach the consumer, not become an `outage`.
         const parsed = parseUser(response.data);
 
+        /*
+         * Re-checked AFTER the guard ran. `parseUser` is package-called and
+         * consumer-written, and nothing in its type forbids a side effect: one
+         * that starts another read takes a ticket synchronously, in the gap
+         * between the check above and the writes below. Without this, an
+         * overtaken read commits anyway and reports a state it had no business
+         * writing (D23). A THROWING guard still propagates — this is reached
+         * only once it has returned (D13).
+         */
+        if (issued !== ticket) return SUPERSEDED;
+
+        let wrote: SessionState;
+
         if (parsed === undefined) {
-            state.value = 'outage';
+            wrote = 'outage';
         } else {
+            // `user` before the machine, so a synchronous effect on `state` cannot
+            // observe `authenticated` with the previous identity still readable.
             user.value = parsed;
-            state.value = 'authenticated';
+            wrote = 'authenticated';
         }
 
-        return {status: response.status, body: response.data, state: state.value};
+        state.value = wrote;
+
+        return {status: response.status, body: response.data, state: wrote};
     };
 
     /** Every read this store makes goes through here, so `latestRead` is never behind one. */
