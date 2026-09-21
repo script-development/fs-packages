@@ -265,7 +265,9 @@ describe('createSessionStore', () => {
              */
             expect(store.user.value).not.toBe(body);
 
-            (read?.body as Employer).id = 99;
+            if (read === undefined) throw new Error('the read answered nothing to mutate');
+
+            (read.body as Employer).id = 99;
 
             expect(store.user.value).toEqual({id: 99});
         });
