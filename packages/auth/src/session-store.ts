@@ -10,6 +10,7 @@ import type {
     SessionEndListenerErrorHandler,
     RequestOptions,
     SessionEndEvent,
+    SessionRead,
     SessionState,
     SessionStore,
 } from './types';
@@ -21,14 +22,29 @@ import {isSignedOutStatus} from './endpoints';
 const STALE_TOKEN_STATUS = 419;
 
 /**
- * What a `me` attempt reported, whatever the store did with it. Read-only so the
- * shared `SUPERSEDED` value below needs no `Object.freeze` — a top-level call
- * would evaluate at module load and break this package's `sideEffects: false`.
+ * What a `me` attempt reported AND what it wrote, whatever the caller does with
+ * it. Read-only so the shared `SUPERSEDED` value below needs no `Object.freeze`
+ * — a top-level call would evaluate at module load and break this package's
+ * `sideEffects: false`.
+ *
+ * Split in two so `state` narrows: an overtaken read carries no state because it
+ * wrote none, and `state === undefined` is the discriminator the public boundary
+ * reads (DECISIONS D23).
  */
-interface MeOutcome {
+interface MeAnswer {
     readonly status: number | undefined;
     readonly body: unknown;
+    /** The state this read wrote, read in the same synchronous block as the write. */
+    readonly state: SessionState;
 }
+
+interface SupersededOutcome {
+    readonly status: undefined;
+    readonly body: undefined;
+    readonly state: undefined;
+}
+
+type MeOutcome = MeAnswer | SupersededOutcome;
 
 /**
  * Default sink for a failing session-end listener: loud, and it does not
@@ -40,7 +56,7 @@ const defaultOnListenerError: SessionEndListenerErrorHandler = (error, event) =>
 };
 
 /** A read a newer one overtook. It reports nothing, because nothing of it was used. */
-const SUPERSEDED: MeOutcome = {status: undefined, body: undefined};
+const SUPERSEDED: SupersededOutcome = {status: undefined, body: undefined, state: undefined};
 
 /**
  * An axios rejection once `isAxiosError` has narrowed it: an answer, or the
@@ -232,7 +248,14 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
                 state.value = 'outage';
             }
 
-            return {status, body: error.response?.data};
+            /*
+             * `state.value` and not a literal: the write is two lines up with no
+             * await between, so this IS what this read wrote, and it stays true
+             * if either branch's write ever changes. Reading it after the await
+             * in `loadSession()` would be a different value entirely — a later
+             * read's (D23).
+             */
+            return {status, body: error.response?.data, state: state.value};
         }
 
         if (issued !== ticket) return SUPERSEDED;
@@ -248,7 +271,7 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
             state.value = 'authenticated';
         }
 
-        return {status: response.status, body: response.data};
+        return {status: response.status, body: response.data, state: state.value};
     };
 
     /** Every read this store makes goes through here, so `latestRead` is never behind one. */
@@ -317,8 +340,17 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
             user.value = next;
         },
 
-        async loadSession() {
-            await startRead();
+        async loadSession(): Promise<SessionRead | undefined> {
+            const read = await startRead();
+
+            /*
+             * The sentinel stays private: a consumer gets `undefined` for a read
+             * a newer one overtook, because it wrote nothing and so has nothing
+             * to report (D23).
+             */
+            if (read.state === undefined) return undefined;
+
+            return {state: read.state, status: read.status, body: read.body};
         },
 
         async login(credentials) {
@@ -354,7 +386,12 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
 
             if (state.value === 'authenticated') return {kind: 'authenticated'};
 
-            return {kind: 'refused', status: me.status, body: me.body};
+            /*
+             * The POST was accepted and the confirm did not establish a session.
+             * That is not a refusal of the credentials, and answering `refused`
+             * here sent a consumer to the wrong sentence (D22).
+             */
+            return {kind: 'unconfirmed', status: me.status, body: me.body};
         },
 
         async logout() {

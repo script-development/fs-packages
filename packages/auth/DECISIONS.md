@@ -66,11 +66,19 @@ package cannot know which one it is inside.
 
 ## D5 — `login()` always confirms against `me`, and pays one extra request for it
 
+_Amended 2026-09-21, 0.2.0. The confirm's non-authenticated answer is now
+`unconfirmed`, not `refused` (D22)._
+
 A successful login POST is not treated as proof of a session: `login()` calls
 `loadSession()` and answers `authenticated` only if the machine says so. The
 cost is one extra round trip on the login path. It buys a single source of
 identity — `parseUser` runs in exactly one place, so no consumer can end up with
 two readings of who is signed in.
+
+The second cost, which the original entry did not name: a confirm that does not
+authenticate is a failure mode the POST alone never had. It is answered as
+`unconfirmed` rather than as a refusal, because the request that failed is the
+confirm and not the credential exchange.
 
 The open case: a consumer whose login body carries the user and whose `me` does
 not. Nothing in the fleet is shaped that way today. If one appears, the answer is
@@ -420,6 +428,12 @@ a ticket while it was in flight — an answer nothing was done with — and
 or after its own POST has settled** — never from a `loading` left by a read
 still in flight, and never from an answer that was discarded.
 
+_Amended 2026-09-21, 0.2.0._ The invariant is unchanged and the KIND it answers
+with is not: when that settled state is anything but `authenticated`, the answer
+is `{kind: 'unconfirmed'}` (D22). Every path below that used to read `refused`
+now reads `unconfirmed`, the superseded-by-a-sign-out case included — a confirm
+with nothing left to wait for still reports that the POST was accepted.
+
 The store now tracks the newest read as the promise that settles it. A confirm
 that comes back superseded waits for that one instead, and repeats while it is
 overtaken too. The false refusal disappears, because by the time `login()`
@@ -449,11 +463,15 @@ wanted, it is argued here first.
 
 **How a consumer tells an outage refusal from a credential refusal.**
 `{kind: 'refused', status: undefined}` is what both a transport failure and a
-discarded answer used to look like. The discriminator is the machine, which is
-readable alongside the outcome and — this is the part that is new — has settled
-by the time `login()` answers: `state.value === 'outage'` is "the API did not
-answer", anything else is a refusal the server issued. `user` follows D14 and
-is retained across an outage.
+discarded answer used to look like. The discriminator was the machine, readable
+alongside the outcome and settled by the time `login()` answers.
+
+_Amended 2026-09-21, 0.2.0: the KIND is now the first discriminator and the
+machine is the second._ A refusal the server issued on the POST is `refused`; a
+confirm that did not land is `unconfirmed`, and `state.value` then says whether
+the API failed to answer (`outage`) or answered that there is no session
+(`signed_out`). The machine has still settled by the time `login()` answers, and
+`user` still follows D14 across an outage — that half is unchanged.
 
 ## D18 — Two findings deferred, by name
 
@@ -653,3 +671,113 @@ cross-package claims get checked. It binds fs-http's **built** artifact, which i
 what a consumer resolves — so proving it has teeth means mutating fs-http's
 source and rebuilding; a mutation without the rebuild leaves the suite green and
 proves nothing.
+
+## D22 — A refused POST and an unconfirmed session are two answers
+
+_2026-09-21, Commander ruling ("yes to the two shapes"). 0.2.0, breaking. WR-1588._
+
+`login()` ended with `return {kind: 'refused', status: me.status, body: me.body}`
+— so a POST the server **accepted**, whose confirming `me` then failed to
+establish a session, was answered as a refusal. The status on it was the `me`
+answer's, not the POST's, and nothing in the type said so.
+
+**The invariant: `refused` means the login POST was refused, or never answered.
+Nothing else may produce it.** Its two sources are the rejected POST and the
+rejected stale-token retry, both through `refusalOf`. A confirm that does not
+authenticate is the new `unconfirmed` arm, and it is that arm's only source.
+
+**Why it is not a copy problem.** The package renders no sentences (D7), so the
+consumer picks the words — and with one arm for both facts, the only words
+available for either were the refusal's. lokalekeuze ruled the same shape
+independently as **LK-0327 rule G**: a 2xx login whose probe finds no session
+renders the UNREACHABLE sentence and never the credential refusal, _because the
+credentials are not what went wrong_. Offering the password again is the one
+instruction that cannot help, and it is what a `refused` arm asks a consumer to
+write.
+
+**`status` on `unconfirmed` is the ME answer's, deliberately.** The POST's status
+is not interesting on this path — it was a 2xx, that is what put the caller here.
+What the consumer needs is why the confirm did not land, and `state.value` is
+read alongside it for the half a status cannot carry: `outage` is "the API did
+not answer", `signed_out` is "it answered that there is no session". The comment
+on the arm says exactly that, and it is here rather than only there because it
+names a limitation the type cannot.
+
+**No fifth state, and no further arm.** The Commander's ruling was "not too much
+deviation from fs-auth itself": the four-state machine stands, and a consumer's
+richer vocabulary — lokalekeuze's `rate_limited | network | server`, its
+`blocked` — is a classification over what these outcomes carry (D23). A fifth
+state would put the package in the business of naming causes it learns about
+only through a status it did not interpret.
+
+**The cost, stated plainly: this is breaking, before any consumer exists.** An
+exhaustive `switch` on `kind` stops compiling, which is the point — a consumer
+that had handled all three arms has a fourth fact to decide about, and silently
+folding it into the default would reintroduce the defect. There are **zero**
+consumers on npm today (nine territory manifests read at dispatch), so the cost
+is paid by nobody and is paid now rather than after LK-0732 adopts.
+
+**What it retires.** The docs carried a workaround for the missing arm —
+_"`refused` with no `status` is therefore the machine's answer and not a
+discarded one: read `state.value` alongside the outcome"_. That sentence asked
+every consumer to re-derive a distinction the type now makes. It is gone.
+
+## D23 — `loadSession()` answers what THIS read wrote
+
+_2026-09-21, Commander ruling. 0.2.0, breaking. WR-1588._
+
+`loadSession()` returned `void` while `runLoadSession` already computed
+everything a caller could want and threw it away: the status, the body, and the
+state it had just written. A consumer that needed any of it re-read the machine
+afterwards, which is a different question with a different answer.
+
+**The invariant: the returned `state` is the value this read wrote at the moment
+it wrote it — never a later read's.** It is captured inside `runLoadSession`, in
+the same synchronous block as the write, with no `await` between. Reading
+`state.value` after the await in `loadSession()` would be the defect this entry
+exists to avoid: a concurrent read that landed in between would have moved the
+machine, and the caller would be handed a fact about somebody else's request.
+That is the shape enforcement-queue row 227 names on lokalekeuze.
+
+`state.value` read synchronously, rather than a literal per branch: the write is
+two lines up and the read cannot observe anything else, so the value is this
+read's by construction **and** stays true if either branch's write is ever
+changed. A literal would be a copy of the write with nothing keeping it in step
+— a claim rather than a mechanism, the same argument D19 makes about the
+endpoint list.
+
+**`undefined` for an overtaken read, and no `superseded` arm.** A read a newer
+one overtook wrote nothing, so it has nothing to report; there is no partial
+answer to describe and no state to name. The `SUPERSEDED` sentinel stays
+**private** — `readUntilSettled` compares against it by identity and that is
+internal ordering, not a fact a consumer should learn. `MeOutcome` is therefore
+split in two (`MeAnswer | SupersededOutcome`) so `state === undefined` narrows at
+the public boundary without a cast, and `login()`'s existing reads of
+`me.status` / `me.body` are untouched on the union.
+
+**The consumer classifies; the package does not.** This is the other half of
+D22's "no fifth state". A consumer derives its own vocabulary from what the read
+carries, and none of these is a state this package holds:
+
+| What the read says                                   | The consumer's own name |
+| ---------------------------------------------------- | ----------------------- |
+| `status === 429`                                     | `rate_limited`          |
+| `status === undefined` and `state === 'outage'`      | `network`               |
+| `status === 403` and its own reason-reader on `body` | `blocked`               |
+
+lokalekeuze's beheer store (LK-0732, the first consumer) is exactly this reader:
+its `loadSession(): Promise<SessionState | undefined>` already answers _"what
+this probe wrote — never merely `void`"_, with `undefined` meaning superseded,
+and two callers plus a `confirmedByProbe()` read it. The package now supplies
+what that consumer had to build, and supplies the status and body it could not
+reach at all.
+
+**The cost: breaking, and for the same reason D22's is.** The return type widens
+from `Promise<void>`, so a consumer assigning it somewhere typed `void` stops
+compiling. Zero consumers on npm; the cost is paid by nobody.
+
+**The residual, named rather than solved.** A consumer that awaits a read and
+then reads `state.value` still gets the machine's current value, not the read's —
+the package cannot stop that and should not try. What it can do is make the
+read's own answer available, so reaching for the machine is a choice rather than
+the only option.

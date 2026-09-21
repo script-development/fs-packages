@@ -29,7 +29,7 @@ export const session = createSessionStore<Employer, Credentials>({
     timeoutMs: 10_000,
 });
 
-await session.loadSession();
+const read = await session.loadSession(); // what THIS read wrote, or undefined if a newer one overtook it
 
 session.state.value; // 'loading' | 'authenticated' | 'signed_out' | 'outage'
 session.isAuthenticated.value; // boolean
@@ -72,6 +72,28 @@ A body `parseUser` refuses is an **outage, never signed out**. Rendering a broke
 
 A **401 or 419 on a session that was live** is an expiry: the user is cleared and `onSessionEnd` fires once with `{reason: 'expired'}`. The event carries **no `returnTo`** — `loadSession` does not know where the person is, and a refused `me` is judged here rather than by the expiry hook whatever registrars are installed (`DECISIONS.md` D19). Live means `authenticated`, and also `outage` — an outage keeps the user, so a shell is still naming somebody and the 401 says that person is gone. From `loading` or `signed_out` the same status writes `signed_out` and fires nothing: arriving at a login screen is not an event.
 
+**It answers what it wrote.**
+
+```typescript
+const read = await session.loadSession();
+
+if (read === undefined) return; // a newer read overtook this one; it is that read's answer to give
+
+read.state; // the state THIS read wrote — never a later read's
+read.status; // the `me` answer's status; undefined when nothing answered
+read.body; // the `me` answer's body: data on a 2xx, error data on a refusal
+```
+
+`read.state` is captured where the write happens, so it is this read's fact and not `state.value` after the await — by then a concurrent read may have moved the machine. `undefined` and no `superseded` arm: a read a newer one overtook wrote nothing, so it has nothing to report (`DECISIONS.md` D23).
+
+**The classification is yours.** The package keeps four states and adds none. Every richer vocabulary a shell renders is _your_ reading of what the read returned, and none of the three rows below is a state this package holds:
+
+| What the read says                                            | What a consumer may call it |
+| ------------------------------------------------------------- | --------------------------- |
+| `status === 429`                                              | rate limited                |
+| `status === undefined` and `state === 'outage'`               | the network                 |
+| `status === 403` and your own reason-reader says so on `body` | blocked                     |
+
 ### `login(credentials)`
 
 Returns an outcome; it never throws on a status.
@@ -81,15 +103,19 @@ const outcome = await session.login({email, password});
 
 if (outcome.kind === 'authenticated') return goToDashboard();
 if (outcome.kind === 'challenge') return startTwoFactor(outcome.body);
+if (outcome.kind === 'unconfirmed') return showUnreachable(outcome.status); // the credentials were fine
 
 showRefusal(outcome.status, outcome.body); // your copy, your call
 ```
 
 - `{kind: 'authenticated'}` — the login succeeded **and** `me` confirmed it. Identity has one source; see `DECISIONS.md` D5 for the extra request this costs.
 - `{kind: 'challenge', body}` — the login answered without establishing a session (a 2FA step, say). **No state change**, and no `sessionEnd` event. You interpret `body`.
-- `{kind: 'refused', status, body}` — everything else, including a `me` that did not authenticate afterwards.
+- `{kind: 'refused', status, body}` — the login POST itself was refused, or never answered. `status` is always the **POST's**.
+- `{kind: 'unconfirmed', status, body}` — the POST answered 2xx and the confirming `me` did not establish a session. `status`/`body` are the **`me` answer's**; `state.value` says which kind of silence it was, `outage` or `signed_out`.
 
-If another read overtakes the confirming `me` — a focus revalidation, a second navigation's own `loadSession()` — `login()` waits for _that_ read to settle and answers from what it wrote. It never reports a refusal for a login the server accepted. `refused` with no `status` is therefore the machine's answer and not a discarded one: read `state.value` alongside the outcome, where `outage` means the API did not answer and anything else means the server refused.
+**The two are different sentences, which is the whole reason they are different arms.** `refused` is the server rejecting the credentials, so "check your e-mail and password" is the right words. `unconfirmed` is a login the server **accepted** whose session could not be read back — the credentials are not what went wrong, and offering them again is the one instruction that cannot help (`DECISIONS.md` D22).
+
+If another read overtakes the confirming `me` — a focus revalidation, a second navigation's own `loadSession()` — `login()` waits for _that_ read to settle and answers from what it wrote. It never reports a refusal for a login the server accepted.
 
 A rejection that is not an HTTP answer — a thrown `parseUser`, a programming error — **propagates out of every operation on the store**, `login()`, `loadSession()` and `logout()` alike. That is a defect, not an outcome, and dressing it as `refused` would show a wrong-password screen for a fault nobody would ever read.
 

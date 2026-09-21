@@ -15,6 +15,7 @@ export type {
     SessionEndListenerErrorHandler,
     SessionEndpoints,
     SessionExpiryHandler,
+    SessionRead,
     SessionState,
     SessionStore,
 } from './types';
