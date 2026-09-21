@@ -44,7 +44,7 @@
     "devDependencies": {
         "@script-development/fs-http": "^0.6.0",
         "@script-development/fs-router": "^0.3.0",
-        "@vue/test-utils": "^2.5.0",
+        "@vue/test-utils": "^2.5.1",
         "axios": "^1.20.0",
         "axios-mock-adapter": "^2.1.0",
         "happy-dom": "^20.14.5",
