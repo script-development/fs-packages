@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {watch} from 'vue';
 
-import type {SessionStore} from '../src';
+import type {LoginOutcome, SessionRead, SessionStore} from '../src';
 import type {HttpStub} from './support/http-stub';
 
 import {createSessionStore, sanctumEndpoints} from '../src';
@@ -121,9 +122,11 @@ describe('createSessionStore', () => {
             const store = build();
             vi.mocked(http.getRequest).mockResolvedValue(respondWith({id: 7}));
 
-            await store.loadSession();
+            const read = await store.loadSession();
 
             expect(vi.mocked(http.getRequest)).toHaveBeenCalledWith('auth/employer/me', PLAIN_OPTIONS);
+            expect(read).toEqual({state: 'authenticated', status: 200, body: {id: 7}});
+            expect(read?.state).toBe(store.state.value);
             expect(store.state.value).toBe('authenticated');
             expect(store.user.value).toEqual({id: 7});
             expect(store.isAuthenticated.value).toBe(true);
@@ -133,19 +136,21 @@ describe('createSessionStore', () => {
             const store = build();
             vi.mocked(http.getRequest).mockResolvedValue(respondWith({unexpected: true}));
 
-            await store.loadSession();
+            const read = await store.loadSession();
 
+            expect(read).toEqual({state: 'outage', status: 200, body: {unexpected: true}});
             expect(store.state.value).toBe('outage');
             expect(store.user.value).toBeUndefined();
         });
 
-        it.each([401, 419])('reads a %i as signed out', async (status) => {
+        it.each([401, 419])('reads a %i as signed out, and answers with what it wrote', async (status) => {
             const store = build();
-            vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(status));
+            vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(status, {message: 'gone'}));
 
-            await store.loadSession();
+            const read = await store.loadSession();
 
             expect(store.state.value).toBe('signed_out');
+            expect(read).toEqual({state: 'signed_out', status, body: {message: 'gone'}});
         });
 
         it('takes the 401 path for a 419 without priming, even with csrf configured', async () => {
@@ -159,22 +164,24 @@ describe('createSessionStore', () => {
             expect(vi.mocked(http.getRequest)).not.toHaveBeenCalledWith(PRIME_URL, expect.anything());
         });
 
-        it.each([403, 422, 500])('reads a %i as an outage', async (status) => {
+        it.each([403, 422, 500])('reads a %i as an outage, and answers with what it wrote', async (status) => {
             const store = build();
-            vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(status));
+            vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(status, {message: 'down'}));
 
-            await store.loadSession();
+            const read = await store.loadSession();
 
             expect(store.state.value).toBe('outage');
+            expect(read).toEqual({state: 'outage', status, body: {message: 'down'}});
         });
 
-        it('reads a transport failure as an outage', async () => {
+        it('reads a transport failure as an outage, and answers a status nothing supplied', async () => {
             const store = build();
             vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(undefined));
 
-            await store.loadSession();
+            const read = await store.loadSession();
 
             expect(store.state.value).toBe('outage');
+            expect(read).toEqual({state: 'outage', status: undefined, body: undefined});
         });
 
         it('retains the user on an outage — an outage is not a sign-out', async () => {
@@ -233,6 +240,194 @@ describe('createSessionStore', () => {
             expect(parseUser).toHaveBeenCalledExactlyOnceWith({id: 2});
         });
 
+        it('hands back the API answer itself, aliased with the user a pass-through parseUser returned', async () => {
+            const store = build();
+            const body = {id: 7};
+            vi.mocked(http.getRequest).mockResolvedValue(respondWith(body));
+
+            const read = await store.loadSession();
+
+            /*
+             * Pinned, not guarded (DECISIONS D23). `body` is `unknown` and has no
+             * safe clone, so the read hands back the API's own object. Turning
+             * that into a copy costs a consumer the identity it may classify on,
+             * so it takes a case rather than a hunch — and reds this line first.
+             */
+            expect(read?.body).toBe(body);
+
+            /*
+             * `user.value` is NOT that object — `readonly()` hands back a proxy,
+             * so identity does not survive the ref. Its TARGET is that object
+             * though, which is the half that matters: a write through `read.body`
+             * is readable as the user, having gone nowhere near `setUser` and its
+             * TypeError (D3). Asserted as the mutation rather than as identity,
+             * because identity is the part that is false.
+             */
+            expect(store.user.value).not.toBe(body);
+
+            if (read === undefined) throw new Error('the read answered nothing to mutate');
+
+            (read.body as Employer).id = 99;
+
+            expect(store.user.value).toEqual({id: 99});
+        });
+
+        describe('a consumer that moves the machine INSIDE the write', () => {
+            /*
+             * `flush: 'sync'` runs the callback inside the assignment to `state`,
+             * which is the only window in which consumer code can move the machine
+             * between a read's write and its answer. It is a documented Vue option,
+             * not a contrived one — and `handleSessionExpired` is exactly what a
+             * shell wires to a state it does not like the look of.
+             */
+            const endTheSessionWhenTheMachineReaches = (
+                store: SessionStore<Employer, Credentials>,
+                target: SessionState,
+            ) =>
+                watch(
+                    store.state,
+                    (next) => {
+                        if (next === target) store.handleSessionExpired();
+                    },
+                    {flush: 'sync'},
+                );
+
+            it('answers the authenticated it wrote, not what the consumer left behind', async () => {
+                const store = build();
+                vi.mocked(http.getRequest).mockResolvedValue(respondWith({id: 7}));
+                const stop = endTheSessionWhenTheMachineReaches(store, 'authenticated');
+
+                const read = await store.loadSession();
+
+                stop();
+
+                // The read DID write `authenticated`. That the consumer's own
+                // effect ended the session a microtask-free instant later is the
+                // machine's news, not this read's answer (D23).
+                expect(read).toEqual({state: 'authenticated', status: 200, body: {id: 7}});
+                expect(store.state.value).toBe('signed_out');
+            });
+
+            /*
+             * The `user` write is the OTHER re-entry point, one statement later:
+             * a watcher on the identity fires inside `user.value = parsed`, after
+             * the post-`parseUser` epoch check and before the machine is written.
+             * Crit findings `6ecd750b40bc` and `fff70bd50c2d`, #266 private round 2.
+             */
+            it('leaves a session an effect ended during the user write exactly as it was ended', async () => {
+                const store = build();
+                await signIn(store);
+                const ended = vi.fn();
+                store.onSessionEnd(ended);
+                vi.mocked(http.getRequest).mockResolvedValue(respondWith({id: 9}));
+                const stop = watch(store.user, () => store.handleSessionExpired(), {flush: 'sync'});
+
+                const read = await store.loadSession();
+
+                stop();
+
+                // The session ended INSIDE this read's own write. Writing
+                // `authenticated` over it would leave `isAuthenticated` true with
+                // no user, after the consumer was told the session was over.
+                expect(read).toBeUndefined();
+                expect(store.state.value).toBe('signed_out');
+                expect(store.user.value).toBeUndefined();
+                expect(store.isAuthenticated.value).toBe(false);
+                expect(ended).toHaveBeenCalledOnce();
+            });
+
+            it('answers nothing for a read a watcher on the user overtook, and lets the newer one land', async () => {
+                const store = build();
+                let inner: Promise<SessionRead | undefined> | undefined;
+                let armed = true;
+                vi.mocked(http.getRequest)
+                    .mockResolvedValueOnce(respondWith({id: 1}))
+                    .mockResolvedValueOnce(respondWith({id: 2}));
+                const stop = watch(
+                    store.user,
+                    () => {
+                        if (!armed) return;
+
+                        armed = false;
+                        inner = store.loadSession();
+                    },
+                    {flush: 'sync'},
+                );
+
+                const outer = await store.loadSession();
+
+                stop();
+
+                expect(outer).toBeUndefined();
+                await expect(inner).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
+                expect(store.user.value).toEqual({id: 2});
+                expect(store.state.value).toBe('authenticated');
+            });
+
+            it('answers the outage it wrote, not what the consumer left behind', async () => {
+                const store = build();
+                await signIn(store);
+                vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(503, {message: 'down'}));
+                const stop = endTheSessionWhenTheMachineReaches(store, 'outage');
+
+                const read = await store.loadSession();
+
+                stop();
+
+                expect(read).toEqual({state: 'outage', status: 503, body: {message: 'down'}});
+                expect(store.state.value).toBe('signed_out');
+            });
+        });
+
+        it('answers nothing for a read a re-entrant parseUser overtook, and never commits behind the newer one', async () => {
+            /*
+             * `parseUser` is package-CALLED and consumer-WRITTEN, and nothing in
+             * its type forbids a side effect. One that starts another read takes a
+             * ticket synchronously — after this read's epoch check and before its
+             * write — so without a re-check the overtaken read still commits and
+             * still claims to have written something.
+             */
+            let reenter: (() => void) | undefined;
+            const store = build({
+                parseUser: (body) => {
+                    const once = reenter;
+
+                    reenter = undefined;
+                    once?.();
+
+                    return isEmployer(body);
+                },
+            });
+            const newer = heldRequest();
+            vi.mocked(http.getRequest)
+                .mockResolvedValueOnce(respondWith({id: 1}))
+                .mockImplementationOnce(newer.implementation);
+
+            let inner: Promise<SessionRead | undefined> | undefined;
+            reenter = () => {
+                inner = store.loadSession();
+            };
+
+            const outer = await store.loadSession();
+
+            expect(outer).toBeUndefined();
+
+            /*
+             * The newer read is HELD, so this is the overtaken read's own
+             * footprint and nothing else: none. Stopping it before the writes —
+             * rather than only before the machine write — is what buys that. With
+             * the re-check above `user` gone, the discarded answer's identity
+             * lands here and stays readable until the newer read overwrites it.
+             */
+            expect(store.user.value).toBeUndefined();
+            expect(store.state.value).toBe('loading');
+
+            newer.answerWith({id: 2});
+
+            await expect(inner).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
+            expect(store.user.value).toEqual({id: 2});
+        });
+
         describe('a 401 on a LIVE session is an expiry', () => {
             it('clears the user and fires exactly one session-end event', async () => {
                 const store = build();
@@ -289,15 +484,16 @@ describe('createSessionStore', () => {
             const first = store.loadSession();
             const second = store.loadSession();
 
-            await second;
+            await expect(second).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
             releaseFirst();
-            await first;
 
+            // An overtaken read wrote nothing, so it has nothing to answer.
+            await expect(first).resolves.toBeUndefined();
             expect(store.user.value).toEqual({id: 2});
             expect(store.state.value).toBe('authenticated');
         });
 
-        it('discards a superseded rejection rather than flipping the machine under a newer read', async () => {
+        it('discards a superseded rejection rather than flipping the machine under a newer read, and answers nothing for it', async () => {
             const store = build();
             let rejectFirst = (): void => undefined;
             vi.mocked(http.getRequest)
@@ -311,10 +507,13 @@ describe('createSessionStore', () => {
             const first = store.loadSession();
             const second = store.loadSession();
 
-            await second;
+            // The second read answers its OWN state. The first is overtaken and
+            // answers `undefined` — never the `signed_out` its 401 would have
+            // written, and never the `authenticated` the machine now reads.
+            await expect(second).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
             rejectFirst();
-            await first;
 
+            await expect(first).resolves.toBeUndefined();
             expect(store.state.value).toBe('authenticated');
             expect(store.user.value).toEqual({id: 2});
         });
@@ -335,26 +534,43 @@ describe('createSessionStore', () => {
             expectEveryRequestUses(PLAIN_OPTIONS);
         });
 
-        it('refuses with the me status when the login succeeded but me did not authenticate', async () => {
+        it('answers unconfirmed with the me status when the login succeeded but me did not authenticate', async () => {
             const store = build();
             vi.mocked(http.postRequest).mockResolvedValue(respondWith({}));
             vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(503, {message: 'down'}));
 
             const outcome = await store.login(credentials);
 
-            expect(outcome).toEqual({kind: 'refused', status: 503, body: {message: 'down'}});
+            // The server ACCEPTED the POST. `refused` here would name the
+            // credentials for something the credentials did not do (D22).
+            expect(outcome).toEqual({kind: 'unconfirmed', status: 503, body: {message: 'down'}});
             expect(store.state.value).toBe('outage');
         });
 
-        it('refuses with the me RESPONSE when me answered a body the consumer could not read', async () => {
+        it('answers unconfirmed with the me RESPONSE when me answered a body the consumer could not read', async () => {
             const store = build();
             vi.mocked(http.postRequest).mockResolvedValue(respondWith({}));
             vi.mocked(http.getRequest).mockResolvedValue(respondWith({unexpected: true}, 200));
 
             const outcome = await store.login(credentials);
 
-            expect(outcome).toEqual({kind: 'refused', status: 200, body: {unexpected: true}});
+            expect(outcome).toEqual({kind: 'unconfirmed', status: 200, body: {unexpected: true}});
             expect(store.state.value).toBe('outage');
+        });
+
+        it('answers unconfirmed when the confirming me signed the session out, and ends nothing that was never live', async () => {
+            const store = build();
+            const ended = vi.fn();
+            store.onSessionEnd(ended);
+            vi.mocked(http.postRequest).mockResolvedValue(respondWith({}));
+            vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(401, {message: 'no session'}));
+
+            const outcome = await store.login(credentials);
+
+            expect(outcome).toEqual({kind: 'unconfirmed', status: 401, body: {message: 'no session'}});
+            expect(store.state.value).toBe('signed_out');
+            // Nothing was live, so nothing ended (D16).
+            expect(ended).not.toHaveBeenCalled();
         });
 
         it('refuses on a rejected login without probing me', async () => {
@@ -557,7 +773,7 @@ describe('createSessionStore', () => {
                 expect(store.user.value).toEqual({id: 9});
             });
 
-            it("refuses with the newer read's status, never with the discarded answer's", async () => {
+            it("answers unconfirmed with the newer read's status, never with the discarded answer's", async () => {
                 const store = build();
                 vi.mocked(http.postRequest).mockResolvedValue(respondWith({}));
                 const confirm = heldRequest();
@@ -579,12 +795,12 @@ describe('createSessionStore', () => {
 
                 revalidation.rejectWith(axiosRejection(401, {message: 'gone'}));
 
-                await expect(pending).resolves.toEqual({kind: 'refused', status: 401, body: {message: 'gone'}});
+                await expect(pending).resolves.toEqual({kind: 'unconfirmed', status: 401, body: {message: 'gone'}});
                 await consumerRead;
                 expect(store.state.value).toBe('signed_out');
             });
 
-            it('answers from the machine an outage left, which is how the two refusals are told apart', async () => {
+            it('answers unconfirmed from the machine an outage left — the POST was never the problem', async () => {
                 const store = build();
                 vi.mocked(http.postRequest).mockResolvedValue(respondWith({}));
                 const confirm = heldRequest();
@@ -605,11 +821,11 @@ describe('createSessionStore', () => {
 
                 revalidation.rejectWith(axiosRejection(undefined));
 
-                // `refused` with no status is what a transport failure and a
-                // discarded answer both look like. The machine is the
-                // discriminator, and it has settled by the time login answers.
+                // The KIND now says the POST was accepted; the machine says why
+                // the confirm did not land. `outage` means the API did not answer,
+                // and it has settled by the time login answers (D22).
                 await expect(pending).resolves.toEqual({
-                    outcome: {kind: 'refused', status: undefined, body: undefined},
+                    outcome: {kind: 'unconfirmed', status: undefined, body: undefined},
                     stateWhenAnswered: 'outage',
                 });
                 await consumerRead;
@@ -647,7 +863,7 @@ describe('createSessionStore', () => {
                 expect(store.user.value).toEqual({id: 9});
             });
 
-            it('refuses when a sign-out overtook it, rather than waiting for a read that will never come', async () => {
+            it('answers unconfirmed when a sign-out overtook it, rather than waiting for a read that will never come', async () => {
                 const store = build();
                 await signIn(store);
                 const confirm = heldRequest();
@@ -662,7 +878,7 @@ describe('createSessionStore', () => {
                 await store.logout();
                 confirm.answerWith({id: 7});
 
-                await expect(pending).resolves.toEqual({kind: 'refused', status: undefined, body: undefined});
+                await expect(pending).resolves.toEqual({kind: 'unconfirmed', status: undefined, body: undefined});
                 expect(store.state.value).toBe('signed_out');
             });
         });
@@ -1020,6 +1236,50 @@ describe('createSessionStore', () => {
         });
     });
 
+    describe('the two answers a consumer classifies over', () => {
+        /*
+         * The annotations are the assertion: a `Promise<void>` and a three-arm
+         * `LoginOutcome` would not satisfy them. No tsconfig in this repo includes
+         * a test file (enforcement queue #240), so nothing typechecks that half
+         * today — which is why each spec also reads the value at runtime, where
+         * the suite does have teeth.
+         */
+        it('hands loadSession() a value to read, not a void call', async () => {
+            const store = build();
+            vi.mocked(http.getRequest).mockResolvedValue(respondWith({id: 7}));
+
+            const read: SessionRead | undefined = await store.loadSession();
+
+            expect(read?.state).toBe('authenticated');
+            expect(read?.status).toBe(200);
+        });
+
+        it('narrows a login outcome on kind, unconfirmed included', async () => {
+            const store = build();
+            vi.mocked(http.postRequest).mockResolvedValue(respondWith({}));
+            vi.mocked(http.getRequest).mockRejectedValue(axiosRejection(503, {message: 'down'}));
+
+            const outcome: LoginOutcome = await store.login({email: 'a@b.test', password: 'secret'});
+            let described: string;
+
+            switch (outcome.kind) {
+                case 'authenticated':
+                    described = 'in';
+                    break;
+                case 'challenge':
+                    described = 'deferred';
+                    break;
+                case 'unconfirmed':
+                    described = `unconfirmed:${String(outcome.status)}`;
+                    break;
+                default:
+                    described = `refused:${String(outcome.status)}`;
+            }
+
+            expect(described).toBe('unconfirmed:503');
+        });
+    });
+
     describe('user and state are readonly outward', () => {
         it('refuses a write at compile time', async () => {
             const store = build();
@@ -1189,7 +1449,7 @@ describe('createSessionStore', () => {
             return {pending: store.loadSession(), answerPendingMe};
         };
 
-        it('discards a me still in flight when logout succeeds', async () => {
+        it('discards a me still in flight when logout succeeds, and answers nothing for it', async () => {
             const store = build();
             await signIn(store);
             const ended = vi.fn();
@@ -1199,15 +1459,27 @@ describe('createSessionStore', () => {
 
             await store.logout();
             answerPendingMe();
-            await pending;
 
+            // The session end took a read ticket (D15), so this read wrote
+            // nothing and has no answer to give.
+            await expect(pending).resolves.toBeUndefined();
             expect(store.state.value).toBe('signed_out');
             expect(store.user.value).toBeUndefined();
             expect(store.isAuthenticated.value).toBe(false);
             expect(ended).toHaveBeenCalledExactlyOnceWith({reason: 'logout'});
+
+            /*
+             * The control for the `undefined` above. Without a read that DOES
+             * answer in the same spec, `toBeUndefined()` passes just as well on a
+             * `loadSession()` that answers nobody — which is the shape this whole
+             * change replaces.
+             */
+            vi.mocked(http.getRequest).mockResolvedValueOnce(respondWith({id: 9}));
+
+            await expect(store.loadSession()).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 9}});
         });
 
-        it('discards a me still in flight when the session expires', async () => {
+        it('discards a me still in flight when the session expires, and answers nothing for it', async () => {
             const store = build();
             await signIn(store);
             const ended = vi.fn();
@@ -1216,11 +1488,16 @@ describe('createSessionStore', () => {
 
             store.handleSessionExpired('/employers/7');
             answerPendingMe();
-            await pending;
 
+            await expect(pending).resolves.toBeUndefined();
             expect(store.state.value).toBe('signed_out');
             expect(store.user.value).toBeUndefined();
             expect(ended).toHaveBeenCalledExactlyOnceWith({reason: 'expired', returnTo: '/employers/7'});
+
+            // Same control as above, for the expiry half of D15.
+            vi.mocked(http.getRequest).mockResolvedValueOnce(respondWith({id: 9}));
+
+            await expect(store.loadSession()).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 9}});
         });
 
         it('still commits a read issued AFTER the session ended', async () => {

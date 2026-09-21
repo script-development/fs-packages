@@ -10,6 +10,7 @@ import type {
     SessionEndListenerErrorHandler,
     RequestOptions,
     SessionEndEvent,
+    SessionRead,
     SessionState,
     SessionStore,
 } from './types';
@@ -21,14 +22,29 @@ import {isSignedOutStatus} from './endpoints';
 const STALE_TOKEN_STATUS = 419;
 
 /**
- * What a `me` attempt reported, whatever the store did with it. Read-only so the
- * shared `SUPERSEDED` value below needs no `Object.freeze` — a top-level call
- * would evaluate at module load and break this package's `sideEffects: false`.
+ * What a `me` attempt reported AND what it wrote, whatever the caller does with
+ * it. Read-only so the shared `SUPERSEDED` value below needs no `Object.freeze`
+ * — a top-level call would evaluate at module load and break this package's
+ * `sideEffects: false`.
+ *
+ * Split in two so `state` narrows: an overtaken read carries no state because it
+ * wrote none, and `state === undefined` is the discriminator the public boundary
+ * reads (DECISIONS D23).
  */
-interface MeOutcome {
+interface MeAnswer {
     readonly status: number | undefined;
     readonly body: unknown;
+    /** The state this read wrote, read in the same synchronous block as the write. */
+    readonly state: SessionState;
 }
+
+interface SupersededOutcome {
+    readonly status: undefined;
+    readonly body: undefined;
+    readonly state: undefined;
+}
+
+type MeOutcome = MeAnswer | SupersededOutcome;
 
 /**
  * Default sink for a failing session-end listener: loud, and it does not
@@ -40,7 +56,7 @@ const defaultOnListenerError: SessionEndListenerErrorHandler = (error, event) =>
 };
 
 /** A read a newer one overtook. It reports nothing, because nothing of it was used. */
-const SUPERSEDED: MeOutcome = {status: undefined, body: undefined};
+const SUPERSEDED: SupersededOutcome = {status: undefined, body: undefined, state: undefined};
 
 /**
  * An axios rejection once `isAxiosError` has narrowed it: an answer, or the
@@ -211,6 +227,14 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
             if (issued !== ticket) return SUPERSEDED;
 
             const status = error.response?.status;
+            /*
+             * Hoisted so the optional chain has ONE site. Duplicated across the
+             * two returns below, the signed-out copy is an equivalent mutant no
+             * spec can kill — that branch is only reached for a 401/419, which
+             * implies a response — while this single site is killed by the
+             * transport-failure spec, where there is none.
+             */
+            const body: unknown = error.response?.data;
 
             if (isSignedOutStatus(status)) {
                 /*
@@ -222,17 +246,26 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
                  * nothing when a login screen's own `me` answers 401.
                  */
                 endSession({reason: 'expired'});
-            } else {
+
                 /*
-                 * `user` is deliberately RETAINED on an outage. The ADR is explicit that
-                 * an outage is never a sign-out, so the identity is still presumed
-                 * good and a shell can keep naming it behind a notice; clearing it
-                 * would render a broken API as a sign-out by another route.
+                 * The branch decided `signed_out` and `endSession` wrote it through
+                 * `clearSession`, unconditionally. Reading `state.value` back here
+                 * instead would report whatever a SYNCHRONOUS consumer effect left —
+                 * a `watch(…, {flush: 'sync'})` fires inside the assignment — which
+                 * is the machine's later news and not this read's answer (D23).
                  */
-                state.value = 'outage';
+                return {status, body, state: 'signed_out'};
             }
 
-            return {status, body: error.response?.data};
+            /*
+             * `user` is deliberately RETAINED on an outage. The ADR is explicit that
+             * an outage is never a sign-out, so the identity is still presumed
+             * good and a shell can keep naming it behind a notice; clearing it
+             * would render a broken API as a sign-out by another route.
+             */
+            state.value = 'outage';
+
+            return {status, body, state: 'outage'};
         }
 
         if (issued !== ticket) return SUPERSEDED;
@@ -241,14 +274,43 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
         // consumer's defect and must reach the consumer, not become an `outage`.
         const parsed = parseUser(response.data);
 
+        /*
+         * Re-checked AFTER the guard ran. `parseUser` is package-called and
+         * consumer-written, and nothing in its type forbids a side effect: one
+         * that starts another read takes a ticket synchronously, in the gap
+         * between the check above and the writes below. Without this, an
+         * overtaken read commits anyway and reports a state it had no business
+         * writing (D23). A THROWING guard still propagates — this is reached
+         * only once it has returned (D13).
+         */
+        if (issued !== ticket) return SUPERSEDED;
+
+        let wrote: SessionState;
+
         if (parsed === undefined) {
-            state.value = 'outage';
+            wrote = 'outage';
         } else {
+            // `user` before the machine, so a synchronous effect on `state` cannot
+            // observe `authenticated` with the previous identity still readable.
             user.value = parsed;
-            state.value = 'authenticated';
+            wrote = 'authenticated';
         }
 
-        return {status: response.status, body: response.data};
+        /*
+         * The THIRD re-entry point, and the last one this read owns: the `user`
+         * write above is itself observable, so a `watch(store.user, …,
+         * {flush: 'sync'})` runs between it and the machine. An effect that ends
+         * the session there took a ticket, and writing `wrote` over it would
+         * report `authenticated` with no user, after the consumer was told the
+         * session was over. An effect that starts a newer read took one too, and
+         * this read has no answer to give (D23, crit `6ecd750b40bc` /
+         * `fff70bd50c2d`).
+         */
+        if (issued !== ticket) return SUPERSEDED;
+
+        state.value = wrote;
+
+        return {status: response.status, body: response.data, state: wrote};
     };
 
     /** Every read this store makes goes through here, so `latestRead` is never behind one. */
@@ -317,8 +379,17 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
             user.value = next;
         },
 
-        async loadSession() {
-            await startRead();
+        async loadSession(): Promise<SessionRead | undefined> {
+            const read = await startRead();
+
+            /*
+             * The sentinel stays private: a consumer gets `undefined` for a read
+             * a newer one overtook, because it wrote nothing and so has nothing
+             * to report (D23).
+             */
+            if (read.state === undefined) return undefined;
+
+            return {state: read.state, status: read.status, body: read.body};
         },
 
         async login(credentials) {
@@ -354,7 +425,12 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
 
             if (state.value === 'authenticated') return {kind: 'authenticated'};
 
-            return {kind: 'refused', status: me.status, body: me.body};
+            /*
+             * The POST was accepted and the confirm did not establish a session.
+             * That is not a refusal of the credentials, and answering `refused`
+             * here sent a consumer to the wrong sentence (D22).
+             */
+            return {kind: 'unconfirmed', status: me.status, body: me.body};
         },
 
         async logout() {
