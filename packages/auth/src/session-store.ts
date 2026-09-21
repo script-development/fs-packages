@@ -227,6 +227,14 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
             if (issued !== ticket) return SUPERSEDED;
 
             const status = error.response?.status;
+            /*
+             * Hoisted so the optional chain has ONE site. Duplicated across the
+             * two returns below, the signed-out copy is an equivalent mutant no
+             * spec can kill — that branch is only reached for a 401/419, which
+             * implies a response — while this single site is killed by the
+             * transport-failure spec, where there is none.
+             */
+            const body: unknown = error.response?.data;
 
             if (isSignedOutStatus(status)) {
                 /*
@@ -246,7 +254,7 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
                  * a `watch(…, {flush: 'sync'})` fires inside the assignment — which
                  * is the machine's later news and not this read's answer (D23).
                  */
-                return {status, body: error.response?.data, state: 'signed_out'};
+                return {status, body, state: 'signed_out'};
             }
 
             /*
@@ -257,7 +265,7 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
              */
             state.value = 'outage';
 
-            return {status, body: error.response?.data, state: 'outage'};
+            return {status, body, state: 'outage'};
         }
 
         if (issued !== ticket) return SUPERSEDED;

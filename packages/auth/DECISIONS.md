@@ -183,11 +183,20 @@ and an assertion on the unchanged value for the proxy.
 ## D11 — Six surviving mutants
 
 _Fifth added in fix round 3; sixth in fix round 4, 2026-09-16. Score re-measured
-at each: 98.00 → 97.71 → 97.61 → 97.67 → 97.71, and **97.74 at 0.2.0**
-(2026-09-21, full run with the incremental file deleted: 266 mutants, 257
-killed, 3 timed out, 6 survived). Rounds 5, 6 and 7 each added no new survivor,
-and neither did 0.2.0 — the six below are exactly the six measured, in the same
-six shapes. The only 0.2.0 change is to the third entry's quoted line: the
+at each: 98.00 → 97.71 → 97.61 → 97.67 → 97.71, **97.74 at 0.2.0** and
+**97.79 after 0.2.0 fix round 1** (2026-09-21, full runs with the incremental
+file deleted; the last: 271 mutants, 262 killed, 3 timed out, 6 survived).
+Rounds 5, 6 and 7 each added no new survivor, and neither did 0.2.0 or its fix
+round — the six below are exactly the six measured, in the same six shapes.
+
+**Fix round 1 produced a seventh and it was deleted rather than documented.**
+Splitting the refusal path into two returns duplicated `error.response?.data`,
+and the copy on the signed-out branch is unkillable: that branch is reached only
+for a 401/419, which implies a response, so the optional chain can never
+short-circuit there. Hoisting it to a single `const body` above the branch
+restored one site — killed by the transport-failure spec, where there genuinely
+is no response. **A survivor an edit CREATED is a sign the edit duplicated
+something, not a sixth-and-a-half equivalent to write down.** The only 0.2.0 change is to the third entry's quoted line: the
 sentinel carries a `state` property now (D23), and emptying it is equivalent for
 the same reason it always was._
 
