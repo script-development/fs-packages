@@ -38,8 +38,8 @@ const PACKAGES_DIR = 'packages';
 // reports `dist/index.mjs`, not an absolute path).
 const REQUIRED = ['dist/index.mjs', 'dist/index.cjs', 'dist/index.d.mts', 'dist/index.d.cts'];
 
-function listPackageDirs() {
-    return readdirSync(PACKAGES_DIR)
+const listPackageDirs = () =>
+    readdirSync(PACKAGES_DIR)
         .map((name) => path.join(PACKAGES_DIR, name))
         .filter((dir) => {
             // A stray file in packages/ is legitimately not a package — skip it. The dir
@@ -62,14 +62,11 @@ function listPackageDirs() {
             }
         })
         .sort();
-}
 
-function packageName(dir) {
-    return JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')).name ?? dir;
-}
+const packageName = (dir) => JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')).name ?? dir;
 
 // Returns the tarball file list from `npm pack --dry-run --json`, or null on failure.
-function packFileList(dir) {
+const packFileList = (dir) => {
     const result = spawnSync('npm', ['pack', '--dry-run', '--json'], {
         cwd: dir,
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -86,9 +83,9 @@ function packFileList(dir) {
     } catch {
         return null;
     }
-}
+};
 
-function main() {
+const main = () => {
     const dirs = listPackageDirs();
 
     // Floor assertion: a zero-package result means packages/ is present but empty (a
@@ -143,6 +140,6 @@ function main() {
     process.stdout.write(
         `\nvalidate:dist gate PASS — ${dirs.length} packages: required dist/ artifacts present and non-empty.\n`,
     );
-}
+};
 
 main();

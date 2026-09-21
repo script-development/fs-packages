@@ -7,24 +7,26 @@
  */
 export type CloudflareGateSource = 'header' | 'socket';
 
-export type CloudflareGateOptions = {
+export interface CloudflareGateOptions {
     /** Paths that bypass the gate entirely, matched exactly against `req.path`. No default — health-probe paths differ per app. */
     exemptPaths?: readonly string[];
     /** Client-IP header read in `'header'` mode. Must be proxy-written; a client-suppliable header is a bypass. */
     header?: string;
     /** Default `'header'`. */
     source?: CloudflareGateSource;
-};
+}
 
 /** Structural subset of an Express 4/5 `Request` — duck-typed so the package needs no Express dependency. */
-export type CloudflareGateRequest = {
+export interface CloudflareGateRequest {
     path: string;
     get: (name: string) => string | undefined;
     socket?: {remoteAddress?: string};
-};
+}
 
 /** `403` rather than `number`: a narrower parameter keeps this assignable from both Express 4 and Express 5 `Response`. */
-export type CloudflareGateResponse = {sendStatus: (code: 403) => void};
+export interface CloudflareGateResponse {
+    sendStatus: (code: 403) => void;
+}
 
 export type CloudflareGateMiddleware = (
     req: CloudflareGateRequest,
@@ -32,4 +34,7 @@ export type CloudflareGateMiddleware = (
     next: () => void,
 ) => void;
 
-export type CloudflareGate = {middleware: CloudflareGateMiddleware; isCloudflareAddress: (value: string) => boolean};
+export interface CloudflareGate {
+    middleware: CloudflareGateMiddleware;
+    isCloudflareAddress: (value: string) => boolean;
+}

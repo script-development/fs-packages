@@ -53,7 +53,7 @@ const failures = [];
  * until the next line at the same or lower indentation that also starts a list item
  * or a new mapping key.
  */
-function stepBlocks() {
+const stepBlocks = () => {
     const blocks = [];
     let current = null;
     for (const [index, line] of lines.entries()) {
@@ -74,7 +74,7 @@ function stepBlocks() {
     }
     if (current) blocks.push(current);
     return blocks.map((block) => ({...block, text: block.lines.join('\n')}));
-}
+};
 
 const steps = stepBlocks();
 
@@ -88,7 +88,7 @@ const steps = stepBlocks();
  * failure is silent in the expensive direction, because the gate keeps reporting PASS
  * while `publish` runs unconditioned. (crit, PR #221.)
  */
-function jobBlock(name) {
+const jobBlock = (name) => {
     const start = lines.findIndex((line) => new RegExp(`^(\\s+)${name}:\\s*$`).test(line));
     if (start === -1) return null;
     const indent = /^(\s*)/.exec(lines[start])[1].length;
@@ -105,7 +105,7 @@ function jobBlock(name) {
         end += 1;
     }
     return {startLine: start + 1, keyIndent: keyIndent ?? indent + 4, text: lines.slice(start, end).join('\n')};
-}
+};
 
 /** One of a job's own top-level keys, ignoring identically-named keys inside its steps. */
 const jobKey = (job, key) => new RegExp(`^ {${job.keyIndent}}${key}:\\s*(.+)$`, 'm').exec(job.text);

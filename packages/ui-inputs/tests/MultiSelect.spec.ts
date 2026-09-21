@@ -6,7 +6,10 @@ import {h} from 'vue';
 import MultiSelect from '../src/components/MultiSelect.vue';
 import {menu} from './find-menu';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},
@@ -243,7 +246,10 @@ describe('MultiSelect', () => {
     });
 
     it('round-trips string ids and resolves labels via a getter', async () => {
-        type Tag = {id: string; title: string};
+        interface Tag {
+            id: string;
+            title: string;
+        }
         const tags: Tag[] = [
             {id: 'b', title: 'beta'},
             {id: 'a', title: 'alpha'},

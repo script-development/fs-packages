@@ -59,8 +59,8 @@ export const createTranslationService = <const TSchema extends TranslationSchema
     const locale = ref(defaultLocale) as Ref<TLocale>;
     const cache = new Map<string, ComputedRef<string>>();
 
-    const createTranslationComputed = (key: string, params?: Record<string, string>): ComputedRef<string> => {
-        return computed(() => {
+    const createTranslationComputed = (key: string, params?: Record<string, string>): ComputedRef<string> =>
+        computed(() => {
             const parts = key.split('.');
 
             if (parts.length !== 2) {
@@ -84,7 +84,6 @@ export const createTranslationService = <const TSchema extends TranslationSchema
 
             return text;
         });
-    };
 
     const t = (key: NestedKeys<TSchema>, params?: Record<string, string>): ComputedRef<string> => {
         const keyString = key as string;

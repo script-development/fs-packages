@@ -50,14 +50,14 @@ export type ShowRouteName<T extends RouteRecordName | undefined> = ExtractNameFr
  * middleware cancels the pending hop and navigates to the target in a single step —
  * `goToRoute` (push) by default, `replaceRoute` when `replace: true`.
  */
-export type MiddlewareRedirect<Routes extends RouteRecordRaw[]> = {
+export interface MiddlewareRedirect<Routes extends RouteRecordRaw[]> {
     name: RouteName<Routes>;
     id?: number | string;
     query?: LocationQueryRaw;
     parentId?: number;
     /** Replace the current history entry instead of pushing a new one. Defaults to `false`. */
     replace?: boolean;
-};
+}
 
 /**
  * The return of a before-route middleware: a boolean (truthy = cancel the hop,

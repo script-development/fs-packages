@@ -10,6 +10,12 @@ export type Theme = 'dark' | 'light';
  * importing it. This keeps the packages loosely coupled: fs-theme depends on a shape,
  * not a package.
  */
-export type ThemeStorageContract = {get: <T>(key: string) => T | undefined; put: (key: string, value: unknown) => void};
+export interface ThemeStorageContract {
+    get: <T>(key: string) => T | undefined;
+    put: (key: string, value: unknown) => void;
+}
 
-export type ThemeService = {isDark: Ref<boolean>; toggleTheme: () => void};
+export interface ThemeService {
+    isDark: Ref<boolean>;
+    toggleTheme: () => void;
+}

@@ -25,12 +25,12 @@ import {isAxiosError} from './utils';
  */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 
-const unregister = <T>(array: T[], item: T): UnregisterMiddleware => {
-    return () => {
+const unregister =
+    <T>(array: T[], item: T): UnregisterMiddleware =>
+    () => {
         const index = array.indexOf(item);
         if (index > -1) array.splice(index, 1);
     };
-};
 
 /**
  * Parse the consumer-supplied baseURL with a library-attributed error on failure.

@@ -117,10 +117,10 @@ function createTestAdapter(
  * readability reasons as createTestAdapter. Each call creates a fresh capture context,
  * maintaining test isolation.
  */
-function createCapturingAdapter(): {
+const createCapturingAdapter = (): {
     adapter: Adapter<TestItem, TestAdapted, TestNewAdapted>;
     getCapturedStoreModule: () => AdapterStoreModule<TestItem> | null;
-} {
+} => {
     let capturedStoreModule: AdapterStoreModule<TestItem> | null = null;
 
     function adapter(storeModule: AdapterStoreModule<TestItem>): TestNewAdapted;
@@ -194,7 +194,7 @@ function createCapturingAdapter(): {
         adapter: adapter as Adapter<TestItem, TestAdapted, TestNewAdapted>,
         getCapturedStoreModule: () => capturedStoreModule,
     };
-}
+};
 
 describe('createAdapterStoreModule', () => {
     describe('getAll', () => {

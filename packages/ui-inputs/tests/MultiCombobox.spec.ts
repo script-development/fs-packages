@@ -6,7 +6,10 @@ import {h} from 'vue';
 import MultiCombobox from '../src/components/MultiCombobox.vue';
 import {menu} from './find-menu';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},
@@ -300,7 +303,10 @@ describe('MultiCombobox', () => {
     });
 
     it('round-trips string ids, resolves labels via a getter, and preserves given order unsorted', async () => {
-        type Tag = {id: string; title: string};
+        interface Tag {
+            id: string;
+            title: string;
+        }
         const tags: Tag[] = [
             {id: 'b', title: 'beta'},
             {id: 'a', title: 'alpha'},

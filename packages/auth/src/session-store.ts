@@ -62,7 +62,9 @@ const SUPERSEDED: SupersededOutcome = {status: undefined, body: undefined, state
  * An axios rejection once `isAxiosError` has narrowed it: an answer, or the
  * recorded absence of one. Written structurally so no axios type is named here.
  */
-type TransportFailure = {response?: {status: number; data: unknown}};
+interface TransportFailure {
+    response?: {status: number; data: unknown};
+}
 
 export const createSessionStore = <TUser, TCredentials = Record<string, unknown>>(
     config: CreateSessionStoreConfig<TUser>,

@@ -95,12 +95,12 @@ const makeFakeHttpService = (): FakeHttpService => {
     const responseMiddlewares: ResponseMiddlewareFunc[] = [];
     const requestMiddlewares: RequestMiddlewareFunc[] = [];
     const responseErrorMiddlewares: ResponseErrorMiddlewareFunc[] = [];
-    const unregisterFrom = <T>(array: T[], item: T): UnregisterMiddleware => {
-        return () => {
+    const unregisterFrom =
+        <T>(array: T[], item: T): UnregisterMiddleware =>
+        () => {
             const index = array.indexOf(item);
             if (index > -1) array.splice(index, 1);
         };
-    };
     const service: FakeHttpService = {
         getRequest: vi.fn(),
         postRequest: vi.fn(),

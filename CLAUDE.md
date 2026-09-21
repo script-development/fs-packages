@@ -155,6 +155,8 @@ Lint configuration lives at `.oxlintrc.json` (repo-root, no per-package override
 - **Categories:** `correctness: "error"` — all 107 Correctness rules fail CI (was `warn`, so violations were silently tolerated pre-config).
 - **`perf`, `suspicious`, `pedantic`, `style`, `restriction`, `nursery`:** unset — library posture is Correctness-only, opt-in per-rule for anything else.
 
+**Arrow functions only — `function` declarations and `function` callbacks are lint errors (`func-style`, `prefer-arrow-callback`; ruling 2026-09-21).** Four companions ride with them: `arrow-body-style` (`as-needed`), same-scope `no-use-before-define`, `import/no-default-export` (the Level-2 encoding of the existing "named exports only, no defaults" convention), and `typescript/consistent-type-definitions` (`interface`). The `import` plugin is enabled solely to carry `import/no-default-export`; the Correctness-only posture is otherwise unchanged. The `overrides` block exempts the shapes that must default-export — note that the canonical `*.config.mts` glob does **not** match VitePress's entry, which is named `config.mts` exactly, and that Stryker's per-package configs are `.mjs`; both patterns are added here beyond the canonical four.
+
 To add a rule, set it in the `rules` object (e.g. `"perf/no-accumulating-spread": "error"`). To disable a default, set it to `"off"`. To opt into a whole category, add it to `categories` (be deliberate — `pedantic` has false positives, `nursery` is unstable). See `npx oxlint --rules` for the full catalog with default-on/off markers.
 
 ## Adding a Package

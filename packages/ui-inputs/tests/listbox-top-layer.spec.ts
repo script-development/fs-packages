@@ -7,7 +7,10 @@ import MultiCombobox from '../src/components/MultiCombobox.vue';
 import MultiSelect from '../src/components/MultiSelect.vue';
 import SingleSelect from '../src/components/SingleSelect.vue';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},

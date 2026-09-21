@@ -6,7 +6,10 @@ import {h} from 'vue';
 import SingleSelect from '../src/components/SingleSelect.vue';
 import {menu} from './find-menu';
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},

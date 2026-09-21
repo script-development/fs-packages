@@ -29,7 +29,10 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
  * property-name case below with the exact `Invalid prop` warning.
  */
 
-type Fruit = {id: number; name: string};
+interface Fruit {
+    id: number;
+    name: string;
+}
 
 const FRUITS: Fruit[] = [
     {id: 1, name: 'Watermelon'},
