@@ -308,6 +308,62 @@ describe('createSessionStore', () => {
                 expect(store.state.value).toBe('signed_out');
             });
 
+            /*
+             * The `user` write is the OTHER re-entry point, one statement later:
+             * a watcher on the identity fires inside `user.value = parsed`, after
+             * the post-`parseUser` epoch check and before the machine is written.
+             * Crit findings `6ecd750b40bc` and `fff70bd50c2d`, #266 private round 2.
+             */
+            it('leaves a session an effect ended during the user write exactly as it was ended', async () => {
+                const store = build();
+                await signIn(store);
+                const ended = vi.fn();
+                store.onSessionEnd(ended);
+                vi.mocked(http.getRequest).mockResolvedValue(respondWith({id: 9}));
+                const stop = watch(store.user, () => store.handleSessionExpired(), {flush: 'sync'});
+
+                const read = await store.loadSession();
+
+                stop();
+
+                // The session ended INSIDE this read's own write. Writing
+                // `authenticated` over it would leave `isAuthenticated` true with
+                // no user, after the consumer was told the session was over.
+                expect(read).toBeUndefined();
+                expect(store.state.value).toBe('signed_out');
+                expect(store.user.value).toBeUndefined();
+                expect(store.isAuthenticated.value).toBe(false);
+                expect(ended).toHaveBeenCalledOnce();
+            });
+
+            it('answers nothing for a read a watcher on the user overtook, and lets the newer one land', async () => {
+                const store = build();
+                let inner: Promise<SessionRead | undefined> | undefined;
+                let armed = true;
+                vi.mocked(http.getRequest)
+                    .mockResolvedValueOnce(respondWith({id: 1}))
+                    .mockResolvedValueOnce(respondWith({id: 2}));
+                const stop = watch(
+                    store.user,
+                    () => {
+                        if (!armed) return;
+
+                        armed = false;
+                        inner = store.loadSession();
+                    },
+                    {flush: 'sync'},
+                );
+
+                const outer = await store.loadSession();
+
+                stop();
+
+                expect(outer).toBeUndefined();
+                await expect(inner).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
+                expect(store.user.value).toEqual({id: 2});
+                expect(store.state.value).toBe('authenticated');
+            });
+
             it('answers the outage it wrote, not what the consumer left behind', async () => {
                 const store = build();
                 await signIn(store);
@@ -342,9 +398,10 @@ describe('createSessionStore', () => {
                     return isEmployer(body);
                 },
             });
+            const newer = heldRequest();
             vi.mocked(http.getRequest)
                 .mockResolvedValueOnce(respondWith({id: 1}))
-                .mockResolvedValueOnce(respondWith({id: 2}));
+                .mockImplementationOnce(newer.implementation);
 
             let inner: Promise<SessionRead | undefined> | undefined;
             reenter = () => {
@@ -354,6 +411,19 @@ describe('createSessionStore', () => {
             const outer = await store.loadSession();
 
             expect(outer).toBeUndefined();
+
+            /*
+             * The newer read is HELD, so this is the overtaken read's own
+             * footprint and nothing else: none. Stopping it before the writes —
+             * rather than only before the machine write — is what buys that. With
+             * the re-check above `user` gone, the discarded answer's identity
+             * lands here and stays readable until the newer read overwrites it.
+             */
+            expect(store.user.value).toBeUndefined();
+            expect(store.state.value).toBe('loading');
+
+            newer.answerWith({id: 2});
+
             await expect(inner).resolves.toEqual({state: 'authenticated', status: 200, body: {id: 2}});
             expect(store.user.value).toEqual({id: 2});
         });

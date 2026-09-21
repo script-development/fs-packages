@@ -296,6 +296,18 @@ export const createSessionStore = <TUser, TCredentials = Record<string, unknown>
             wrote = 'authenticated';
         }
 
+        /*
+         * The THIRD re-entry point, and the last one this read owns: the `user`
+         * write above is itself observable, so a `watch(store.user, …,
+         * {flush: 'sync'})` runs between it and the machine. An effect that ends
+         * the session there took a ticket, and writing `wrote` over it would
+         * report `authenticated` with no user, after the consumer was told the
+         * session was over. An effect that starts a newer read took one too, and
+         * this read has no answer to give (D23, crit `6ecd750b40bc` /
+         * `fff70bd50c2d`).
+         */
+        if (issued !== ticket) return SUPERSEDED;
+
         state.value = wrote;
 
         return {status: response.status, body: response.data, state: wrote};

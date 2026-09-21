@@ -184,7 +184,7 @@ and an assertion on the unchanged value for the proxy.
 
 _Fifth added in fix round 3; sixth in fix round 4, 2026-09-16. Score re-measured
 at each: 98.00 → 97.71 → 97.61 → 97.67 → 97.71, **97.74 at 0.2.0** and
-**97.79 after 0.2.0 fix round 1** (2026-09-21, full runs with the incremental
+**97.79 after 0.2.0 fix round 1** and **97.81 after fix round 2** (2026-09-21, full runs with the incremental
 file deleted; the last: 271 mutants, 262 killed, 3 timed out, 6 survived).
 Rounds 5, 6 and 7 each added no new survivor, and neither did 0.2.0 or its fix
 round — the six below are exactly the six measured, in the same six shapes.
@@ -196,7 +196,18 @@ for a 401/419, which implies a response, so the optional chain can never
 short-circuit there. Hoisting it to a single `const body` above the branch
 restored one site — killed by the transport-failure spec, where there genuinely
 is no response. **A survivor an edit CREATED is a sign the edit duplicated
-something, not a sixth-and-a-half equivalent to write down.** The only 0.2.0 change is to the third entry's quoted line: the
+something, not a sixth-and-a-half equivalent to write down.**
+
+**Fix round 2 produced a seventh too, and it was a real coverage gap.** The
+third epoch check (after the `user` write) made the second one — the check after
+`parseUser` returns — redundant _for the specs that had been killing it_, so
+`if (false) return SUPERSEDED` survived. The second check is not redundant: it
+stops an overtaken read **before** it touches `user`, where the third can only
+stop it before the machine. Nothing asserted that difference. Holding the newer
+read and asserting the overtaken one's footprint — `user` undefined, `state`
+still `loading` — kills it. **A survivor that appears when a guard is ADDED is
+usually the older guard asking what it is still for; the answer here was a
+narrower residual, and the spec now says so.** The only 0.2.0 change is to the third entry's quoted line: the
 sentinel carries a `state` property now (D23), and emptying it is equivalent for
 the same reason it always was._
 
@@ -744,6 +755,8 @@ _2026-09-21, Commander ruling. 0.2.0, breaking. WR-1588._
 _Amended the same day, fix round 1: the capture mechanism below is the SECOND
 one this entry has described. The first was wrong, and the paragraph saying so
 is kept rather than quietly replaced._
+_Amended again, fix round 2: a THIRD re-entry point, on the `user` write.
+Crit findings `6ecd750b40bc` and `fff70bd50c2d` (#266 private round 2)._
 
 `loadSession()` returned `void` while `runLoadSession` already computed
 everything a caller could want and threw it away: the status, the body, and the
@@ -799,6 +812,53 @@ The refusal path needs no second check: nothing between its epoch check and its
 write is consumer code, and `endSession`'s listeners run _after_ the state is
 already decided.
 
+**And a third check, on the `user` write — the same window one statement later.**
+
+_Fix round 2, 2026-09-21. Crit `6ecd750b40bc` (the corrupted machine) and
+`fff70bd50c2d` (the overtaken read)._
+
+`user.value = parsed` is itself observable, so a
+`watch(store.user, …, {flush: 'sync'})` runs **between the identity write and
+the machine write** — past the post-`parseUser` check, and before `state` has
+moved. Both measured on `2adc49c`:
+
+- An effect calling `handleSessionExpired()` ends the session there. The read
+  then wrote `authenticated` over it, leaving **`state: 'authenticated'`,
+  `user: undefined`, `isAuthenticated: true`, one `sessionEnd` event already
+  delivered** — a signed-out session reporting itself signed in, with nobody in
+  it, after the consumer had been told it was over. This is the worst state the
+  machine has been shown to reach.
+- An effect starting a newer `loadSession()` takes a ticket there. The read
+  committed anyway and answered a populated `SessionRead` for an answer a newer
+  read was already replacing.
+
+One more `if (issued !== ticket) return SUPERSEDED;` between the two writes
+closes both. On the first, the session is then left exactly as `clearSession`
+left it — `signed_out`, no user — which is the truthful end state rather than a
+repaired one. On the second, the read answers `undefined` and the newer read's
+answer lands.
+
+**The residual, stated because it is real:** the `user` write has already
+happened when this check fires, so an overtaken read can leave a _newer identity
+behind an unmoved machine_ for as long as the read that overtook it is in
+flight. It is the safe direction — `isAuthenticated` reads `state`, so nothing
+is exposed as signed in — and the newer read resolves it. Writing `state` first
+instead would trade this for the round-1 defect (a `state` watcher observing
+`authenticated` with the previous identity still readable), which is worse; the
+order stays as D14 has it.
+
+**This is the fifth concurrency finding on this file, and the class is not
+claimed closed.** Fix round 3 (D17), rounds 4–5 (D19), round 7 (D19's `me`
+amendment), 0.2.0 round 1 (the `state` watcher and the re-entrant `parseUser`)
+and now this one all have the same generator: **consumer code running inside the
+store's own write, at a moment the ordering logic assumed nothing could run.**
+The epoch guards `await` boundaries; every one of these is a _synchronous_
+re-entry it does not model. That generator is the subject of **WR-1610**, a
+spike with its pass conditions written before it runs. This round closes the
+measured window; it does not claim the class is closed. D18(b)'s trigger — a
+fourth concurrency finding here is a spike, not another fix round — has fired,
+and the spike is filed rather than skipped.
+
 **`undefined` for an overtaken read, and no `superseded` arm.** A read a newer
 one overtook wrote nothing, so it has nothing to report; there is no partial
 answer to describe and no state to name. The `SUPERSEDED` sentinel stays
@@ -837,7 +897,15 @@ the only option.
 
 **`read.body` is the API's answer, aliased and not copied — accepted.**
 
-_Fix round 1, 2026-09-21._
+_Finding `61c20a05ad12` (crit, #266 private round 2) — **accepted, not fixed**.
+First recorded in fix round 1, 2026-09-21; the id is named here because that is
+what the record is waived against._
+
+**The alias is not `SessionRead`'s to create.** `parseUser` is handed
+`response.data` and a pass-through guard returns that same object, so the store
+has retained the API's payload as the user since 0.1.0 — before `loadSession()`
+returned anything at all. Exposing `body` gives a consumer a second reference to
+an object it already had through its own guard; it does not widen the surface.
 
 On a successful `me`, `read.body` is `response.data` — the identical object
 `parseUser` was handed, and for a pass-through guard (`(body) => (isEmployer(body)
