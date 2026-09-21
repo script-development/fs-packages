@@ -48,13 +48,13 @@
         "axios": "^1.20.0",
         "axios-mock-adapter": "^2.1.0",
         "happy-dom": "^20.14.3",
-        "vue": "^3.5.42",
+        "vue": "^3.5.43",
         "vue-router": "^5.3.1"
     },
     "peerDependencies": {
         "@script-development/fs-http": "^0.6.0",
         "@script-development/fs-router": "^0.3.0",
-        "vue": "^3.5.42",
+        "vue": "^3.5.43",
         "vue-router": "^5.3.1"
     },
     "engines": {
