@@ -27,7 +27,28 @@ export type LoginOutcome =
     | {kind: 'authenticated'}
     /** The login answered without establishing a session (a 2FA step, say). The CONSUMER interprets `body`. */
     | {kind: 'challenge'; body: unknown}
-    | {kind: 'refused'; status: number | undefined; body: unknown};
+    /** The login POST itself was refused, or never answered. `status` is the POST's. */
+    | {kind: 'refused'; status: number | undefined; body: unknown}
+    /**
+     * The POST answered 2xx and the confirming `me` did not establish a session.
+     * `status`/`body` are the ME answer's, and `state.value` says which kind of
+     * silence it was — `outage` or `signed_out` (DECISIONS D22).
+     */
+    | {kind: 'unconfirmed'; status: number | undefined; body: unknown};
+
+/**
+ * What one `me` read wrote, and what the API said (DECISIONS D23). A consumer
+ * classifies over this — a 429, a transport failure, a blocked account are its
+ * vocabulary to name, not the package's.
+ */
+export interface SessionRead {
+    /** The state THIS read wrote, captured where it wrote it — never a later read's. */
+    state: SessionState;
+    /** The `me` answer's status. `undefined` when nothing answered. */
+    status: number | undefined;
+    /** The `me` answer's body: data on a 2xx, the error data on a refusal. */
+    body: unknown;
+}
 
 export type LogoutOutcome = {kind: 'signed_out'} | {kind: 'failed'; status: number | undefined; body: unknown};
 
@@ -98,7 +119,8 @@ export interface SessionStore<TUser, TCredentials> extends AuthenticationState, 
     readonly isAuthenticated: ComputedRef<boolean>;
     /** The one writer of `user` (ADR-0050 ruling 3). Throws while the session is not authenticated. */
     setUser(next: TUser): void;
-    loadSession(): Promise<void>;
+    /** `undefined` when a newer read overtook this one: it wrote nothing, so it has no answer. */
+    loadSession(): Promise<SessionRead | undefined>;
     login(credentials: TCredentials): Promise<LoginOutcome>;
     logout(): Promise<LogoutOutcome>;
     handleSessionExpired(returnTo?: string): void;
