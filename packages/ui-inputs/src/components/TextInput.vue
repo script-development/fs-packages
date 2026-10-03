@@ -4,17 +4,21 @@
         :type="type"
         class="ui-control ui-input"
         :class="{'is-invalid': invalid}"
-        :value="model"
+        :value="shown"
         :placeholder="placeholder"
         :disabled="disabled"
         :aria-required="required || undefined"
         :aria-invalid="invalid || undefined"
         :aria-describedby="describedby"
-        @input="model = ($event.target as HTMLInputElement).value"
+        @input="onInput"
+        @compositionstart="onCompositionstart"
+        @compositionend="onCompositionend"
     />
 </template>
 
 <script setup lang="ts">
+import {commitOutsideComposition} from '../internal/composition';
+
 const {type = 'text'} = defineProps<{
     id: string;
     type?: 'text' | 'email' | 'password' | 'search' | 'tel' | 'url';
@@ -32,4 +36,11 @@ const {type = 'text'} = defineProps<{
 // an empty control); a cleared input emits '', which the fleet's
 // ConvertEmptyStringsToNull middleware converts back to null on submit.
 const model = defineModel<string | null>({required: true});
+
+const {shown, onInput, onCompositionstart, onCompositionend} = commitOutsideComposition(
+    () => model.value,
+    (value) => {
+        model.value = value;
+    },
+);
 </script>

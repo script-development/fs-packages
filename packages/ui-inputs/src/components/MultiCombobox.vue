@@ -1,5 +1,5 @@
 <template>
-    <div ref="root" class="ui-multicombobox">
+    <div ref="root" v-bind="rootAttrs($attrs)" class="ui-multicombobox">
         <div
             ref="box"
             class="ui-control ui-multicombobox__box"
@@ -34,6 +34,7 @@
                  committed label to snap to, so Combobox's commit-snaps-query→label and
                  closed-state label re-sync are deliberately NOT ported. -->
             <input
+                v-bind="controlAttrs($attrs)"
                 :id="id"
                 ref="input"
                 type="text"
@@ -117,7 +118,11 @@ import type {LabelKey, SelectItem} from '../types';
 
 import {useListbox} from '../composables/useListbox';
 import {ensureRefValueExists} from '../internal/reactivity';
+import {controlAttrs, rootAttrs} from '../internal/split-attrs';
 import OptionList from './OptionList.vue';
+
+// `class`/`style` → root, every other attr → the combobox element (see split-attrs).
+defineOptions({inheritAttrs: false});
 
 const {
     options,
@@ -125,7 +130,7 @@ const {
     id,
     placeholder = 'Select…',
     disabled = false,
-    alphabeticalSort = true,
+    alphabeticalSort = false,
     required = false,
     invalid = false,
     describedby,
@@ -142,6 +147,7 @@ const {
     /** shown only while nothing is committed — chips replace it, like MultiSelect. */
     placeholder?: string;
     disabled?: boolean;
+    /** sort the rendered options by display string — off by default, so the caller's order is kept. */
     alphabeticalSort?: boolean;
     /** conveys the required state to assistive tech via `aria-required`. */
     required?: boolean;
@@ -259,8 +265,8 @@ const commit = (index: number): boolean => {
     return true;
 };
 
-const {open, pointer, listboxId, optionId, activeDescendant, floatingStyles, onKey, close, resetHighlight} = useListbox(
-    {
+const {open, pointer, listboxId, optionId, activeDescendant, floatingStyles, onKey, openList, close, resetHighlight} =
+    useListbox({
         root,
         reference: box,
         floating,
@@ -273,8 +279,7 @@ const {open, pointer, listboxId, optionId, activeDescendant, floatingStyles, onK
         onCommit: commit,
         onDismiss: () => dismiss(),
         onOutside: () => dismiss(),
-    },
-);
+    });
 
 // Close-without-commit (Escape, Tab, click outside): the query clears back to the resting
 // empty state — a half-typed filter never lingers, and there is no committed label to revert to.
@@ -293,7 +298,7 @@ const remove = (value: T['id']): void => {
     model.value = model.value.filter((member) => member !== value);
     const wasOpen = open.value;
     ensureRefValueExists(input).focus();
-    open.value = wasOpen;
+    if (!wasOpen) close();
 };
 /** Backspace with an EMPTY query pops the LAST committed value (no-op when empty). */
 const popLast = (): void => {
@@ -317,15 +322,13 @@ const onInputKey = (event: KeyboardEvent): void => {
 // resets the highlight (nothing is pre-selected — Enter with no highlight is a no-op).
 const onInput = (event: Event) => {
     query.value = (event.target as HTMLInputElement).value;
-    open.value = true;
+    openList();
     resetHighlight();
 };
 // Focusing or clicking the (enabled) input opens the list (kendo's searchable choreography —
 // focus is managed into the input, and the list is its context). A disabled input never
 // dispatches either event.
-const onOpen = () => {
-    open.value = true;
-};
+const onOpen = openList;
 
 // The one sanctioned defineExpose: a PUBLIC imperative handle (Combobox parity).
 // The input is non-null by lifetime; the loud accessor names the assumption if it ever breaks.

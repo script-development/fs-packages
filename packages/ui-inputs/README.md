@@ -71,6 +71,12 @@ shape at that fixed breakpoint (a custom property cannot drive a media query, so
 
 ### The select family's shared extras
 
+**Attributes.** On all six selects and comboboxes, `class` and `style` stay on the root `<div>`,
+where you style the whole control; every other attr — `aria-label`, `aria-labelledby`, `data-*`,
+listeners — lands on the element carrying `role="combobox"` (the trigger button, or the text
+input), the only place an accessible name can name the control. A consumer attr never overrides
+the component's own `id`, `role` or ARIA wiring.
+
 **Per-option content — the `#option` scoped slot.** All four selects render each option's
 plain display string by default; the `option` slot replaces that content with your own
 (colour swatches, icons, rich labels). The payload is `{option, index, selected, active}` —
@@ -114,6 +120,17 @@ state ("No options" / `emptyText`) is **announced**, not just painted: every sel
 persistent, visually-hidden `aria-live="polite"` region that speaks the empty text the moment
 the (filtered) list drains to nothing — which matters most on the filterable components,
 where typing can drain the list silently.
+
+**Typeahead (`SingleSelect`, `MultiSelect`, `GroupSelect`).** Typing on the focused trigger
+moves the keyboard highlight the way a native `<select>` does: a character moves to the next
+option starting with it (so repeating it cycles through those options), a string typed quickly —
+spaces included — matches by prefix, and the string resets after 500 ms without a keystroke.
+Matching ignores case and wraps past the last option, and a character no option starts with
+moves nothing. With nothing highlighted, a search starts from the chosen option on
+`SingleSelect` and `GroupSelect` (so with Banana chosen, `b` moves on to the next b-option);
+`MultiSelect` has no single chosen option and searches from the top. On a closed control a match
+**opens** the list on that option and commits nothing; Enter commits, as always. The comboboxes
+have no typeahead: what you type there is the query.
 
 **The committing clear entry (`SingleSelect` / `Combobox`).** `clearLabel` renders a
 committing entry **above** the options — choosing it commits `null` and closes, exactly like
@@ -521,6 +538,8 @@ option — the anchor grows with it, so the popup stays on-screen.
 ## Nullable values
 
 Every text-like input (`TextInput`, `DateInput`, `Textarea`) models `string | null`, and `NumberInput` models `number | null`. A `null` from a nullable backend column binds directly — the control renders empty, no `?? ''` at the call site. When the user clears the field, the string inputs emit `''` (the raw native value); a Laravel backend's `ConvertEmptyStringsToNull` middleware maps that back to `null` on submit. `NumberInput` is the one exception: an empty number input emits `null` (not `NaN`, not `''`), since a `number` model can never hold `''` honestly — so it round-trips to `null` without relying on the middleware.
+
+**IME input.** `TextInput` and `Textarea` follow Vue's own `v-model` on a text field: while an input method (Japanese, Chinese, Korean, …) is composing, the candidate `input` events emit nothing, and the composed value is emitted once on `compositionend`. Swapping a native `v-model` for one of these controls does not hand you every candidate.
 
 ## SingleSelect and assistive tech
 

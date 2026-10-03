@@ -1,6 +1,7 @@
 <template>
-    <div ref="root" class="ui-groupcombobox" @keydown="onKey">
+    <div ref="root" v-bind="rootAttrs($attrs)" class="ui-groupcombobox" @keydown="onKey">
         <input
+            v-bind="controlAttrs($attrs)"
             :id="id"
             ref="input"
             type="text"
@@ -82,7 +83,11 @@ import type {LabelKey, SelectItem} from '../types';
 import {useListbox} from '../composables/useListbox';
 import {buildGroupRows} from '../internal/group-rows';
 import {ensureRefValueExists} from '../internal/reactivity';
+import {controlAttrs, rootAttrs} from '../internal/split-attrs';
 import OptionList from './OptionList.vue';
+
+// `class`/`style` → root, every other attr → the combobox element (see split-attrs).
+defineOptions({inheritAttrs: false});
 
 const {
     groups,
@@ -224,6 +229,7 @@ const {
     activeDescendant,
     floatingStyles,
     onKey,
+    openList,
     close,
     clearHighlighted,
     clearId,
@@ -277,13 +283,11 @@ const dismiss = (): void => {
 // `resetHighlight` (not a bare pointer write) so a hovered clear entry drops too.
 const onInput = (event: Event) => {
     query.value = (event.target as HTMLInputElement).value;
-    open.value = true;
+    openList();
     resetHighlight();
 };
 // Clicking the (enabled) input opens the list. A disabled input never dispatches click.
-const onClick = () => {
-    open.value = true;
-};
+const onClick = openList;
 
 // The one sanctioned defineExpose: a PUBLIC imperative handle (isms WR-0448 focus trap).
 defineExpose({focus: () => ensureRefValueExists(input).focus()});

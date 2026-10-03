@@ -1,6 +1,7 @@
 <template>
-    <div ref="root" class="ui-select" @keydown="onKey">
+    <div ref="root" v-bind="rootAttrs($attrs)" class="ui-select" @keydown="onKey">
         <button
+            v-bind="controlAttrs($attrs)"
             :id="id"
             ref="reference"
             type="button"
@@ -89,7 +90,11 @@ import type {GroupRow} from '../internal/group-rows';
 import type {LabelKey, SelectItem} from '../types';
 
 import {useListbox} from '../composables/useListbox';
+import {controlAttrs, rootAttrs} from '../internal/split-attrs';
 import OptionList from './OptionList.vue';
+
+// `class`/`style` → root, every other attr → the combobox element (see split-attrs).
+defineOptions({inheritAttrs: false});
 
 const {
     options,
@@ -97,7 +102,7 @@ const {
     id,
     placeholder = 'Select…',
     disabled = false,
-    alphabeticalSort = true,
+    alphabeticalSort = false,
     required = false,
     invalid = false,
     describedby,
@@ -114,6 +119,7 @@ const {
     id: string;
     placeholder?: string;
     disabled?: boolean;
+    /** sort the rendered options by display string — off by default, so the caller's order is kept. */
     alphabeticalSort?: boolean;
     /** conveys the required state to assistive tech via `aria-required`. */
     required?: boolean;
@@ -201,6 +207,7 @@ const {
     floatingStyles,
     onKey,
     close,
+    toggle,
     clearHighlighted,
     clearId,
     highlightClear,
@@ -216,13 +223,12 @@ const {
     onCommit: commit,
     onDismiss: () => close(),
     onOutside: () => close(),
+    typeaheadLabels: () => optionLabels.value,
+    committedIndex: () => sorted.value.findIndex((option) => option.id === model.value),
     clearEntry: () => clearLabel !== undefined,
     onClearCommit: commitClear,
 });
 
-const toggle = () => {
-    open.value = !open.value;
-};
 const choose = (option: T): void => {
     model.value = option.id;
     close();

@@ -292,6 +292,8 @@ The default slot receives `{controlId, errorId, required, invalid, describedby}`
 | `DateInput`   | `min`, `max` (ISO `YYYY-MM-DD`)     | `string \| null` | `''`           |
 | `Textarea`    | `rows`, `placeholder`               | `string \| null` | `''`           |
 
+**IME input.** `TextInput` and `Textarea` follow Vue's own `v-model` on a text field: while an input method (Japanese, Chinese, Korean, …) is composing, the candidate `input` events emit nothing, and the composed value is emitted once on `compositionend`. Swapping a native `v-model` for one of these controls does not hand you every candidate.
+
 See [Nullable values](#nullable-values) for why the models are nullable and what each input emits when cleared.
 
 ### The select family
@@ -305,7 +307,7 @@ See [Nullable values](#nullable-values) for why the models are nullable and what
 | `id`               | `string`      | —              | Required. Pairs the trigger with a label/error                     |
 | `placeholder`      | `string`      | `'Select…'`    |                                                                    |
 | `disabled`         | `boolean`     | `false`        |                                                                    |
-| `alphabeticalSort` | `boolean`     | `true`         | Sorts rendered options by display string                           |
+| `alphabeticalSort` | `boolean`     | `false`        | Sorts rendered options by display string; off keeps caller order   |
 | `required`         | `boolean`     | `false`        | Conveyed via `aria-required`                                       |
 | `invalid`          | `boolean`     | `false`        | Invalid styling + `aria-invalid`                                   |
 | `describedby`      | `string`      | —              | Id of the paired error element                                     |
@@ -437,7 +439,7 @@ The **`as` escape hatch is discouraged**. Where a button genuinely cannot be use
 
 ### Attribute fall-through
 
-Props the components do not declare — `name`, `autocomplete`, `inputmode`, `data-*`, … — fall through to the underlying native control via Vue's attribute inheritance. You do not need a declared prop to make a field participate in autofill or a native form post. (`Checkbox` and `Switch` re-aim attrs at the native **input** — their root is the wrapping `<label>`.)
+Props the components do not declare — `name`, `autocomplete`, `inputmode`, `data-*`, … — fall through to the underlying native control via Vue's attribute inheritance. You do not need a declared prop to make a field participate in autofill or a native form post. (`Checkbox` and `Switch` re-aim attrs at the native **input** — their root is the wrapping `<label>`.) The six selects and comboboxes split them: `class` and `style` stay on the root `<div>`, where you style the whole control, and every other attr — `aria-label`, `aria-labelledby`, `data-*`, listeners — lands on the element carrying `role="combobox"` (the trigger button, or the combobox's text input), the only place an accessible name can name the control.
 
 ## Theming — the `--ui-*` contract
 
@@ -666,6 +668,7 @@ The select family keeps DOM focus on the trigger and conveys the keyboard-focuse
 - `aria-selected` marks the **committed** value, never the option under the keyboard pointer — keyboard/hover focus stays visual (`.is-active`) plus `aria-activedescendant`; selection only moves on <kbd>Enter</kbd> or click.
 - `MultiSelect`'s and `MultiCombobox`'s listboxes are `aria-multiselectable="true"`; `aria-selected` marks membership, and every chip's remove button carries an accessible name (`"${removeLabel} ${label}"`). `MultiCombobox` additionally conveys the committed selection through an `aria-describedby` summary (its input's accessible value is the query).
 - <kbd>Home</kbd>/<kbd>End</kbd> jump the keyboard highlight to the first/last option while the listbox is open, and the empty state (`emptyText`) is announced through a persistent, visually-hidden `aria-live="polite"` region — a filtered list draining to nothing is never silent.
+- **Typeahead** on `SingleSelect`, `MultiSelect` and `GroupSelect`: Typing on the focused trigger moves the keyboard highlight the way a native `<select>` does: a character moves to the next option starting with it (so repeating it cycles through those options), a string typed quickly — spaces included — matches by prefix, and the string resets after 500 ms without a keystroke. Matching ignores case and wraps past the last option, and a character no option starts with moves nothing. With nothing highlighted, a search starts from the chosen option on `SingleSelect` and `GroupSelect` (so with Banana chosen, `b` moves on to the next b-option); `MultiSelect` has no single chosen option and searches from the top. On a closed control a match **opens** the list on that option and commits nothing; Enter commits, as always. The comboboxes have no typeahead: what you type there is the query.
 - `required` and `invalid` are conveyed via `aria-required` / `aria-invalid`; pair `describedby` with the error element's id — `FormField` does all of this for you.
 
 `Pressable` and `Disclosure` follow the same rule from the other end: rather than describing a control to assistive tech, they _are_ the control — a real `<button>`, whose role, focusability and activation the platform supplies. The only ARIA either sets by hand is the state a button has no native equivalent for (`aria-pressed`, `aria-expanded` + `aria-controls`).

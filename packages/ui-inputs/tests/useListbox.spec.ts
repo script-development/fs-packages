@@ -148,7 +148,7 @@ describe('useListbox Home/End (WR-0521)', () => {
     it('End jumps to the last option and Home back to the first, both swallowing the key', () => {
         const wrapper = mount(Harness, {props: {overrides: {listLength: () => 3}}});
 
-        api.open.value = true;
+        api.openList();
         const end = key('End');
         api.onKey(end);
         expect(api.pointer.value).toBe(2);
@@ -164,7 +164,7 @@ describe('useListbox Home/End (WR-0521)', () => {
     it('an empty list leaves the highlight untouched but still swallows the key while open', () => {
         const wrapper = mount(Harness); // listLength 0
 
-        api.open.value = true;
+        api.openList();
         const home = key('Home');
         api.onKey(home);
         expect(api.pointer.value).toBe(-1);
@@ -176,7 +176,7 @@ describe('useListbox Home/End (WR-0521)', () => {
     it('modified Home/End (Shift/Ctrl/Meta) fall through to native text-selection — never swallowed', () => {
         const wrapper = mount(Harness, {props: {overrides: {listLength: () => 3}}});
 
-        api.open.value = true;
+        api.openList();
         api.onKey(key('ArrowDown')); // highlight option 0 so a wrongly-taken arm would move it
         expect(api.pointer.value).toBe(0);
 
@@ -196,7 +196,7 @@ describe('useListbox Home/End (WR-0521)', () => {
             props: {overrides: {clearEntry: () => true, onClearCommit: () => true, listLength: () => 2}},
         });
 
-        api.open.value = true;
+        api.openList();
         api.onKey(key('ArrowDown')); // "nothing" → the clear entry
         expect(api.clearHighlighted.value).toBe(true);
 
@@ -214,7 +214,7 @@ describe('useListbox clear-entry option combinations', () => {
     it('a rendered clear entry with NO commit callback highlights but never swallows Enter', () => {
         const wrapper = mount(Harness, {props: {overrides: {clearEntry: () => true, listLength: () => 2}}});
 
-        api.open.value = true;
+        api.openList();
         api.onKey(key('ArrowDown')); // "nothing" → the clear entry
         expect(api.clearHighlighted.value).toBe(true);
         expect(api.activeDescendant.value).toBe('harness-clear');
@@ -231,7 +231,7 @@ describe('useListbox clear-entry option combinations', () => {
             props: {overrides: {clearEntry: () => true, onClearCommit: () => false, listLength: () => 2}},
         });
 
-        api.open.value = true;
+        api.openList();
         api.onKey(key('ArrowDown'));
         expect(api.clearHighlighted.value).toBe(true);
 
@@ -246,7 +246,7 @@ describe('useListbox clear-entry option combinations', () => {
             props: {overrides: {clearEntry: () => true, onClearCommit: () => true, listLength: () => 0}},
         });
 
-        api.open.value = true;
+        api.openList();
         api.onKey(key('ArrowDown')); // → clear entry
         api.onKey(key('ArrowDown')); // empty list → nowhere to go, stays
         expect(api.clearHighlighted.value).toBe(true);
@@ -306,7 +306,7 @@ describe('useListbox click-outside across shadow boundaries (KD-1136)', () => {
         const mountPoint = document.createElement('div');
         host.attachShadow({mode: 'open'}).append(mountPoint);
         const wrapper = mount(Harness, {props: {overrides: {onOutside}}, attachTo: mountPoint});
-        api.open.value = true;
+        api.openList();
 
         wrapper.element.dispatchEvent(new MouseEvent('click', {bubbles: true, composed: true}));
         expect(onOutside).not.toHaveBeenCalled();
@@ -317,7 +317,7 @@ describe('useListbox click-outside across shadow boundaries (KD-1136)', () => {
     it('calls onOutside for a click that is in neither root nor floating', () => {
         const onOutside = vi.fn();
         const wrapper = mount(Harness, {props: {overrides: {onOutside}}, attachTo: document.body});
-        api.open.value = true;
+        api.openList();
 
         document.body.dispatchEvent(new MouseEvent('click', {bubbles: true}));
         expect(onOutside).toHaveBeenCalledTimes(1);
@@ -327,7 +327,7 @@ describe('useListbox click-outside across shadow boundaries (KD-1136)', () => {
     it('does not call onOutside for a click inside root', () => {
         const onOutside = vi.fn();
         const wrapper = mount(Harness, {props: {overrides: {onOutside}}, attachTo: document.body});
-        api.open.value = true;
+        api.openList();
 
         wrapper.element.dispatchEvent(new MouseEvent('click', {bubbles: true}));
         expect(onOutside).not.toHaveBeenCalled();

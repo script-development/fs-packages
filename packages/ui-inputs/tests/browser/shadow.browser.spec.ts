@@ -63,6 +63,7 @@ const mountInShadow = (model: {value: number[]}): ShadowRoot => {
                     options: FRUITS,
                     label: 'name',
                     id: 'fruit',
+                    alphabeticalSort: true,
                     modelValue: model.value,
                     'onUpdate:modelValue': (value: number[]) => {
                         model.value = value;

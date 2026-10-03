@@ -36,7 +36,7 @@ const FRUITS: Fruit[] = [
     {id: 2, name: 'Apricot'},
     {id: 3, name: 'Mango'},
 ];
-// Sorted render order: Apricot(2), Mango(3), Watermelon(1).
+// Sorted render order (`alphabeticalSort: true`): Apricot(2), Mango(3), Watermelon(1).
 
 // Grouped controls are CALLER-ordered (no alphabetical sort), so the flat option index runs
 // through the groups in declaration order: Watermelon(0), Mango(1), Apricot(2).
@@ -111,9 +111,35 @@ const groupMenu = () => document.querySelector('.ui-groupselect__menu, .ui-group
 const groupHeaders = (variant: 'groupselect' | 'groupcombobox'): string[] =>
     [...document.querySelectorAll(`.ui-${variant}__group-header`)].map((h) => h.textContent?.trim() ?? '');
 
+describe('SingleSelect — real typeahead (WR-1991)', () => {
+    const SPACED: Fruit[] = [
+        {id: 1, name: 'Blue moon'},
+        {id: 2, name: 'Blueberry'},
+        {id: 3, name: 'Banana'},
+    ];
+
+    it('typed from the closed trigger, opens on the match; a space inside the string keeps the list open', async () => {
+        const model = await renderControlled<number | null>(SingleSelect, null, {
+            options: SPACED,
+            alphabeticalSort: false,
+        });
+        const trigger = document.getElementById('fruit') as HTMLButtonElement;
+
+        await userEvent.tab();
+        await userEvent.keyboard('blue m');
+
+        // A Space that reached the button's default would click it on keyup and close the list.
+        expect(menu()).not.toBeNull();
+        expect(trigger.getAttribute('aria-activedescendant')).toBe('fruit-opt-0');
+
+        await userEvent.keyboard('{Enter}');
+        expect(model.value).toBe(1);
+    });
+});
+
 describe('SingleSelect — real keyboard walk', () => {
     it('Tab focuses, Enter opens, ArrowDown navigates, Enter commits, menu closes', async () => {
-        const model = await renderControlled<number | null>(SingleSelect, null, {});
+        const model = await renderControlled<number | null>(SingleSelect, null, {alphabeticalSort: true});
         const trigger = document.getElementById('fruit') as HTMLButtonElement;
 
         await userEvent.tab();
@@ -271,7 +297,7 @@ describe('Combobox — real typing filters and commits', () => {
 
 describe('MultiSelect — chips, toggle-stays-open, Backspace', () => {
     it('a real click commit toggles membership while the menu STAYS open, and chips render', async () => {
-        const model = await renderControlled<number[]>(MultiSelect, [], {});
+        const model = await renderControlled<number[]>(MultiSelect, [], {alphabeticalSort: true});
         const trigger = document.getElementById('fruit') as HTMLButtonElement;
 
         await userEvent.click(trigger);

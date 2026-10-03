@@ -1,6 +1,7 @@
 <template>
-    <div ref="root" class="ui-combobox" @keydown="onKey">
+    <div ref="root" v-bind="rootAttrs($attrs)" class="ui-combobox" @keydown="onKey">
         <input
+            v-bind="controlAttrs($attrs)"
             :id="id"
             ref="input"
             type="text"
@@ -82,7 +83,11 @@ import type {LabelKey, SelectItem} from '../types';
 
 import {useListbox} from '../composables/useListbox';
 import {ensureRefValueExists} from '../internal/reactivity';
+import {controlAttrs, rootAttrs} from '../internal/split-attrs';
 import OptionList from './OptionList.vue';
+
+// `class`/`style` → root, every other attr → the combobox element (see split-attrs).
+defineOptions({inheritAttrs: false});
 
 const {
     options,
@@ -90,7 +95,7 @@ const {
     id,
     placeholder = 'Select…',
     disabled = false,
-    alphabeticalSort = true,
+    alphabeticalSort = false,
     required = false,
     invalid = false,
     describedby,
@@ -107,6 +112,7 @@ const {
     id: string;
     placeholder?: string;
     disabled?: boolean;
+    /** sort the rendered options by display string — off by default, so the caller's order is kept. */
     alphabeticalSort?: boolean;
     /** conveys the required state to assistive tech via `aria-required`. */
     required?: boolean;
@@ -222,6 +228,7 @@ const {
     activeDescendant,
     floatingStyles,
     onKey,
+    openList,
     close,
     clearHighlighted,
     clearId,
@@ -285,13 +292,11 @@ const choose = (option: T): void => {
 // `resetHighlight` (not a bare pointer write) so a hovered clear entry drops too.
 const onInput = (event: Event) => {
     query.value = (event.target as HTMLInputElement).value;
-    open.value = true;
+    openList();
     resetHighlight();
 };
 // Clicking the (enabled) input opens the list. A disabled input never dispatches click.
-const onClick = () => {
-    open.value = true;
-};
+const onClick = openList;
 
 // The one sanctioned defineExpose: a PUBLIC imperative handle (isms WR-0448 focus trap).
 // The input is non-null by lifetime; the loud accessor names the assumption if it ever breaks.

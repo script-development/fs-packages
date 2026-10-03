@@ -20,7 +20,8 @@ const FRUITS: Fruit[] = [
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic SFC + VTU mount inference
 const mountMulti = (props: Record<string, unknown>, slots?: Record<string, unknown>) =>
     mount(MultiSelect as any, {
-        props: {options: FRUITS, label: 'name', id: 'fruit', modelValue: [], ...props},
+        // Sorted on purpose: the cases below index the sorted order (the default is caller order).
+        props: {options: FRUITS, label: 'name', id: 'fruit', modelValue: [], alphabeticalSort: true, ...props},
         slots,
         attachTo: document.body,
     });

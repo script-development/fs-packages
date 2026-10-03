@@ -1,6 +1,7 @@
 <template>
-    <div ref="root" class="ui-groupselect" @keydown="onKey">
+    <div ref="root" v-bind="rootAttrs($attrs)" class="ui-groupselect" @keydown="onKey">
         <button
+            v-bind="controlAttrs($attrs)"
             :id="id"
             ref="reference"
             type="button"
@@ -90,7 +91,11 @@ import type {LabelKey, SelectItem} from '../types';
 
 import {useListbox} from '../composables/useListbox';
 import {buildGroupRows} from '../internal/group-rows';
+import {controlAttrs, rootAttrs} from '../internal/split-attrs';
 import OptionList from './OptionList.vue';
+
+// `class`/`style` → root, every other attr → the combobox element (see split-attrs).
+defineOptions({inheritAttrs: false});
 
 const {
     groups,
@@ -201,6 +206,7 @@ const {
     floatingStyles,
     onKey,
     close,
+    toggle,
     clearHighlighted,
     clearId,
     highlightClear,
@@ -216,15 +222,9 @@ const {
     onCommit: commit,
     onDismiss: () => close(),
     onOutside: () => close(),
+    typeaheadLabels: () => flatOptions.value.map(labelOf),
+    committedIndex: () => flatOptions.value.findIndex((option) => option.id === model.value),
     clearEntry: () => clearLabel !== undefined,
     onClearCommit: commitClear,
 });
-
-const toggle = () => {
-    if (open.value) {
-        close();
-    } else {
-        open.value = true;
-    }
-};
 </script>
