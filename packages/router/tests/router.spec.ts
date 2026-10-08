@@ -64,6 +64,76 @@ describe('router service', () => {
             expect(service).toHaveProperty('RouterView');
             expect(service).toHaveProperty('RouterLink');
         });
+
+        it('should throw at construction, naming the route, when a child route has children of its own', () => {
+            // Arrange
+            const routes: RouteRecordRaw[] = [
+                {
+                    path: '/',
+                    component: TestLayout,
+                    children: [
+                        {
+                            path: 'settings',
+                            name: 'settings',
+                            component: TestLayout,
+                            children: [{path: 'profile', name: 'settings.profile', component: TestPage}],
+                        },
+                    ],
+                },
+            ];
+
+            // Act & Assert
+            expect(() => createRouterService(routes)).toThrow(
+                'fs-router: route "settings" has children of its own, but fs-router supports two levels only ' +
+                    '(a route and its children). Compose the deeper level into the path instead, ' +
+                    'e.g. "/parent/:parentId/child".',
+            );
+        });
+
+        it('should name an unnamed third-level parent by its path', () => {
+            // Arrange
+            const routes: RouteRecordRaw[] = [
+                {
+                    path: '/',
+                    component: TestLayout,
+                    children: [
+                        {
+                            path: 'account',
+                            component: TestLayout,
+                            children: [{path: 'profile', name: 'account.profile', component: TestPage}],
+                        },
+                    ],
+                },
+            ];
+
+            // Act & Assert
+            expect(() => createRouterService(routes)).toThrow('fs-router: route "account" has children of its own');
+        });
+
+        it('should not treat an empty children array on a child route as a third level', () => {
+            // Arrange
+            const routes: RouteRecordRaw[] = [
+                {
+                    path: '/',
+                    component: TestLayout,
+                    children: [{path: 'settings', name: 'settings', component: TestPage, children: []}],
+                },
+            ];
+
+            // Act & Assert
+            expect(() => createRouterService(routes)).not.toThrow();
+        });
+
+        it('should construct and navigate a two-level tree', async () => {
+            // Arrange
+            const service = createRouterService(createTestRoutes());
+
+            // Act
+            await service.goToRoute('items.create');
+
+            // Assert
+            expect(service.currentRouteRef.value.name).toBe('items.create');
+        });
     });
 
     describe('install', () => {

@@ -45,6 +45,23 @@ const router = createRouterService(routes);
 
 Omit a component to skip that route — `projects` above has no `show` page.
 
+### Two Levels Deep
+
+A route tree is at most two levels deep: a top-level route and its direct `children`. `createRouterService` throws at construction when a child route has `children` of its own, naming that route. vue-router would accept the deeper tree, but fs-router's route lookup only sees two levels, so the third level would fail at navigation time instead.
+
+Nest deeper in the **path**, not in the tree. `createNestedCrudRoutes` does exactly that:
+
+```typescript
+// ✗ three levels — throws at construction
+{path: '/projects', component: ProjectsLayout, children: [
+    {path: ':parentId/issues', component: IssuesLayout, children: [/* … */]},
+]}
+
+// ✓ two levels — the parent segment lives in the path
+createNestedCrudRoutes({parent: 'projects', child: 'issues'}, 'project-issues', IssuesLayout, {/* … */});
+// → /projects/:parentId/issues, /projects/:parentId/issues/:id, …
+```
+
 ### Type-Safe Navigation
 
 ```typescript

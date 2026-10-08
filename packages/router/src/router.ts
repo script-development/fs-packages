@@ -8,10 +8,32 @@ import type {BeforeRouteMiddleware, MiddlewareRedirect, RouteName, RouterService
 import {createRouterLink, createRouterView} from './components';
 import {CREATE_PAGE_NAME, EDIT_PAGE_NAME, OVERVIEW_PAGE_NAME, SHOW_PAGE_NAME} from './routes';
 
+// The lookup `createRouterService` builds sees two levels: a top-level route and its direct
+// children. vue-router accepts a third, so a third-level route would match, reach fs-router's
+// `beforeEach`, and throw "unknown route" there — at navigation time, and only on that route.
+// Refusing the tree at construction turns that silent limit into a loud one at startup.
+// An empty `children` array adds no route, so it is not a third level.
+const assertTwoLevelRouteTree = (routes: readonly RouteRecordRaw[]): void => {
+    for (const route of routes) {
+        for (const child of route.children ?? []) {
+            if (!child.children?.length) continue;
+
+            const label = String(child.name ?? child.path);
+            throw new Error(
+                `fs-router: route "${label}" has children of its own, but fs-router supports two levels only ` +
+                    '(a route and its children). Compose the deeper level into the path instead, ' +
+                    'e.g. "/parent/:parentId/child".',
+            );
+        }
+    }
+};
+
 export const createRouterService = <Routes extends RouteRecordRaw[]>(
     routes: Routes,
     options?: RouterServiceOptions,
 ): RouterService<Routes> => {
+    assertTwoLevelRouteTree(routes);
+
     const router = createRouter({history: createWebHistory(options?.base), routes});
 
     const flattenedRoutes = routes

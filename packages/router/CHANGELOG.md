@@ -1,5 +1,11 @@
 # @script-development/fs-router
 
+## 0.3.2 — 2026-10-07
+
+### Patch Changes
+
+- **A route tree deeper than two levels is refused at construction (SH-0199).** fs-router's route lookup sees a top-level route and its direct `children` and nothing below, while vue-router accepts any depth. A third-level route therefore matched, reached fs-router's `beforeEach`, and threw `<path> is an unknown route` — at navigation time, and only on that route, so the limit stayed invisible until someone visited it. `createRouterService` now throws when any child route has `children` of its own, with a message naming that route and the two-level limit. An empty `children` array adds no route and is accepted. Two-level trees are unchanged. Nest deeper in the path instead (`/parent/:parentId/child`, which is what `createNestedCrudRoutes` builds); see "Two Levels Deep" in the docs. No known consumer has a third level, so no consumer has to change anything.
+
 ## 0.3.1 — 2026-10-03
 
 ### Patch Changes

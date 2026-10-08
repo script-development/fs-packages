@@ -687,28 +687,20 @@ describe('createRouterView', () => {
         window.history.replaceState({}, '', '/');
     });
 
-    it('should never read a route vue-router matched as a miss, at any depth', async () => {
-        // Arrange — the miss is vue-router's verdict (nothing matched), never fs-router's two-level
-        // flattened lookup. A matched grandchild must therefore take the lookup, not the miss path
-        // that skips middleware. The lookup still rejects at that depth, as it did before WR-1160;
-        // landing on the leaf instead would mean it slipped past the cancelling middleware.
-        window.history.replaceState({}, '', '/deep/inner/leaf');
+    it('should never read a route vue-router matched as a miss, even one the flattened lookup cannot find', async () => {
+        // Arrange — the miss is vue-router's verdict (nothing matched), never fs-router's flattened
+        // lookup. The two disagree on a parent route visited at its own path: vue-router matches the
+        // parent record, while the lookup keeps only its children. Such a hop must take the lookup,
+        // not the miss path that skips middleware, and the lookup rejects it as it did before
+        // WR-1160; landing on the parent instead would mean it slipped past the cancelling
+        // middleware. (A third level used to be the other disagreement; construction now refuses it.)
+        window.history.replaceState({}, '', '/deep');
         const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const layout = defineComponent({render: () => h('div', 'layout')});
         const service = createRouterService([
             {path: '/', name: 'home', component: TestPage},
-            {
-                path: '/deep',
-                component: layout,
-                children: [
-                    {
-                        path: 'inner',
-                        component: layout,
-                        children: [{path: 'leaf', name: 'deep.leaf', component: TestPage}],
-                    },
-                ],
-            },
+            {path: '/deep', component: layout, children: [{path: 'leaf', name: 'deep.leaf', component: TestPage}]},
         ]);
         service.registerBeforeRouteMiddleware(() => true);
 
@@ -720,8 +712,8 @@ describe('createRouterView', () => {
         await flushPromises();
 
         // Assert
-        expect(installed).toBe('Error: /deep/inner/leaf is an unknown route');
-        expect(service.currentRouteRef.value.name).not.toBe('deep.leaf');
+        expect(installed).toBe('Error: /deep is an unknown route');
+        expect(service.currentRouteRef.value.path).not.toBe('/deep');
 
         consoleWarnSpy.mockRestore();
         consoleErrorSpy.mockRestore();
