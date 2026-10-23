@@ -1,0 +1,1086 @@
+/*
+ * @script-development/ui-form — shipped stylesheet.
+ *
+ *   import '@script-development/ui-form/style.css';
+ *
+ * Every rule is keyed on a --ui-* custom property. The component ships NO token
+ * vocabulary and NO hard-coded colour: a consuming territory maps its own tokens
+ * onto the --ui-* contract once (see the :where(:root) defaults below for the full
+ * surface), and every component follows. The defaults use :where() so they carry
+ * zero specificity and are trivially overridden by a territory theme.
+ *
+ * Every component rule sits in the `ui-form` cascade layer: package styles are defaults that
+ * consumer CSS always overrides without hacks. Unlayered CSS (utilities such as UnoCSS's
+ * `w-40` / `[w-40]`) beats any layered rule whatever its specificity or load order, while the
+ * package's own rules keep their specificity among themselves. A consumer with an element base
+ * (`input { font-size: inherit }`, `p { margin-bottom: 1rem }`) puts it in a layer declared
+ * BEFORE this one, at the very top of its first stylesheet:
+ *
+ *   @layer base, ui-form;
+ *
+ * The tokens below stay unlayered.
+ */
+
+:where(:root) {
+    /* field / label */
+    --ui-field-gap: 0.4rem;
+    --ui-field-margin: 0 0 1.25rem;
+    /* horizontal orientation only: label column width + the LABEL's cross-axis alignment in its row.
+       Applied via align-self on the label alone, so a wrapped label that makes the row taller never
+       moves the control — that stays pinned to the row top. */
+    --ui-field-label-width: 12rem;
+    --ui-field-label-align: start;
+    --ui-label-color: #374151;
+    --ui-label-size: 0.875rem;
+    --ui-label-weight: 500;
+    --ui-label-transform: none;
+    --ui-label-tracking: normal;
+
+    /* control (input + select trigger) */
+    --ui-control-bg: #ffffff;
+    /* background-on-state hooks — default to the resting background so they are a
+       no-op until a territory opts in (brick fills the control on focus/invalid). */
+    --ui-control-bg-focus: var(--ui-control-bg);
+    --ui-control-bg-invalid: var(--ui-control-bg);
+    --ui-control-bg-disabled: #f3f4f6;
+    --ui-control-text: #111827;
+    /* text-on-state hooks — default to the resting text colour so they are a no-op
+       until a territory opts in (a strong bg-focus/bg-invalid fill needs a text
+       partner for contrast). */
+    --ui-control-text-focus: var(--ui-control-text);
+    --ui-control-text-invalid: var(--ui-control-text);
+    --ui-control-text-muted: #6b7280;
+    /* typography escape hatch — `inherit` reproduces the historical `font: inherit`
+       size; a territory sizes control text through this var (which the package
+       reads) instead of a utility that loses the source-order tie. */
+    --ui-control-font-size: inherit;
+    /* completes the `font: inherit` decomposition (WR-0537): line-height reads from the
+       var instead of a hardcoded `inherit` longhand — same rendered default. */
+    --ui-control-line-height: inherit;
+    /* touch-target hook — `auto` is the measured status quo. WCAG 2.5.5's 44px is the
+       CONSUMER's call: assign 2.75rem under your own coarse-pointer media query. */
+    --ui-control-min-height: auto;
+    --ui-control-border-width: 1px;
+    --ui-control-border-color: #d1d5db;
+    --ui-control-border-open: #2563eb;
+    /* border-on-focus hooks — default to the resting border so they are a no-op
+       until a territory opts in. .is-open / .is-invalid follow in source order and
+       keep winning their border where they did before. */
+    --ui-control-border-color-focus: var(--ui-control-border-color);
+    --ui-control-border-width-focus: var(--ui-control-border-width);
+    --ui-control-radius: 8px;
+    --ui-control-pad-x: 0.75rem;
+    --ui-control-pad-y: 0.55rem;
+    --ui-control-shadow: none;
+    --ui-control-shadow-hover: none;
+    --ui-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
+
+    /* listbox menu */
+    --ui-menu-bg: #ffffff;
+    --ui-menu-border-width: 1px;
+    --ui-menu-border-color: #d1d5db;
+    --ui-menu-radius: 8px;
+    --ui-menu-pad: 0.375rem;
+    --ui-menu-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+    --ui-menu-max-height: 15rem;
+    /* width clamps — `100%` is the trigger width. The popup sits inside a `.ui-menu-anchor`
+       box sized to the trigger, so a percentage here resolves against the trigger. A territory
+       caps them (e.g. `max(100%, 240px)` / `calc(100vw - 16px)`) without fighting
+       specificity. */
+    --ui-menu-min-width: 100%;
+    --ui-menu-max-width: none;
+    /* menu typography — `inherit` walks the DOM tree, and the popup never leaves it, so the
+       popup inherits from the control exactly as it always did. The var is the hook to size
+       menu text independently of the control. */
+    --ui-menu-font-size: inherit;
+
+    /* option */
+    --ui-option-radius: 6px;
+    --ui-option-pad: 0.5rem 0.625rem;
+    --ui-option-bg-active: #f3f4f6;
+    /* touch-target hook — see --ui-control-min-height. */
+    --ui-option-min-height: auto;
+    /* muted options (`mutedOptions` prop) — defaults to the RESTING option text so the
+       class is a no-op until a territory opts in (the state-variant-hook discipline). */
+    --ui-option-text-muted: var(--ui-control-text);
+    /* MultiSelect committed membership (`[aria-selected="true"]`) — both default to the
+       resting option rendering (transparent bg, resting text), so the treatment is a
+       no-op until a territory opts in. */
+    --ui-option-bg-selected: transparent;
+    --ui-option-text-selected: var(--ui-control-text);
+    /* the committing clear entry (`clearLabel` prop) — danger-toned by default (it is a
+       destructive-ish "commit null"); renders only when a consumer passes the prop. */
+    --ui-clear-text: var(--ui-danger-text);
+
+    /* group header (GroupSelect / GroupCombobox) — the non-navigable label above each
+       option run. Defaults derive from existing tokens so a territory's --ui-* map themes
+       them for free; override individually to break from the muted-label treatment. */
+    --ui-group-header-pad: var(--ui-option-pad);
+    --ui-group-header-color: var(--ui-control-text-muted);
+    --ui-group-header-size: 0.75em;
+    --ui-group-header-weight: 600;
+    --ui-group-header-transform: uppercase;
+    --ui-group-header-tracking: 0.05em;
+
+    /* chip (MultiSelect) — every default derives from an existing resting token, so the
+       chip contract is neutral until a territory opts in. */
+    --ui-chip-bg: var(--ui-option-bg-active);
+    --ui-chip-text: var(--ui-control-text);
+    --ui-chip-radius: var(--ui-option-radius);
+    --ui-chip-pad: 0.1rem 0.45rem;
+
+    /* check (Checkbox / CheckboxGroup / RadioGroup) — every colour default derives from an
+       existing resting token, so a territory's --ui-* map themes the check family for free;
+       the structural defaults are neutral literals (the chip-pad precedent). */
+    --ui-check-size: 1.125rem;
+    /* feeds a border-width declaration, so it takes the full shorthand grammar — like
+       --ui-control-border-width (`0 0 1px` is valid, if unusual on a checkbox). */
+    --ui-check-border-width: var(--ui-control-border-width);
+    --ui-check-border-color: var(--ui-control-border-color);
+    --ui-check-bg: var(--ui-control-bg);
+    --ui-check-bg-checked: var(--ui-control-border-open);
+    --ui-check-mark-color: var(--ui-control-bg);
+    --ui-check-radius: 4px;
+    --ui-check-gap: 0.5rem;
+    --ui-check-item-gap: 0.5rem;
+
+    /* switch (track + thumb) */
+    --ui-switch-track-width: 2.25rem;
+    --ui-switch-track-height: 1.25rem;
+    --ui-switch-track-radius: 999px;
+    --ui-switch-track-bg: var(--ui-control-border-color);
+    --ui-switch-track-bg-checked: var(--ui-control-border-open);
+    --ui-switch-thumb-size: 0.875rem;
+    --ui-switch-thumb-bg: var(--ui-control-bg);
+
+    /* pressable (Pressable, and the Disclosure trigger which reuses the class) — the defaults
+       are deliberately CHROME-LESS: adopting Pressable in place of a bare `<span @click>` must
+       not repaint the control, only make it reachable. Every hook opts a territory in. */
+    --ui-pressable-gap: 0.4rem;
+    --ui-pressable-pad: 0;
+    --ui-pressable-min-height: auto; /* touch-target hook — see --ui-control-min-height. */
+    --ui-pressable-bg: transparent;
+    --ui-pressable-text: inherit;
+    /* the WR-0512 decomposition, repeated: a bare `font: inherit` would make a consumer's
+       font-size utility lose the source-order tie against this sheet. Both default to the
+       inherited value, so the rendering is identical to `font: inherit`. */
+    --ui-pressable-font-size: inherit;
+    --ui-pressable-line-height: inherit;
+    --ui-pressable-border-width: 0;
+    --ui-pressable-border-color: transparent;
+    --ui-pressable-radius: var(--ui-control-radius);
+    --ui-pressable-text-disabled: var(--ui-control-text-muted);
+    /* toggle mode ([aria-pressed="true"]). Unlike the other state hooks this one is NOT a no-op:
+       a toggle whose pressed state is conveyed only to assistive tech is invisible to everyone
+       else. The default is an EXISTING resting token, so it adds no colour vocabulary. */
+    --ui-pressable-bg-pressed: var(--ui-option-bg-active);
+    --ui-pressable-text-pressed: var(--ui-pressable-text);
+
+    /* disclosure — neutral by default (the panel adds no box of its own). */
+    --ui-disclosure-panel-pad: 0;
+    --ui-disclosure-panel-gap: 0;
+
+    /* error / danger */
+    --ui-danger-text: #dc2626;
+    --ui-danger-border: #dc2626;
+    --ui-danger-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    --ui-error-size: 0.8125rem;
+    --ui-error-weight: 400;
+}
+
+@layer ui-form {
+    .ui-field {
+        display: flex;
+        flex-direction: column;
+        gap: var(--ui-field-gap);
+        margin: var(--ui-field-margin);
+    }
+
+    /* Wraps the control slot so multi-node slot content (e.g. an input plus an inline hint) can occupy a
+       single grid cell when horizontal. In the vertical default it generates no box at all, so the
+       field's flex column sees exactly the nodes it saw before the wrapper existed. */
+    .ui-field__control {
+        display: contents;
+    }
+
+    /* Horizontal orientation (opt-in via the `orientation` prop → `.is-horizontal`, the sheet's state-class
+       vocabulary — a class merges with consumer classes where a data attribute could be clobbered by a
+       fallthrough attr): label in a fixed left column, control on the right, error beneath the control.
+       The base .ui-field flex column stays the default — and stays the layout below 48rem (768px, the
+       usual `md` breakpoint): a fixed label column has no room on a phone, so a horizontal field
+       collapses back to the vertical shape there. The breakpoint is a constant, not a --ui-* var:
+       a custom property cannot drive a media query. */
+    @media (min-width: 48rem) {
+        .ui-field.is-horizontal {
+            display: grid;
+            grid-template-columns: var(--ui-field-label-width) minmax(0, 1fr);
+            align-items: start;
+        }
+        .ui-field.is-horizontal > .ui-label {
+            grid-column: 1;
+            grid-row: 1;
+            align-self: var(--ui-field-label-align);
+        }
+        .ui-field.is-horizontal > .ui-field__control {
+            display: flex;
+            flex-direction: column;
+            gap: var(--ui-field-gap);
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
+        }
+        .ui-field.is-horizontal > .ui-error {
+            grid-column: 2;
+            grid-row: 2;
+        }
+    }
+
+    .ui-label {
+        color: var(--ui-label-color);
+        font-size: var(--ui-label-size);
+        font-weight: var(--ui-label-weight);
+        text-transform: var(--ui-label-transform);
+        letter-spacing: var(--ui-label-tracking);
+    }
+    .ui-label__req {
+        color: var(--ui-danger-text);
+        margin-left: 2px;
+    }
+
+    .ui-control {
+        /* decomposed from `font: inherit` so font-size becomes a var hook while every
+           other longhand the shorthand set still inherits — keeps the default byte-
+           identical to the prior `font: inherit`. */
+        font-family: inherit;
+        font-size: var(--ui-control-font-size);
+        font-style: inherit;
+        font-variant: inherit;
+        font-weight: inherit;
+        font-stretch: inherit;
+        line-height: var(--ui-control-line-height);
+        width: 100%;
+        min-height: var(--ui-control-min-height);
+        box-sizing: border-box;
+        padding: var(--ui-control-pad-y) var(--ui-control-pad-x);
+        background: var(--ui-control-bg);
+        color: var(--ui-control-text);
+        border-style: solid;
+        border-width: var(--ui-control-border-width);
+        border-color: var(--ui-control-border-color);
+        border-radius: var(--ui-control-radius);
+        box-shadow: var(--ui-control-shadow);
+        transition:
+            box-shadow 0.12s ease,
+            border-color 0.12s ease;
+    }
+    /* :where() keeps this at (0,2,0) so the LATER state rules — :focus-visible's ring, .is-open,
+       .is-invalid — win the specificity tie while hover co-matches. Without it, hover's (0,3,0)
+       masked the focus ring (and the open/invalid shadows) with its `none` default for any
+       pointer resting on the control — caught by the browser suite's focus-visible spec. */
+    .ui-control:hover:where(:not(:disabled)) {
+        box-shadow: var(--ui-control-shadow-hover);
+    }
+    /* The MultiSelect control is a flex box whose focus lives on the inner trigger button, so
+       its focus treatment keys on :focus-within — declared in the same rule, BEFORE .is-open /
+       .is-invalid, so those state classes keep winning their properties over focus exactly as
+       they do over :focus-visible on the sibling controls. */
+    .ui-control:focus-visible,
+    .ui-multiselect__box:focus-within,
+    .ui-multicombobox__box:focus-within {
+        outline: none;
+        color: var(--ui-control-text-focus);
+        background: var(--ui-control-bg-focus);
+        border-color: var(--ui-control-border-color-focus);
+        border-width: var(--ui-control-border-width-focus);
+        box-shadow: var(--ui-focus-ring);
+    }
+    .ui-control.is-open {
+        border-color: var(--ui-control-border-open);
+        box-shadow: var(--ui-focus-ring);
+    }
+    .ui-control.is-invalid {
+        background: var(--ui-control-bg-invalid);
+        color: var(--ui-control-text-invalid);
+        border-color: var(--ui-danger-border);
+        box-shadow: var(--ui-danger-shadow);
+    }
+
+    /* TextInput's in-input error icon: shown while the control is marked, at the right edge,
+       with the text kept clear of it. Keyed on .ui-input-wrap, which only ui-form's TextInput
+       renders: during the migration this sheet also styles ui-inputs 0.17 controls, whose invalid
+       TextInput has no icon and must keep its own padding. */
+    .ui-input-wrap {
+        position: relative;
+        display: block;
+    }
+    .ui-input-wrap > .ui-input.is-invalid {
+        padding-right: calc(var(--ui-control-pad-x) * 2 + 1em);
+    }
+    .ui-input__icon {
+        position: absolute;
+        top: 50%;
+        right: var(--ui-control-pad-x);
+        width: 1em;
+        height: 1em;
+        transform: translateY(-50%);
+        color: var(--ui-danger-text);
+        font-size: var(--ui-control-font-size);
+        pointer-events: none;
+    }
+
+    .ui-textarea {
+        resize: vertical;
+    }
+    /* The MultiSelect/MultiCombobox box is a div, so :disabled cannot match it — the component
+       mirrors the state as .is-disabled (every focusable child inside carries the native :disabled). */
+    .ui-control:disabled,
+    .ui-multiselect__box.is-disabled,
+    .ui-multicombobox__box.is-disabled {
+        background: var(--ui-control-bg-disabled);
+        color: var(--ui-control-text-muted);
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    .ui-select,
+    .ui-combobox,
+    .ui-multiselect,
+    .ui-multicombobox,
+    .ui-groupselect,
+    .ui-groupcombobox {
+        position: relative;
+    }
+    .ui-select__trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        text-align: left;
+        cursor: pointer;
+    }
+    .ui-select__placeholder {
+        color: var(--ui-control-text-muted);
+    }
+    .ui-select__chevron {
+        width: 1.1em;
+        height: 1.1em;
+        flex: none;
+        transition: transform 0.12s ease;
+    }
+    .ui-select__trigger.is-open .ui-select__chevron {
+        transform: rotate(180deg);
+    }
+
+    /* GroupSelect trigger — button-triggered, same layout as SingleSelect. */
+    .ui-groupselect__trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        text-align: left;
+        cursor: pointer;
+    }
+    .ui-groupselect__placeholder {
+        color: var(--ui-control-text-muted);
+    }
+    .ui-groupselect__chevron {
+        width: 1.1em;
+        height: 1.1em;
+        flex: none;
+        transition: transform 0.12s ease;
+    }
+    .ui-groupselect__trigger.is-open .ui-groupselect__chevron {
+        transform: rotate(180deg);
+    }
+
+    /* MultiSelect / MultiCombobox — the control chrome sits on the flex box; the chips and the
+       (chrome-less, flex-filling) trigger — a button on MultiSelect, a text input on
+       MultiCombobox — live inside it, so clicking the empty part of the chip bar is clicking
+       the trigger. */
+    .ui-multiselect__box,
+    .ui-multicombobox__box {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .ui-multiselect__chip,
+    .ui-multicombobox__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: var(--ui-chip-pad);
+        background: var(--ui-chip-bg);
+        color: var(--ui-chip-text);
+        border-radius: var(--ui-chip-radius);
+        font-size: 0.875em;
+    }
+    .ui-multiselect__chip-remove,
+    .ui-multicombobox__chip-remove {
+        display: inline-flex;
+        align-items: center;
+        padding: 0;
+        margin: 0;
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+    }
+    .ui-multiselect__chip-remove:disabled,
+    .ui-multicombobox__chip-remove:disabled {
+        cursor: not-allowed;
+    }
+    .ui-multiselect__chip-x,
+    .ui-multicombobox__chip-x {
+        width: 0.9em;
+        height: 0.9em;
+    }
+    /* The MultiCombobox input-as-trigger: chrome-less and flex-filling (the box carries the
+       control chrome), like the MultiSelect trigger button — but an input, so the font must be
+       inherited explicitly and the caret keeps its text cursor. Focus is conveyed on the box
+       via :focus-within (rule above, with :focus-visible). */
+    .ui-multicombobox__input {
+        flex: 1;
+        min-width: 6ch;
+        padding: 0;
+        margin: 0;
+        background: none;
+        border: none;
+        color: inherit;
+        font: inherit;
+        outline: none;
+    }
+    .ui-multicombobox__input::placeholder {
+        color: var(--ui-control-text-muted);
+    }
+    .ui-multicombobox__box.is-disabled .ui-multicombobox__input {
+        cursor: not-allowed;
+    }
+    .ui-multiselect__trigger {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0;
+        margin: 0;
+        background: none;
+        border: none;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        /* focus is conveyed on the box via :focus-within (rule above, with :focus-visible) */
+        outline: none;
+    }
+    .ui-multiselect__box.is-disabled .ui-multiselect__trigger {
+        cursor: not-allowed;
+    }
+    .ui-multiselect__placeholder {
+        color: var(--ui-control-text-muted);
+    }
+    /* Screen-reader-only text (the clip pattern — display:none/visibility:hidden would remove it
+       from the accessibility tree, defeating its purpose). Shared by the MultiSelect trigger value,
+       the MultiCombobox selection summary, the CheckboxGroup legend's required conveyance, and the
+       select family's empty-results live region (WR-0521). */
+    .ui-multiselect__sr-value,
+    .ui-multicombobox__sr-selection,
+    .ui-check-group__sr,
+    .ui-live-region {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
+    .ui-multiselect__chevron {
+        width: 1.1em;
+        height: 1.1em;
+        flex: none;
+        margin-left: auto;
+        transition: transform 0.12s ease;
+    }
+    .ui-multiselect__box.is-open .ui-multiselect__chevron {
+        transform: rotate(180deg);
+    }
+
+    /* The positioning anchor (KD-1136). floating-ui positions THIS box, never the `<ul>`.
+       It carries `popover`, so the browser promotes it to the TOP LAYER while open — painted
+       outside the normal flow, where no ancestor's `overflow` can clip it and no ancestor's
+       stacking context can bury it. It is never moved in the DOM, so a consumer's scoped
+       `--ui-*` map still reaches it by inheritance.
+
+       The size() middleware writes the trigger width onto it as an inline `min-width`, which is
+       what keeps `--ui-menu-min-width: 100%` meaning "as wide as the trigger" after the move —
+       a percentage on the `<ul>` resolves against this box, not against body. `width: max-content`
+       lets the anchor grow when the menu outgrows the trigger (a territory floor like
+       `max(100%, 240px)`, or a long option), so shift() and hide() keep measuring a box that
+       encloses the whole menu. */
+    .ui-menu-anchor {
+        /* `fixed` matches useListbox's floating-ui strategy: a top-layer box positions against
+           the viewport. The pre-layout value; floating-ui writes the same `position` inline. */
+        position: fixed;
+        /* Irrelevant once promoted (the top layer paints above everything), but it keeps the
+           stacking sane in the moment before promotion. */
+        z-index: 50;
+        /* Undo the UA `[popover]` box. The browser centres a popover in the viewport
+           (`inset: 0; margin: auto`) and gives it a chrome border/padding/background — all of
+           which must go, because floating-ui owns the position and the `<ul>` owns the skin. */
+        inset: auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        overflow: visible;
+        width: max-content;
+        height: auto;
+        max-width: none;
+        max-height: none;
+    }
+
+    /* The listbox popup is shared verbatim across the button-triggered SingleSelect, the
+       text-input-triggered Combobox, the chip-bar MultiSelect, and the input-as-trigger
+       MultiCombobox — one rule body, all four class families, same --ui-* vars. It is a static
+       box inside `.ui-menu-anchor` above; the anchor owns position and top-layer promotion. */
+    .ui-select__menu,
+    .ui-combobox__menu,
+    .ui-multiselect__menu,
+    .ui-multicombobox__menu,
+    .ui-groupselect__menu,
+    .ui-groupcombobox__menu {
+        list-style: none;
+        margin: 0.25rem 0 0;
+        padding: var(--ui-menu-pad);
+        min-width: var(--ui-menu-min-width);
+        max-width: var(--ui-menu-max-width);
+        font-size: var(--ui-menu-font-size);
+        box-sizing: border-box;
+        background: var(--ui-menu-bg);
+        border-style: solid;
+        border-width: var(--ui-menu-border-width);
+        border-color: var(--ui-menu-border-color);
+        border-radius: var(--ui-menu-radius);
+        box-shadow: var(--ui-menu-shadow);
+        max-height: var(--ui-menu-max-height);
+        overflow-y: auto;
+    }
+    .ui-select__option,
+    .ui-combobox__option,
+    .ui-multiselect__option,
+    .ui-multicombobox__option,
+    .ui-groupselect__option,
+    .ui-groupcombobox__option {
+        padding: var(--ui-option-pad);
+        border-radius: var(--ui-option-radius);
+        cursor: pointer;
+        color: var(--ui-control-text);
+        min-height: var(--ui-option-min-height);
+        box-sizing: border-box;
+    }
+    /* Committed MEMBERSHIP in the MultiSelect/MultiCombobox popup. Declared BEFORE the .is-active
+       rule (equal specificity) so the pointer highlight keeps winning its background — with the
+       no-op defaults the combined rendering is byte-identical to the pre-var stylesheet. */
+    .ui-multiselect__option[aria-selected='true'],
+    .ui-multicombobox__option[aria-selected='true'] {
+        background: var(--ui-option-bg-selected);
+        color: var(--ui-option-text-selected);
+    }
+    /* Muted options — visual de-emphasis only; committable, and last in the colour cascade
+       so a muted option stays muted while selected or under the pointer highlight. */
+    .ui-select__option.is-muted,
+    .ui-combobox__option.is-muted,
+    .ui-multiselect__option.is-muted,
+    .ui-multicombobox__option.is-muted,
+    .ui-groupselect__option.is-muted,
+    .ui-groupcombobox__option.is-muted {
+        color: var(--ui-option-text-muted);
+    }
+    .ui-select__option.is-active,
+    .ui-combobox__option.is-active,
+    .ui-multiselect__option.is-active,
+    .ui-multicombobox__option.is-active,
+    .ui-groupselect__option.is-active,
+    .ui-groupcombobox__option.is-active {
+        background: var(--ui-option-bg-active);
+    }
+    /* The committing clear entry — an option-shaped row above the list (outside the index
+       space), danger-toned by default; shares the option's active-highlight treatment. */
+    .ui-select__clear,
+    .ui-combobox__clear,
+    .ui-groupselect__clear,
+    .ui-groupcombobox__clear {
+        padding: var(--ui-option-pad);
+        border-radius: var(--ui-option-radius);
+        cursor: pointer;
+        min-height: var(--ui-option-min-height);
+        box-sizing: border-box;
+        color: var(--ui-clear-text);
+    }
+    .ui-select__clear.is-active,
+    .ui-combobox__clear.is-active,
+    .ui-groupselect__clear.is-active,
+    .ui-groupcombobox__clear.is-active {
+        background: var(--ui-option-bg-active);
+    }
+    .ui-select__empty,
+    .ui-combobox__empty,
+    .ui-multiselect__empty,
+    .ui-multicombobox__empty,
+    .ui-groupselect__empty,
+    .ui-groupcombobox__empty {
+        padding: var(--ui-option-pad);
+        color: var(--ui-control-text-muted);
+    }
+
+    /* GroupSelect / GroupCombobox — group container (<li role="group">) and inner presentation
+       list reset their default list chrome so options sit flush with the rest of the menu. */
+    .ui-groupselect__group,
+    .ui-groupcombobox__group {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .ui-groupselect__group > ul,
+    .ui-groupcombobox__group > ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    /* The visual group label — hidden from AT via aria-hidden="true"; the group name is
+       announced through role="group" + aria-label on the parent <li>. */
+    .ui-groupselect__group-header,
+    .ui-groupcombobox__group-header {
+        display: block;
+        padding: var(--ui-group-header-pad);
+        color: var(--ui-group-header-color);
+        font-size: var(--ui-group-header-size);
+        font-weight: var(--ui-group-header-weight);
+        text-transform: var(--ui-group-header-transform);
+        letter-spacing: var(--ui-group-header-tracking);
+    }
+
+    /* Checkbox / Switch / radio rows — the <label> element is the row (implicit labelling, the
+       whole row is the hit target), the native input is the restyled chassis (appearance: none;
+       never a div-with-role), and the drawn mark is an inline SVG sibling — pseudo-elements on a
+       replaced <input> are not guaranteed to render, an overlaid sibling is. */
+    .ui-check,
+    .ui-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--ui-check-gap);
+        color: var(--ui-control-text);
+        cursor: pointer;
+    }
+    .ui-check.is-disabled,
+    .ui-switch.is-disabled {
+        color: var(--ui-control-text-muted);
+        cursor: not-allowed;
+    }
+    .ui-check__control,
+    .ui-switch__control {
+        position: relative;
+        display: inline-flex;
+        flex: none;
+    }
+    .ui-check__input {
+        appearance: none;
+        margin: 0;
+        width: var(--ui-check-size);
+        height: var(--ui-check-size);
+        box-sizing: border-box;
+        background: var(--ui-check-bg);
+        border-style: solid;
+        border-width: var(--ui-check-border-width);
+        border-color: var(--ui-check-border-color);
+        border-radius: var(--ui-check-radius);
+        cursor: inherit;
+        transition:
+            background 0.12s ease,
+            border-color 0.12s ease,
+            box-shadow 0.12s ease;
+    }
+    .ui-radio__input {
+        border-radius: 50%;
+    }
+    .ui-check__input:checked,
+    .ui-check__input:where([type='checkbox']):indeterminate {
+        background: var(--ui-check-bg-checked);
+        border-color: var(--ui-check-bg-checked);
+    }
+    /* State order mirrors .ui-control: :focus-visible first, .is-invalid after, so the invalid
+       treatment keeps winning on a focused invalid control by source order. */
+    .ui-check__input:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
+    .ui-check__input.is-invalid {
+        border-color: var(--ui-danger-border);
+        box-shadow: var(--ui-danger-shadow);
+    }
+    .ui-check__input:disabled {
+        background: var(--ui-control-bg-disabled);
+        box-shadow: none;
+    }
+    .ui-check__input:disabled:checked,
+    .ui-check__input:disabled:where([type='checkbox']):indeterminate {
+        background: var(--ui-control-text-muted);
+        border-color: var(--ui-control-text-muted);
+    }
+    .ui-check__icon {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: calc(var(--ui-check-size) * 0.75);
+        height: calc(var(--ui-check-size) * 0.75);
+        pointer-events: none;
+        color: var(--ui-check-mark-color);
+    }
+    .ui-check__mark,
+    .ui-check__dash,
+    .ui-radio__dot {
+        opacity: 0;
+        transition: opacity 0.12s ease;
+    }
+    .ui-check__input:checked ~ .ui-check__icon .ui-check__mark,
+    .ui-check__input:checked ~ .ui-check__icon .ui-radio__dot,
+    .ui-check__input:indeterminate ~ .ui-check__icon .ui-check__dash {
+        opacity: 1;
+    }
+    /* Indeterminate wins the visual over checked when both hold (source order). */
+    .ui-check__input:indeterminate ~ .ui-check__icon .ui-check__mark {
+        opacity: 0;
+    }
+
+    /* Switch — same chassis contract, distinct surface: the input is the track, the thumb is an
+       overlaid sibling that travels track-width − track-height (the horizontal room left once the
+       thumb's centred inset is spent on both sides). */
+    .ui-switch__input {
+        appearance: none;
+        margin: 0;
+        width: var(--ui-switch-track-width);
+        height: var(--ui-switch-track-height);
+        box-sizing: border-box;
+        background: var(--ui-switch-track-bg);
+        border: none;
+        border-radius: var(--ui-switch-track-radius);
+        cursor: inherit;
+        transition: background 0.12s ease;
+    }
+    .ui-switch__input:checked {
+        background: var(--ui-switch-track-bg-checked);
+    }
+    .ui-switch__input:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
+    .ui-switch__input.is-invalid {
+        box-shadow: var(--ui-danger-shadow);
+    }
+    .ui-switch__input:disabled {
+        background: var(--ui-control-bg-disabled);
+        box-shadow: none;
+    }
+    .ui-switch__thumb {
+        position: absolute;
+        top: 50%;
+        left: calc((var(--ui-switch-track-height) - var(--ui-switch-thumb-size)) / 2);
+        width: var(--ui-switch-thumb-size);
+        height: var(--ui-switch-thumb-size);
+        background: var(--ui-switch-thumb-bg);
+        border-radius: 50%;
+        pointer-events: none;
+        transform: translateY(-50%);
+        transition: transform 0.12s ease;
+    }
+    .ui-switch__input:checked ~ .ui-switch__thumb {
+        transform: translateY(-50%) translateX(calc(var(--ui-switch-track-width) - var(--ui-switch-track-height)));
+    }
+
+    /* Groups — a chrome-less fieldset; the legend reuses the .ui-label vocabulary. Spacing rides
+       margins rather than flex gap: a <legend> is special-cased out of a flex fieldset's layout
+       (it never becomes a flex item), so gap would silently skip the legend↔first-row seam. */
+    .ui-check-group,
+    .ui-radio-group {
+        margin: 0;
+        padding: 0;
+        border: none;
+        min-width: 0;
+    }
+    .ui-check-group__legend,
+    .ui-radio-group__legend {
+        padding: 0;
+        margin: 0 0 var(--ui-field-gap);
+    }
+    .ui-check-group .ui-check,
+    .ui-radio-group .ui-check {
+        display: flex;
+    }
+    .ui-check-group .ui-check + .ui-check,
+    .ui-radio-group .ui-check + .ui-check {
+        margin-top: var(--ui-check-item-gap);
+    }
+
+    .ui-error {
+        margin: 0;
+        color: var(--ui-danger-text);
+        font-size: var(--ui-error-size);
+        font-weight: var(--ui-error-weight);
+    }
+
+    /* Pressable — a real <button> stripped back to nothing so it can stand in for the bare
+       `<span @click>` / `<div @click>` controls it replaces, WITHOUT repainting them. Everything a
+       native button brings (focusability, Enter/Space, :disabled, forced-colors treatment) is kept;
+       everything it paints (UA chrome) is removed. The Disclosure trigger carries this class too. */
+    .ui-pressable {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--ui-pressable-gap);
+        box-sizing: border-box;
+        min-height: var(--ui-pressable-min-height);
+        padding: var(--ui-pressable-pad);
+        margin: 0;
+        background: var(--ui-pressable-bg);
+        color: var(--ui-pressable-text);
+        border-style: solid;
+        border-width: var(--ui-pressable-border-width);
+        border-color: var(--ui-pressable-border-color);
+        border-radius: var(--ui-pressable-radius);
+        /* decomposed rather than `font: inherit` — see the --ui-pressable-font-size rationale. */
+        font-family: inherit;
+        font-size: var(--ui-pressable-font-size);
+        font-style: inherit;
+        font-variant: inherit;
+        font-weight: inherit;
+        font-stretch: inherit;
+        line-height: var(--ui-pressable-line-height);
+        text-align: inherit;
+        cursor: pointer;
+        transition: box-shadow 0.12s ease;
+    }
+    /* The focus ring is the POINT of this component — a control with no keyboard affordance is the
+       defect it exists to close, so the ring is not themeable away to nothing by omission. */
+    .ui-pressable:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
+    .ui-pressable[aria-pressed='true'] {
+        background: var(--ui-pressable-bg-pressed);
+        color: var(--ui-pressable-text-pressed);
+    }
+    .ui-pressable:disabled {
+        color: var(--ui-pressable-text-disabled);
+        cursor: not-allowed;
+    }
+    /* `as` renders an arbitrary tag, so the chassis's `display` cannot be applied blindly: on the
+       documented clickable `<tr>` it stops the element being a table row and the row's cells lose
+       their table boxes. The COMPONENT decides — it knows the tag — and marks the elements whose own
+       display is required by their parent's layout algorithm. `revert` rolls back to the UA value, so
+       this needs no per-tag list here and covers every table-internal tag at once. */
+    .ui-pressable.keeps-tag-display {
+        display: revert;
+    }
+    /* The `as` escape hatch renders a non-button, where :disabled cannot match (the
+       .ui-multiselect__box precedent) — the component mirrors the state as .is-disabled, which is
+       therefore only ever present on the fallback path. Suppressing the fall-through @click is the
+       COMPONENT's job, not this rule's: a CAPTURE-phase click guard preventDefault()s and
+       stopImmediatePropagation()s while disabled, so the event dies at the control before it reaches
+       the control's own descendants. `pointer-events: none` used to stand in for that and must NOT
+       come back — it removes the control from hit-testing entirely, so a pointer over a disabled
+       fallback targets whatever sits BEHIND it and an ancestor's own @click fires (measured with
+       document.elementFromPoint; pinned in the browser suite). Transparent is worse than inert.
+       `cursor` is set here because the rule no longer hides the resting `cursor: pointer`. */
+    .ui-pressable.is-disabled {
+        color: var(--ui-pressable-text-disabled);
+        cursor: not-allowed;
+    }
+
+    /* Disclosure — the header wrapper is untouched (a consumer's <h2> must keep looking like their
+       <h2>; the package only guarantees the button INSIDE it is a real button). */
+    .ui-disclosure__header {
+        margin: 0;
+    }
+    .ui-disclosure__trigger {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .ui-disclosure__chevron {
+        width: 1.1em;
+        height: 1.1em;
+        flex: none;
+        margin-left: auto;
+        transition: transform 0.12s ease;
+    }
+    /* Keyed on the ARIA state itself rather than a parallel class, so the rendering cannot drift
+       out of step with what assistive tech is told (the [aria-selected] precedent). */
+    .ui-disclosure__trigger[aria-expanded='true'] .ui-disclosure__chevron {
+        transform: rotate(180deg);
+    }
+    .ui-disclosure__panel {
+        padding: var(--ui-disclosure-panel-pad);
+        margin-top: var(--ui-disclosure-panel-gap);
+    }
+
+    /* Forced-colors mode strips box-shadow — which is the ONLY thing conveying focus by default:
+       every focusable control sets `outline: none` and paints --ui-focus-ring through box-shadow
+       (.ui-control / .ui-multiselect__box / .ui-multicombobox__box :focus, .ui-check__input and
+       .ui-switch__input :focus-visible). With the shadow gone, keyboard focus becomes invisible in a
+       forced-colors / high-contrast theme. Restore a real outline for EVERY focus surface so the
+       indicator survives (WCAG 2.4.7). This block sits last in source order and reuses the same
+       selectors, so it wins the specificity tie over each base `outline: none`. `Highlight` is a
+       system colour forced-colors maps to the user's palette (author colours are ignored here). */
+    @media (forced-colors: active) {
+        /* Invalid is conveyed ONLY by the danger border, background and box-shadow — all discarded here,
+           so an invalid control painted identical to a valid one. There is no system colour for an
+           error, so the cue is a SHAPE: a dashed CanvasText outline, which contrasts with Canvas in any
+           palette, stays apart from the solid Highlight focus ring even where the two colours coincide,
+           and takes no layout room. It sits before the focus rule so a focused invalid control shows the
+           focus ring while focused (WCAG 2.4.7), and the dashes return on blur. */
+        .ui-control.is-invalid,
+        .ui-check__input.is-invalid,
+        .ui-switch__input.is-invalid {
+            outline: 2px dashed CanvasText;
+            outline-offset: 2px;
+        }
+
+        .ui-control:focus-visible,
+        .ui-multiselect__box:focus-within,
+        .ui-multicombobox__box:focus-within,
+        .ui-check__input:focus-visible,
+        .ui-switch__input:focus-visible,
+        .ui-pressable:focus-visible {
+            outline: 2px solid Highlight;
+            outline-offset: 2px;
+        }
+
+        /* Same class of defect, one surface further in. The pressed state is conveyed ONLY by
+           `background` + `color` and the fallback's disabled state ONLY by `color` — all author
+           colours, all ignored here, so a pressed toggle computes pixel-identical to an unpressed one
+           (measured: transparent-white over Canvas vs opaque white, black text either way) and a
+           disabled `as` fallback identical to an enabled one. `aria-pressed` and `aria-disabled` still
+           reach assistive tech, so this is a SIGHTED high-contrast gap (WCAG 1.4.11), not an AT one.
+           System colours rather than `forced-color-adjust`: the user's palette is the whole point of
+           the mode, so the fix is to speak it, not to opt out of it. Highlight/HighlightText is what
+           the UA itself uses for a selected surface. Source order matches the base sheet (pressed,
+           then disabled) so a control that is BOTH still resolves disabled last, as it does there. */
+        .ui-pressable[aria-pressed='true'] {
+            background: Highlight;
+            color: HighlightText;
+        }
+        /* The native path already gets GrayText from the UA's own disabled-button treatment (measured:
+           it computes rgb(96, 0, 0) here unaided); declaring it makes the two paths hold the SAME
+           source rather than one of them depending on a UA default, and the spec asserts them against
+           each other. `.is-disabled` is the leg that was genuinely broken. */
+        .ui-pressable:disabled,
+        .ui-pressable.is-disabled {
+            color: GrayText;
+        }
+
+        /* The keyboard-active option is conveyed ONLY by --ui-option-bg-active, so an open listbox
+           showed no active option at all (measured: identical pixels to its inactive siblings). */
+        .ui-select__option.is-active,
+        .ui-combobox__option.is-active,
+        .ui-multiselect__option.is-active,
+        .ui-multicombobox__option.is-active,
+        .ui-groupselect__option.is-active,
+        .ui-groupcombobox__option.is-active,
+        .ui-select__clear.is-active,
+        .ui-combobox__clear.is-active,
+        .ui-groupselect__clear.is-active,
+        .ui-groupcombobox__clear.is-active {
+            background: Highlight;
+            color: HighlightText;
+        }
+        /* The UA paints a disabled typed <input>, <textarea> and <button> with GrayText text AND
+           border; the div boxes and the check/switch rows get nothing from it, and a type-less
+           <input class="ui-control"> does not match the UA rule either. */
+        .ui-control:disabled,
+        .ui-multiselect__box.is-disabled,
+        .ui-multicombobox__box.is-disabled {
+            color: GrayText;
+            border-color: GrayText;
+        }
+        .ui-check.is-disabled,
+        .ui-switch.is-disabled {
+            color: GrayText;
+        }
+
+        /* The checked state is author-painted on an `appearance: none` chassis: the box and track fill,
+           the mark and dot in `currentColor` off a background token, the thumb in a background token,
+           and a switch with no border at all. Every one of those collapses onto Canvas, so checked,
+           unchecked and (for the switch) the whole control paint identical to the page. Each needs a
+           system colour of its own; source order matches the base sheet (checked, then disabled). */
+        .ui-check__input:checked,
+        .ui-check__input:where([type='checkbox']):indeterminate {
+            background: Highlight;
+            border-color: Highlight;
+        }
+        .ui-check__input:checked ~ .ui-check__icon,
+        .ui-check__input:where([type='checkbox']):indeterminate ~ .ui-check__icon {
+            color: HighlightText;
+        }
+        .ui-check__input:disabled {
+            border-color: GrayText;
+        }
+        .ui-check__input:disabled:checked,
+        .ui-check__input:disabled:where([type='checkbox']):indeterminate {
+            background: GrayText;
+            border-color: GrayText;
+        }
+        .ui-check__input:disabled:checked ~ .ui-check__icon,
+        .ui-check__input:disabled:where([type='checkbox']):indeterminate ~ .ui-check__icon {
+            color: Canvas;
+        }
+        .ui-switch__input {
+            border: 1px solid CanvasText;
+        }
+        .ui-switch__thumb {
+            background: CanvasText;
+        }
+        .ui-switch__input:checked {
+            background: Highlight;
+            border-color: Highlight;
+        }
+        .ui-switch__input:checked ~ .ui-switch__thumb {
+            background: HighlightText;
+        }
+        .ui-switch__input:disabled {
+            border-color: GrayText;
+        }
+        .ui-switch__input:disabled ~ .ui-switch__thumb {
+            background: GrayText;
+        }
+        .ui-switch__input:disabled:checked {
+            background: GrayText;
+            border-color: GrayText;
+        }
+        .ui-switch__input:disabled:checked ~ .ui-switch__thumb {
+            background: Canvas;
+        }
+    }
+
+    /* Respect a reduced-motion preference — zero every transition the stylesheet declares (the 0.12s
+       box-shadow / border-color / background / opacity / transform eases on the controls, chevrons,
+       check chassis, marks, switch track + thumb). Scoped to the ui-* surfaces that carry a transition
+       rather than a blanket `*`, so a consumer's own transitions stay untouched. */
+    @media (prefers-reduced-motion: reduce) {
+        .ui-control,
+        .ui-select__chevron,
+        .ui-groupselect__chevron,
+        .ui-multiselect__chevron,
+        .ui-check__input,
+        .ui-check__mark,
+        .ui-check__dash,
+        .ui-radio__dot,
+        .ui-switch__input,
+        .ui-switch__thumb,
+        .ui-pressable,
+        .ui-disclosure__chevron {
+            transition: none;
+        }
+    }
+}

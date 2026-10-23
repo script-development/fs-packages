@@ -25,6 +25,7 @@ const PACKAGE_THRESHOLDS = Object.fromEntries(
         'theme',
         'toast',
         'translation',
+        'ui-form',
         'ui-inputs',
     ].map((pkg) => [`packages/${pkg}/src/**`, {lines: 100, branches: 100, functions: 100, statements: 100}]),
 );
