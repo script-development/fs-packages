@@ -332,10 +332,10 @@
         box-shadow: var(--ui-danger-shadow);
     }
 
-    /* TextInput's in-input error icon: shown while the control is marked, at the right edge,
-       with the text kept clear of it. Keyed on .ui-input-wrap, which only ui-form's TextInput
-       renders: during the migration this sheet also styles ui-inputs 0.17 controls, whose invalid
-       TextInput has no icon and must keep its own padding. */
+    /* The in-input error icon: shown while the control is marked, at the right edge, with the
+       text kept clear of it. Keyed on .ui-input-wrap, which only ui-form's controls render: during
+       the migration this sheet also styles ui-inputs 0.17 controls, which have no icon and must
+       keep their own padding. */
     .ui-input-wrap {
         position: relative;
         display: block;
