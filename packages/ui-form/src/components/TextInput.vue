@@ -56,7 +56,8 @@ defineOptions({inheritAttrs: false});
 
 const input = useTemplateRef<HTMLInputElement>('input');
 onMounted(() => {
-    if (autofocus) input.value?.focus();
+    // the input is rendered by the time the component mounts
+    if (autofocus) input.value!.focus();
 });
 
 // Accepts null so it binds a nullable backend field directly (Vue renders null as
