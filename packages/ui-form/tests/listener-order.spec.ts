@@ -3,7 +3,7 @@ import {mount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
 import {defineComponent, h, ref} from 'vue';
 
-import {TextInput} from '../src';
+import {Textarea, TextInput} from '../src';
 
 // Every value control, the value it starts from, the event its value arrives on, and what the user enters.
 // A consumer's listener on that event runs after the control's own, so it reads the new value, as with
@@ -12,6 +12,7 @@ import {TextInput} from '../src';
 // keystroke of a row whose @input added the next row.
 const CONTROLS: [string, unknown, unknown, 'input' | 'change', (element: HTMLInputElement) => unknown][] = [
     ['TextInput', TextInput, '', 'input', (element) => (element.value = 'A')],
+    ['Textarea', Textarea, '', 'input', (element) => (element.value = 'A')],
 ];
 
 describe("a consumer's listener on a control", () => {
