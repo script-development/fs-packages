@@ -100,6 +100,10 @@
     --ui-control-pad-y: 0.55rem;
     --ui-control-shadow: none;
     --ui-control-shadow-hover: none;
+    /* InputGroup's addons: the text joined to a control. Neutral by default: the disabled control
+       background, and the control's own text colour (the muted one falls below 4.5:1 on it). */
+    --ui-addon-bg: var(--ui-control-bg-disabled);
+    --ui-addon-text: var(--ui-control-text);
     --ui-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
 
     /* listbox menu */
@@ -343,6 +347,49 @@
     .ui-input-wrap > .ui-input.is-invalid {
         padding-right: calc(var(--ui-control-pad-x) * 2 + 1em);
     }
+    /* InputGroup: addon texts joined to a control, read as one box. The control keeps its own
+       wrapper (and so its icons); it loses its rounding on the side an addon touches. */
+    .ui-input-group {
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+    /* The control sits above the addons, so its focus and invalid rings paint over both sides
+       instead of being covered by the later addon. */
+    .ui-input-group > :not(.ui-input-group__addon) {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .ui-input-group__addon {
+        display: flex;
+        flex: none;
+        align-items: center;
+        padding: 0 var(--ui-control-pad-x);
+        border: var(--ui-control-border-width) solid var(--ui-control-border-color);
+        background: var(--ui-addon-bg);
+        color: var(--ui-addon-text);
+        font-size: var(--ui-control-font-size);
+        white-space: nowrap;
+    }
+    .ui-input-group__addon.is-start {
+        border-right: 0;
+        border-radius: var(--ui-control-radius) 0 0 var(--ui-control-radius);
+    }
+    .ui-input-group__addon.is-end {
+        border-left: 0;
+        border-radius: 0 var(--ui-control-radius) var(--ui-control-radius) 0;
+    }
+    .ui-input-group:has(> .ui-input-group__addon:first-child) .ui-control {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .ui-input-group:has(> .ui-input-group__addon:last-child) .ui-control {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
     .ui-input__icon {
         position: absolute;
         top: 50%;
