@@ -18,7 +18,7 @@
         "lint:pkg": "node scripts/lint-pkg.mjs",
         "release": "npm run build && changeset publish",
         "test": "vitest run",
-        "test:browser": "vitest run --config packages/ui-inputs/vitest.browser.config.ts && vitest run --config packages/dialog/vitest.browser.config.ts",
+        "test:browser": "vitest run --config packages/ui-inputs/vitest.browser.config.ts && vitest run --config packages/ui-form/vitest.browser.config.ts && vitest run --config packages/dialog/vitest.browser.config.ts",
         "test:coverage": "vitest run --coverage",
         "test:mutation": "npm run test:mutation --workspaces",
         "typecheck": "npm run typecheck --workspaces",
