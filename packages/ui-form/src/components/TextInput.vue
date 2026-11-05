@@ -21,17 +21,20 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, useTemplateRef} from 'vue';
+import {computed, onMounted, useTemplateRef} from 'vue';
 
 import {controlAttrs, rootAttrs} from '../internal/split-attrs';
 import ErrorIcon from './ErrorIcon.vue';
 
 const {
+    modelValue,
     type = 'text',
     id,
     invalid = false,
     autofocus = false,
 } = defineProps<{
+    /** the value; `null` shows an empty control. */
+    modelValue: string | null;
     /** control id, pairing the input with its label and error; inside a `FormField` the field passes its own. */
     id: string;
     /** a password field is PasswordInput, a search field SearchInput. */
@@ -62,5 +65,13 @@ onMounted(() => {
 // Accepts null so it binds a nullable backend field directly (Vue renders null as
 // an empty control); a cleared input emits '', which the fleet's
 // ConvertEmptyStringsToNull middleware converts back to null on submit.
-const model = defineModel<string | null>({required: true});
+const emit = defineEmits<{'update:modelValue': [value: string]}>();
+// v-model stays on the native element (so Vue's IME handling applies), over a computed: the event is
+// declared as what it writes, a string, so a draft path typed plain `string` binds. defineModel cannot
+// type its event apart from its prop.
+const model = computed({
+    get: () => modelValue,
+    // the native element writes its text, never null
+    set: (value: string | null) => emit('update:modelValue', value!),
+});
 </script>
