@@ -542,8 +542,9 @@
        `--ui-*` map still reaches it by inheritance.
 
        The size() middleware writes the trigger width onto it as an inline `min-width`, which is
-       what keeps `--ui-menu-min-width: 100%` meaning "as wide as the trigger" after the move —
-       a percentage on the `<ul>` resolves against this box, not against body. `width: max-content`
+       what keeps `--ui-menu-min-width: 100%` meaning "as wide as the trigger" while the anchor
+       sits in the top layer in place — a percentage on the `<ul>` resolves against this box,
+       which without that min-width is only as wide as the menu itself. `width: max-content`
        lets the anchor grow when the menu outgrows the trigger (a territory floor like
        `max(100%, 240px)`, or a long option), so shift() and hide() keep measuring a box that
        encloses the whole menu. */
