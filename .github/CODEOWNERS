@@ -1,9 +1,11 @@
 # CODEOWNERS — fs-packages (The Armory)
 #
 # fs-packages is the OIDC Trusted-Publishing root for every @script-development/*
-# package consumed across the fleet. Every change requires review from a repo
-# admin — the CI/release surface (.github/**) is the highest-leverage supply-chain
-# path here, so the same owner set guards the whole repo.
+# package consumed across the fleet. Every change needs one approval from the team
+# below. crit-ai is on that team, so its approval alone can merge, including on
+# .github/**. Merging does not publish: the publish job waits on the npm-publish
+# environment, whose required reviewer is Goosterhof. That press is the human gate
+# (WR-2590).
 #
 # Routes to the @script-development/fs-packages-admins org team, mirroring
 # phpstan-warroom-rules' single-team CODEOWNERS shape. The team is the dedicated
