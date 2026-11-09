@@ -358,6 +358,11 @@
     .ui-textarea {
         resize: vertical;
     }
+    /* An autogrow Textarea sizes itself, so it offers no manual resize. .is-autogrow is ui-form's own
+       class: a ui-inputs 0.17 textarea never carries it. */
+    .ui-textarea.is-autogrow {
+        resize: none;
+    }
     /* The MultiSelect/MultiCombobox box is a div, so :disabled cannot match it — the component
        mirrors the state as .is-disabled (every focusable child inside carries the native :disabled). */
     .ui-control:disabled,
