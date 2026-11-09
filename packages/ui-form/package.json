@@ -52,11 +52,11 @@
         "@vue/test-utils": "^2.5.1",
         "happy-dom": "^21.0.3",
         "unplugin-vue": "^8.0.1",
-        "vue": "^3.5.44",
+        "vue": "^3.5.45",
         "vue-tsc": "^3.3.14"
     },
     "peerDependencies": {
-        "vue": "^3.5.44"
+        "vue": "^3.5.45"
     },
     "engines": {
         "node": ">=24.0.0"
