@@ -186,6 +186,24 @@ describe('SingleSelect — real keyboard walk', () => {
     });
 });
 
+describe('TextInput — a typed password stays out of the DOM', () => {
+    it('real typing reaches the model, and the page source never carries it', async () => {
+        const model = await renderControlled<string | null>(TextInput, null, {
+            options: undefined,
+            label: undefined,
+            type: 'password',
+        });
+        const input = document.getElementById('fruit') as HTMLInputElement;
+
+        await userEvent.click(input);
+        await userEvent.keyboard('hunter2');
+
+        expect(model.value).toBe('hunter2');
+        expect(input.value).toBe('hunter2');
+        expect(document.body.outerHTML).not.toContain('hunter2');
+    });
+});
+
 describe('disabled controls genuinely receive no events', () => {
     it('a forced real click on a disabled trigger dispatches no click — the menu never opens', async () => {
         await renderControlled<number | null>(SingleSelect, null, {disabled: true});

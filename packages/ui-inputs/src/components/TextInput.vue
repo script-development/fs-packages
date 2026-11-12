@@ -4,7 +4,7 @@
         :type="type"
         class="ui-control ui-input"
         :class="{'is-invalid': invalid}"
-        :value="shown"
+        v-value-property="shown"
         :placeholder="placeholder"
         :disabled="disabled"
         :aria-required="required || undefined"
@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import {commitOutsideComposition} from '../internal/composition';
+import {vValueProperty} from '../internal/value-property';
 
 const {type = 'text'} = defineProps<{
     id: string;
