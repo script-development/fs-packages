@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import {mount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
+import {defineComponent, h, ref} from 'vue';
 
 import TextInput from '../src/components/TextInput.vue';
 
@@ -51,4 +52,36 @@ describe('TextInput', () => {
         const wrapper = mount(TextInput, {props: {id: 'name', modelValue: null}});
         expect((wrapper.find('input').element as HTMLInputElement).value).toBe('');
     });
+
+    it.each(['text', 'email', 'password', 'search', 'tel', 'url'] as const)(
+        'never writes the value to the attribute (type %s)',
+        async (type) => {
+            const model = ref<string | null>('from-parent');
+            const wrapper = mount(
+                defineComponent(
+                    () => () =>
+                        h(TextInput, {
+                            id: 'f',
+                            type,
+                            modelValue: model.value,
+                            'onUpdate:modelValue': (value: string) => {
+                                model.value = value;
+                            },
+                        }),
+                ),
+            );
+            const input = wrapper.find('input');
+            expect((input.element as HTMLInputElement).value).toBe('from-parent');
+            expect(input.attributes('value')).toBeUndefined();
+
+            await input.setValue('typed');
+            expect(model.value).toBe('typed');
+            expect(input.attributes('value')).toBeUndefined();
+
+            model.value = 'set-later';
+            await wrapper.vm.$nextTick();
+            expect((input.element as HTMLInputElement).value).toBe('set-later');
+            expect(wrapper.html()).not.toMatch(/from-parent|typed|set-later/);
+        },
+    );
 });

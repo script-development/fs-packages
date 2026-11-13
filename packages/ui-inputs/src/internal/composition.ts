@@ -7,7 +7,7 @@ type TextField = HTMLInputElement | HTMLTextAreaElement;
  * one character through several `input` events, none of which is the user's value, so nothing is
  * committed while composing and the field's value is committed once on `compositionend`.
  *
- * Bind the field's `:value` to `shown`, never to the model: Vue re-patches `value` on every render,
+ * Bind the field's value to `shown`, never to the model: Vue re-patches `value` on every render,
  * and the model is stale mid-composition, so any re-render then would wipe the candidate text.
  * `shown` holds the field's own text while composing — the job `vModelText`'s
  * `if (el.composing) return` does on update.
