@@ -186,7 +186,7 @@ describe('SingleSelect — real keyboard walk', () => {
     });
 });
 
-describe('TextInput — a typed password stays out of the DOM', () => {
+describe('TextInput — the value stays out of the DOM', () => {
     it('real typing reaches the model, and the page source never carries it', async () => {
         const model = await renderControlled<string | null>(TextInput, null, {
             options: undefined,
@@ -201,6 +201,29 @@ describe('TextInput — a typed password stays out of the DOM', () => {
         expect(model.value).toBe('hunter2');
         expect(input.value).toBe('hunter2');
         expect(document.body.outerHTML).not.toContain('hunter2');
+    });
+
+    it('a form reset empties the field and emits nothing, as with v-model', async () => {
+        const emitted: string[] = [];
+        await render(
+            defineComponent(
+                () => () =>
+                    h('form', {id: 'form'}, [
+                        h(TextInput, {
+                            id: 'fruit',
+                            modelValue: 'typed',
+                            'onUpdate:modelValue': (value: string) => emitted.push(value),
+                        }),
+                    ]),
+            ),
+        );
+        const input = document.getElementById('fruit') as HTMLInputElement;
+        expect(input.value).toBe('typed');
+
+        (document.getElementById('form') as HTMLFormElement).reset();
+
+        expect(input.value).toBe('');
+        expect(emitted).toEqual([]);
     });
 });
 

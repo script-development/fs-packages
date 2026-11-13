@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- **`TextInput` no longer writes its value into the DOM (EZ-0124).** Vue sets a bound `:value` on a native input as an attribute as well as a property, so the text, a typed password included, showed as `value="…"` in the page source, to anything that reads it: a CSS attribute selector, a session recorder, an extension. `TextInput` now sets the property alone, for every `type`, as Vue's own `v-model` does. A selector or test that read the `value` attribute reads the property instead. A native `form.reset()` now empties the field instead of leaving it, again as with `v-model`, and emits nothing.
+- **`TextInput` no longer writes its value into the DOM (EZ-0124).** Vue sets a bound `:value` on a native input as an attribute as well as a property, so the text, a typed password included, showed as `value="…"` in the page source, to anything that reads it: a CSS attribute selector, a session recorder, an extension. `TextInput` now sets the property alone, for every `type`, as Vue's own `v-model` does. A `[value]` selector or a `getAttribute('value')` read no longer matches: read the `.value` property. A native `form.reset()` now empties the field instead of leaving it, again as with `v-model`, and emits nothing.
 
 ## 0.17.2 — 2026-10-20
 
