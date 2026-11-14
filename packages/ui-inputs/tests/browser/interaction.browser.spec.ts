@@ -14,15 +14,18 @@ import {defineComponent, h, nextTick, ref} from 'vue';
 import Checkbox from '../../src/components/Checkbox.vue';
 import CheckboxGroup from '../../src/components/CheckboxGroup.vue';
 import Combobox from '../../src/components/Combobox.vue';
+import DateInput from '../../src/components/DateInput.vue';
 import Disclosure from '../../src/components/Disclosure.vue';
 import GroupCombobox from '../../src/components/GroupCombobox.vue';
 import GroupSelect from '../../src/components/GroupSelect.vue';
 import MultiCombobox from '../../src/components/MultiCombobox.vue';
 import MultiSelect from '../../src/components/MultiSelect.vue';
+import NumberInput from '../../src/components/NumberInput.vue';
 import Pressable from '../../src/components/Pressable.vue';
 import RadioGroup from '../../src/components/RadioGroup.vue';
 import SingleSelect from '../../src/components/SingleSelect.vue';
 import Switch from '../../src/components/Switch.vue';
+import Textarea from '../../src/components/Textarea.vue';
 import TextInput from '../../src/components/TextInput.vue';
 import '../../styles.css';
 
@@ -186,8 +189,8 @@ describe('SingleSelect — real keyboard walk', () => {
     });
 });
 
-describe('TextInput — the value stays out of the DOM', () => {
-    it('real typing reaches the model, and the page source never carries it', async () => {
+describe('value fields — the value stays out of the DOM', () => {
+    it('TextInput: real typing reaches the model, and the page source never carries it', async () => {
         const model = await renderControlled<string | null>(TextInput, null, {
             options: undefined,
             label: undefined,
@@ -203,28 +206,83 @@ describe('TextInput — the value stays out of the DOM', () => {
         expect(document.body.outerHTML).not.toContain('hunter2');
     });
 
-    it('a form reset empties the field and emits nothing, as with v-model', async () => {
-        const emitted: string[] = [];
-        await render(
-            defineComponent(
-                () => () =>
-                    h('form', {id: 'form'}, [
-                        h(TextInput, {
-                            id: 'fruit',
-                            modelValue: 'typed',
-                            'onUpdate:modelValue': (value: string) => emitted.push(value),
-                        }),
-                    ]),
-            ),
-        );
+    it.each([
+        ['Textarea', Textarea, null, {}, 'zqx', 'zqx'],
+        ['NumberInput', NumberInput, null, {}, '4271', 4271],
+        ['Combobox', Combobox, null, {}, 'zqx', null],
+        ['GroupCombobox', GroupCombobox, null, {groups: FRUIT_GROUPS, options: undefined}, 'zqx', null],
+        ['MultiCombobox', MultiCombobox, [], {}, 'zqx', []],
+    ] as const)(
+        '%s: real typing never reaches the page source',
+        async (_name, component, initial, props, typed, committed) => {
+            const model = await renderControlled<unknown>(component, initial, props);
+            const input = document.getElementById('fruit') as HTMLInputElement;
+
+            await userEvent.click(input);
+            await userEvent.keyboard(typed);
+
+            expect(model.value).toEqual(committed);
+            expect(input.value).toBe(typed);
+            expect(document.body.outerHTML).not.toContain(typed);
+        },
+    );
+
+    it('DateInput: a model-set date never reaches the page source', async () => {
+        const model = await renderControlled<string | null>(DateInput, null, {options: undefined, label: undefined});
         const input = document.getElementById('fruit') as HTMLInputElement;
-        expect(input.value).toBe('typed');
 
-        (document.getElementById('form') as HTMLFormElement).reset();
+        model.value = '2026-11-14';
+        await nextTick();
 
-        expect(input.value).toBe('');
-        expect(emitted).toEqual([]);
+        expect(input.value).toBe('2026-11-14');
+        expect(document.body.outerHTML).not.toContain('2026-11-14');
     });
+
+    it('NumberInput: a lone minus over a number survives the re-render, so -3 stays negative', async () => {
+        const model = await renderControlled<number | null>(NumberInput, 5, {options: undefined, label: undefined});
+        const input = document.getElementById('fruit') as HTMLInputElement;
+
+        await userEvent.click(input);
+        await userEvent.keyboard('{Control>}a{/Control}-');
+        expect(model.value).toBeNull();
+        expect(input.validity.badInput).toBe(true);
+
+        await userEvent.keyboard('3');
+        expect(model.value).toBe(-3);
+    });
+
+    it.each([
+        ['TextInput', TextInput, 'typed', {}],
+        ['Textarea', Textarea, 'typed', {}],
+        ['NumberInput', NumberInput, 5, {}],
+        ['DateInput', DateInput, '2026-11-14', {}],
+        ['Combobox', Combobox, 2, {options: FRUITS, label: 'name'}],
+    ] as const)(
+        '%s: a form reset empties the field and emits nothing, as with v-model',
+        async (_name, component, value, props) => {
+            const emitted: unknown[] = [];
+            await render(
+                defineComponent(
+                    () => () =>
+                        h('form', {id: 'form'}, [
+                            h(component, {
+                                id: 'fruit',
+                                ...props,
+                                modelValue: value,
+                                'onUpdate:modelValue': (next: unknown) => emitted.push(next),
+                            }),
+                        ]),
+                ),
+            );
+            const input = document.getElementById('fruit') as HTMLInputElement;
+            expect(input.value).not.toBe('');
+
+            (document.getElementById('form') as HTMLFormElement).reset();
+
+            expect(input.value).toBe('');
+            expect(emitted).toEqual([]);
+        },
+    );
 });
 
 describe('disabled controls genuinely receive no events', () => {

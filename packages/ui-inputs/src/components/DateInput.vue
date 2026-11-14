@@ -4,7 +4,7 @@
         type="date"
         class="ui-control ui-input"
         :class="{'is-invalid': invalid}"
-        :value="model"
+        v-value-property="model"
         :disabled="disabled"
         :min="min"
         :max="max"
@@ -16,6 +16,8 @@
 </template>
 
 <script setup lang="ts">
+import {vValueProperty} from '../internal/value-property';
+
 defineProps<{
     id: string;
     disabled?: boolean;

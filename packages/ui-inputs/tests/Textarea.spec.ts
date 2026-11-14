@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import {mount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
+import {defineComponent, h, ref} from 'vue';
 
 import Textarea from '../src/components/Textarea.vue';
 
@@ -59,5 +60,37 @@ describe('Textarea', () => {
     it('renders the disabled attribute when disabled', () => {
         const wrapper = mount(Textarea, {props: {id: 'notes', disabled: true, modelValue: null}});
         expect(wrapper.find('textarea').attributes('disabled')).toBeDefined();
+    });
+
+    it('never writes the value to the attribute', async () => {
+        const model = ref<string | null>('from-parent');
+        const wrapper = mount(
+            defineComponent(
+                () => () =>
+                    h(Textarea, {
+                        id: 'f',
+                        modelValue: model.value,
+                        'onUpdate:modelValue': (value: string | null) => {
+                            model.value = value;
+                        },
+                    }),
+            ),
+        );
+        const field = wrapper.find('textarea');
+        expect((field.element as HTMLTextAreaElement).value).toBe('from-parent');
+        expect(field.attributes('value')).toBeUndefined();
+
+        await field.setValue('typed');
+        expect(model.value).toBe('typed');
+        expect(field.attributes('value')).toBeUndefined();
+
+        model.value = 'set-later';
+        await wrapper.vm.$nextTick();
+        expect((field.element as HTMLTextAreaElement).value).toBe('set-later');
+        expect(wrapper.html()).not.toMatch(/from-parent|typed|set-later/);
+
+        model.value = null;
+        await wrapper.vm.$nextTick();
+        expect((field.element as HTMLTextAreaElement).value).toBe('');
     });
 });

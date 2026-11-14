@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import {mount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
+import {defineComponent, h, ref} from 'vue';
 
 import NumberInput from '../src/components/NumberInput.vue';
 
@@ -63,5 +64,37 @@ describe('NumberInput', () => {
     it('renders the disabled attribute when disabled', () => {
         const wrapper = mount(NumberInput, {props: {id: 'qty', disabled: true, modelValue: null}});
         expect(wrapper.find('input').attributes('disabled')).toBeDefined();
+    });
+
+    it('never writes the value to the attribute', async () => {
+        const model = ref<number | null>(41);
+        const wrapper = mount(
+            defineComponent(
+                () => () =>
+                    h(NumberInput, {
+                        id: 'f',
+                        modelValue: model.value,
+                        'onUpdate:modelValue': (value: number | null) => {
+                            model.value = value;
+                        },
+                    }),
+            ),
+        );
+        const field = wrapper.find('input');
+        expect((field.element as HTMLInputElement).value).toBe('41');
+        expect(field.attributes('value')).toBeUndefined();
+
+        await field.setValue('42');
+        expect(model.value).toBe(42);
+        expect(field.attributes('value')).toBeUndefined();
+
+        model.value = 43;
+        await wrapper.vm.$nextTick();
+        expect((field.element as HTMLInputElement).value).toBe('43');
+        expect(wrapper.html()).not.toMatch(/41|42|43/);
+
+        model.value = null;
+        await wrapper.vm.$nextTick();
+        expect((field.element as HTMLInputElement).value).toBe('');
     });
 });
