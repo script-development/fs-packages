@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import {mount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
+import {defineComponent, h, ref} from 'vue';
 
 import DateInput from '../src/components/DateInput.vue';
 
@@ -59,5 +60,37 @@ describe('DateInput', () => {
     it('renders the disabled attribute when disabled', () => {
         const wrapper = mount(DateInput, {props: {id: 'dob', disabled: true, modelValue: null}});
         expect(wrapper.find('input').attributes('disabled')).toBeDefined();
+    });
+
+    it('never writes the value to the attribute', async () => {
+        const model = ref<string | null>('2026-11-12');
+        const wrapper = mount(
+            defineComponent(
+                () => () =>
+                    h(DateInput, {
+                        id: 'f',
+                        modelValue: model.value,
+                        'onUpdate:modelValue': (value: string | null) => {
+                            model.value = value;
+                        },
+                    }),
+            ),
+        );
+        const field = wrapper.find('input');
+        expect((field.element as HTMLInputElement).value).toBe('2026-11-12');
+        expect(field.attributes('value')).toBeUndefined();
+
+        await field.setValue('2026-11-13');
+        expect(model.value).toBe('2026-11-13');
+        expect(field.attributes('value')).toBeUndefined();
+
+        model.value = '2026-11-14';
+        await wrapper.vm.$nextTick();
+        expect((field.element as HTMLInputElement).value).toBe('2026-11-14');
+        expect(wrapper.html()).not.toMatch(/2026-11-1[234]/);
+
+        model.value = null;
+        await wrapper.vm.$nextTick();
+        expect((field.element as HTMLInputElement).value).toBe('');
     });
 });

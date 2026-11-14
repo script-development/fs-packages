@@ -3,7 +3,7 @@
         :id="id"
         class="ui-control ui-textarea"
         :class="{'is-invalid': invalid}"
-        :value="shown"
+        v-value-property="shown"
         :placeholder="placeholder"
         :disabled="disabled"
         :rows="rows"
@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import {commitOutsideComposition} from '../internal/composition';
+import {vValueProperty} from '../internal/value-property';
 
 defineProps<{
     id: string;

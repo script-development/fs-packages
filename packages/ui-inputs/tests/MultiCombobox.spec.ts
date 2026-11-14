@@ -437,4 +437,16 @@ describe('MultiCombobox', () => {
         await input.setValue('m'); // matches return → the region empties again
         expect(region.text()).toBe('');
     });
+
+    it('never writes the query to the attribute', async () => {
+        const wrapper = mountMultiCombobox({modelValue: [3]});
+        const input = wrapper.find('input');
+        expect(input.element.value).toBe('');
+        expect(input.attributes('value')).toBeUndefined();
+
+        await input.setValue('zqx');
+        expect(input.element.value).toBe('zqx');
+        expect(input.attributes('value')).toBeUndefined();
+        expect(wrapper.html()).not.toContain('zqx');
+    });
 });

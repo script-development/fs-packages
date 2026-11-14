@@ -4,7 +4,7 @@
         type="number"
         class="ui-control ui-input"
         :class="{'is-invalid': invalid}"
-        :value="model"
+        v-value-property="model"
         :placeholder="placeholder"
         :disabled="disabled"
         :min="min"
@@ -18,6 +18,8 @@
 </template>
 
 <script setup lang="ts">
+import {vValueProperty} from '../internal/value-property';
+
 defineProps<{
     id: string;
     placeholder?: string;

@@ -1,5 +1,11 @@
 # @script-development/ui-inputs
 
+## 0.17.4 — 2026-11-14
+
+### Patch Changes
+
+- **`Textarea`, `NumberInput`, `DateInput` and the comboboxes' search text no longer write their value into the DOM (EZ-0129).** The same leak 0.17.3 closed in `TextInput`: a bound `:value` also set the `value` attribute, so the text showed in the page source. `Textarea`, `NumberInput` and `DateInput` now set their value as a property alone, and `Combobox`, `GroupCombobox` and `MultiCombobox` their typed search. A `[value]` selector or a `getAttribute('value')` read no longer matches: read the `.value` property. A native `form.reset()` now empties `NumberInput`, `DateInput`, `Combobox` and `GroupCombobox` instead of leaving them, and emits nothing, so the model keeps its value, as with `v-model`.
+
 ## 0.17.3 — 2026-11-13
 
 ### Patch Changes

@@ -50,7 +50,7 @@
                 :aria-activedescendant="activeDescendant"
                 :placeholder="model.length ? undefined : placeholder"
                 :disabled="disabled"
-                :value="query"
+                v-value-property="query"
                 @input="onInput"
                 @click="onOpen"
                 @focus="onOpen"
@@ -119,6 +119,7 @@ import type {LabelKey, SelectItem} from '../types';
 import {useListbox} from '../composables/useListbox';
 import {ensureRefValueExists} from '../internal/reactivity';
 import {controlAttrs, rootAttrs} from '../internal/split-attrs';
+import {vValueProperty} from '../internal/value-property';
 import OptionList from './OptionList.vue';
 
 // `class`/`style` → root, every other attr → the combobox element (see split-attrs).

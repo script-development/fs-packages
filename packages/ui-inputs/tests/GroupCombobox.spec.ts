@@ -428,4 +428,20 @@ describe('GroupCombobox', () => {
             .map((el) => el.text());
         expect(swatches).toEqual(['Kiwi#0']);
     });
+
+    it('never writes the query to the attribute', async () => {
+        const wrapper = mountGroupCombobox({modelValue: 3});
+        const input = wrapper.find('input');
+        expect(input.element.value).toBe('Apricot');
+        expect(input.attributes('value')).toBeUndefined();
+
+        await input.setValue('zqx');
+        expect(input.element.value).toBe('zqx');
+        expect(input.attributes('value')).toBeUndefined();
+        expect(wrapper.html()).not.toContain('zqx');
+
+        await input.trigger('keydown', {key: 'Escape'});
+        await wrapper.setProps({modelValue: null});
+        expect(input.element.value).toBe('');
+    });
 });
