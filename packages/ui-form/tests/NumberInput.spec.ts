@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import {mount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
+import {defineComponent, h, nextTick, ref} from 'vue';
 
 import NumberInput from '../src/components/NumberInput.vue';
 
@@ -122,5 +123,34 @@ describe('NumberInput error icon and attributes', () => {
         expect(input.attributes('data-test')).toBe('amount');
         expect(input.attributes('inputmode')).toBe('decimal');
         expect(input.classes()).not.toContain('w-40');
+    });
+
+    it('never writes the value to the attribute, so it stays out of the page source', async () => {
+        const model = ref<number | null>(41);
+        const wrapper = mount(
+            defineComponent(
+                () => () =>
+                    h(NumberInput, {
+                        id: 'f',
+                        placeholder: 'Amount',
+                        modelValue: model.value,
+                        'onUpdate:modelValue': (value: number | null) => {
+                            model.value = value;
+                        },
+                    }),
+            ),
+        );
+        const field = wrapper.find('input');
+        expect((field.element as HTMLInputElement).value).toBe('41');
+        expect(field.attributes('value')).toBeUndefined();
+
+        await field.setValue('42');
+        expect(model.value).toBe(42);
+        expect(field.attributes('value')).toBeUndefined();
+
+        model.value = 43;
+        await nextTick();
+        expect((field.element as HTMLInputElement).value).toBe('43');
+        expect(wrapper.html()).not.toMatch(/41|42|43/);
     });
 });

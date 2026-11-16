@@ -9,7 +9,7 @@
             type="number"
             class="ui-control ui-input"
             :class="{'is-invalid': invalid}"
-            :value="model"
+            v-value-property="model"
             :placeholder="placeholder"
             :disabled="disabled"
             :min="min"
@@ -27,6 +27,7 @@
 import {onMounted, useTemplateRef} from 'vue';
 
 import {controlAttrs, rootAttrs} from '../internal/split-attrs';
+import {vValueProperty} from '../internal/value-property';
 import ErrorIcon from './ErrorIcon.vue';
 
 defineOptions({inheritAttrs: false});
@@ -61,7 +62,8 @@ const model = defineModel<number | null>({required: true});
 // Own the empty-input coercion ONCE, so no consumer reinvents it: a native number
 // input yields NaN for an empty or unparseable value — map that to null so the
 // model is always a real number or an explicit "no value", never NaN. This is why
-// the input is bound by hand rather than with v-model.
+// the input is bound by hand rather than with v-model: v-value-property sets the value
+// property only, as a bound :value would also write it to the attribute (the page source).
 const onInput = (event: Event) => {
     const {valueAsNumber} = event.target as HTMLInputElement;
     model.value = Number.isNaN(valueAsNumber) ? null : valueAsNumber;
