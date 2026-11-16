@@ -22,9 +22,7 @@
             />
             <span class="ui-switch__thumb" aria-hidden="true"></span>
         </span>
-        <span v-if="label !== undefined || $slots.default" class="ui-switch__label"
-            ><slot>{{ label }}</slot></span
-        >
+        <span v-if="label !== undefined || $slots.default" class="ui-switch__label"><slot>{{ label }}</slot></span>
     </label>
 </template>
 

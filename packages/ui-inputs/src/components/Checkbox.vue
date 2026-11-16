@@ -28,9 +28,7 @@
                 <path class="ui-check__dash" d="M5.5 10h9" fill="none" stroke="currentColor" stroke-width="2.5" />
             </svg>
         </span>
-        <span v-if="label !== undefined || $slots.default" class="ui-check__label"
-            ><slot>{{ label }}</slot></span
-        >
+        <span v-if="label !== undefined || $slots.default" class="ui-check__label"><slot>{{ label }}</slot></span>
     </label>
 </template>
 
