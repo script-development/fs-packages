@@ -17,6 +17,9 @@ export default defineProject({
         // Leftover Stryker sandboxes (crash-abandoned .stryker-tmp/) are likewise a full
         // package copy of the specs — carried from the pre-`test.projects` root config.
         exclude: [...configDefaults.exclude, 'tests/browser/**', '**/.stryker-tmp/**'],
+        // happy-dom has no Popover API; the composable calls showPopover() unconditionally
+        // (Baseline 2024). See tests/popover-shim.ts — the browser suite runs the real thing.
+        setupFiles: ['tests/popover-shim.ts', 'tests/fixed-date.ts'],
         coverage: {
             provider: 'v8',
             // Stricter than the service-package siblings (which cover `.ts` only):
