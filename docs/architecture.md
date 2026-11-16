@@ -204,6 +204,7 @@ This means services integrate naturally with Vue's ecosystem:
 ```vue
 <script setup lang="ts">
 import {watch} from 'vue';
+
 import {loading} from '@/services';
 
 // Standard Vue reactivity — nothing special
