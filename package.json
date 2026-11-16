@@ -32,7 +32,7 @@
         "@changesets/cli": "^3",
         "@stryker-mutator/core": "^10",
         "@stryker-mutator/vitest-runner": "^10",
-        "@vitejs/plugin-vue": "^6.0.10",
+        "@vitejs/plugin-vue": "^6.0.11",
         "@vitest/browser-playwright": "^4.1.12",
         "@vitest/coverage-v8": "^4",
         "axe-core": "^4.14.0",
