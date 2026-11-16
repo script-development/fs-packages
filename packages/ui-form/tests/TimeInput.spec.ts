@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import {mount} from '@vue/test-utils';
 import {afterEach, describe, expect, it, vi} from 'vitest';
+import {defineComponent, h, nextTick, ref} from 'vue';
 
 import TimeInput from '../src/components/TimeInput.vue';
 
@@ -206,5 +207,33 @@ describe('TimeInput', () => {
         expect(input.attributes('data-test')).toBe('start-time');
         expect(input.classes()).not.toContain('w-37');
         expect(input.attributes()).not.toHaveProperty('style');
+    });
+
+    it('never writes the value to the attribute, so it stays out of the page source', async () => {
+        const model = ref<string | null>('08:15');
+        const wrapper = mount(
+            defineComponent(
+                () => () =>
+                    h(TimeInput, {
+                        id: 'f',
+                        modelValue: model.value,
+                        'onUpdate:modelValue': (value: string | null) => {
+                            model.value = value;
+                        },
+                    }),
+            ),
+        );
+        const field = wrapper.find('input');
+        expect((field.element as HTMLInputElement).value).toBe('08:15');
+        expect(field.attributes('value')).toBeUndefined();
+
+        await field.setValue('09:30');
+        expect(model.value).toBe('09:30');
+        expect(field.attributes('value')).toBeUndefined();
+
+        model.value = '10:45';
+        await nextTick();
+        expect((field.element as HTMLInputElement).value).toBe('10:45');
+        expect(wrapper.html()).not.toMatch(/08:15|09:30|10:45/);
     });
 });

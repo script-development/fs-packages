@@ -20,7 +20,7 @@
             type="time"
             class="ui-control ui-input ui-time has-lead"
             :class="{'is-invalid': invalid, 'has-button': showClear}"
-            :value="model ?? ''"
+            v-value-property="model"
             :step="step === undefined ? undefined : step * 60"
             :disabled="disabled"
             :aria-required="required || undefined"
@@ -48,6 +48,7 @@
 import {computed, onMounted, ref, useTemplateRef} from 'vue';
 
 import {controlAttrs, rootAttrs} from '../internal/split-attrs';
+import {vValueProperty} from '../internal/value-property';
 import ErrorIcon from './ErrorIcon.vue';
 
 // No placeholder: a native time input shows none.
@@ -80,7 +81,8 @@ defineOptions({inheritAttrs: false});
 // `HH:MM`, or null for no time: the clear button and an emptied field both emit null, as an empty string is
 // no time. A consumer's own logic reads the model before any backend does (`time === null`), so a time keeps
 // the honest empty value, as NumberInput does. That is why the input is bound by hand, not with v-model,
-// which would emit the native input's ''.
+// which would emit the native input's ''. v-value-property sets the value property only, as a bound :value would
+// also write it to the attribute (the page source).
 const model = defineModel<string | null>({required: true});
 
 const onInput = (event: Event): void => {
