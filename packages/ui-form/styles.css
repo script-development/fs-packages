@@ -332,9 +332,9 @@
         box-shadow: var(--ui-danger-shadow);
     }
 
-    /* TextInput's in-input error icon: shown while the control is marked, at the right edge,
-       with the text kept clear of it. Keyed on .ui-input-wrap, which only ui-form's TextInput
-       renders: during the migration this sheet also styles ui-inputs 0.17 controls, whose invalid
+    /* The wrapped inputs' in-input error icon: shown while the control is marked, at the right edge,
+       with the text kept clear of it. Keyed on .ui-input-wrap, which only ui-form's wrapped inputs
+       render: during the migration this sheet also styles ui-inputs 0.17 controls, whose invalid
        TextInput has no icon and must keep its own padding. */
     .ui-input-wrap {
         position: relative;
@@ -342,6 +342,71 @@
     }
     .ui-input-wrap > .ui-input.is-invalid {
         padding-right: calc(var(--ui-control-pad-x) * 2 + 1em);
+    }
+    /* A leading glyph and an in-input button (a clear button), with room in the text for both. ui-form's
+       own classes: no ui-inputs 0.17 control has them. */
+    .ui-input-wrap > .ui-input.has-lead {
+        padding-left: calc(var(--ui-control-pad-x) * 2 + 1em);
+    }
+    .ui-input-wrap > .ui-input.has-button {
+        padding-right: calc(var(--ui-control-pad-x) * 2 + 1em);
+    }
+    .ui-input-wrap > .ui-input.has-button.is-invalid {
+        padding-right: calc(var(--ui-control-pad-x) * 3 + 2em);
+    }
+    .ui-input__lead {
+        position: absolute;
+        top: 50%;
+        left: var(--ui-control-pad-x);
+        width: 1em;
+        height: 1em;
+        transform: translateY(-50%);
+        color: var(--ui-control-text-muted);
+        font-size: var(--ui-control-font-size);
+        pointer-events: none;
+    }
+    .ui-input__button {
+        position: absolute;
+        top: 50%;
+        right: var(--ui-control-pad-x);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5em;
+        height: 1.5em;
+        /* a pointer target of at least 24px (WCAG 2.5.8) at any control font size */
+        min-width: 24px;
+        min-height: 24px;
+        margin-right: -0.25em;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--ui-control-text-muted);
+        font-size: var(--ui-control-font-size);
+        transform: translateY(-50%);
+        cursor: pointer;
+    }
+    .ui-input__button svg {
+        width: 0.75em;
+        height: 0.75em;
+    }
+    .ui-input__button:hover {
+        color: var(--ui-control-text);
+    }
+    /* reachable by keyboard, so it shows focus as every other focus surface does */
+    .ui-input__button:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
+    /* with the error icon at the edge, the button moves in beside it */
+    .ui-input.is-invalid ~ .ui-input__button {
+        right: calc(var(--ui-control-pad-x) * 2 + 1em);
+    }
+    /* the browser's own clear button gives way to the package's, and Safari's decoration takes no room */
+    .ui-search::-webkit-search-cancel-button,
+    .ui-search::-webkit-search-decoration {
+        appearance: none;
     }
     .ui-input__icon {
         position: absolute;
@@ -979,7 +1044,8 @@
         .ui-multicombobox__box:focus-within,
         .ui-check__input:focus-visible,
         .ui-switch__input:focus-visible,
-        .ui-pressable:focus-visible {
+        .ui-pressable:focus-visible,
+        .ui-input__button:focus-visible {
             outline: 2px solid Highlight;
             outline-offset: 2px;
         }
